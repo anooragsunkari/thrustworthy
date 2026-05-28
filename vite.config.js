@@ -3,7 +3,7 @@ import react from '@vitejs/plugin-react';
 
 export default defineConfig({
   plugins: [react()],
-  base: '/multirotor-build/',
+  base: '/Multirotor-build/',
   build: {
     outDir: 'dist',
     sourcemap: false,
