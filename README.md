@@ -2,7 +2,7 @@
 
 Interactive multi-rotor drone configurator with real-time compatibility checking, physics-based flight time estimation, and 3D component visualization.
 
-**Live:** [lazyonbed.github.io/multirotor-build](https://lazyonbed.github.io/Multirotor-build)
+**Live:** [lazyonbed.github.io/Multirotor-build](https://lazyonbed.github.io/Multirotor-build)
 
 ## Features
 
