@@ -534,16 +534,17 @@ function detectRegion(lat,lon){
 }
 function getBuyUrl(brand,model,region){
   var q=encodeURIComponent(brand+" "+model);
-  if(region==="in")return"https://robu.in/?s="+q;
-  if(region==="uk")return"https://www.amazon.co.uk/s?k="+q+"&i=electronics";
-  if(region==="eu")return"https://www.banggood.com/search/"+encodeURIComponent(brand+"-"+model)+".html";
-  if(region==="au")return"https://www.amazon.com.au/s?k="+q;
-  if(region==="ca")return"https://www.amazon.ca/s?k="+q+"&i=electronics";
+  if(region==="in")return"https://robu.in/?s="+encodeURIComponent(brand+" "+model);
+  if(region==="uk")return"https://www.unmannedtechshop.co.uk/?s="+q;
+  if(region==="eu")return"https://www.banggood.com/search/"+encodeURIComponent(brand+"-"+model)+".html?from=nav";
+  if(region==="au")return"https://www.getfpv.com/search?q="+q;
+  if(region==="ca")return"https://www.getfpv.com/search?q="+q;
   return"https://www.getfpv.com/search?q="+q;
 }
-var REGION_LABELS={"us":"GetFPV (US)","uk":"Amazon UK","eu":"Banggood (EU)","in":"robu.in (India)","au":"Amazon AU","ca":"Amazon CA"};
+var REGION_LABELS={"us":"GetFPV","uk":"Unmanned Tech (UK)","eu":"Banggood (EU)","in":"robu.in (India)","au":"GetFPV","ca":"GetFPV"};
+var REGION_STORE={"us":"GetFPV (getfpv.com)","uk":"Unmanned Tech (unmannedtechshop.co.uk)","eu":"Banggood (banggood.com)","in":"robu.in (robu.in)","au":"GetFPV (getfpv.com)","ca":"GetFPV (getfpv.com)"};
 var REGION_FLAGS={"us":"🇺🇸","uk":"🇬🇧","eu":"🇪🇺","in":"🇮🇳","au":"🇦🇺","ca":"🇨🇦"};
-var CURRENCY={us:{sym:"$",rate:1},uk:{sym:"£",rate:0.79},eu:{sym:"€",rate:0.92},in:{sym:"₹",rate:84},au:{sym:"A$",rate:1.53},ca:{sym:"C$",rate:1.36}};
+var CURRENCY={us:{sym:"$",rate:1,name:"USD"},uk:{sym:"£",rate:0.79,name:"GBP"},eu:{sym:"€",rate:0.92,name:"EUR"},in:{sym:"₹",rate:84,name:"INR"},au:{sym:"A$",rate:1.53,name:"AUD"},ca:{sym:"C$",rate:1.36,name:"CAD"}};
 function fmtPrice(usd,region){var c=CURRENCY[region]||CURRENCY.us;var val=Math.round(usd*c.rate);return c.sym+val.toLocaleString();}
 
 // ════════════════════════════════════════════════════
@@ -719,9 +720,14 @@ function BuildSummaryPage({build,onBack,onBackToBuilder}){
 
       {/* Note */}
       <div style={{background:t.bg2,borderRadius:12,padding:"14px 18px",fontSize:12,color:t.td,fontFamily:SN,lineHeight:1.7,border:"1px solid "+t.bd}}>
-        <strong style={{color:t.tb,fontWeight:700}}>Note on pricing:</strong> Prices shown are USD estimates based on typical market rates and are updated periodically.
-        Actual prices vary by region, stock availability, and promotions. The "Buy" button links to a product search on {REGION_LABELS[region]} —
-        always verify the correct model before purchasing. For motors, the price shown is per motor × quantity ({build.frame?build.frame.mc:4} motors for this build).
+        <strong style={{color:t.tb,fontWeight:700}}>Note on pricing:</strong>{" "}
+        {region==="in"&&"Prices shown in INR (₹) converted from USD at approximate market rates. Buy links search robu.in — India's largest FPV hobby store. Stock availability may vary."}
+        {region==="uk"&&"Prices shown in GBP (£) converted from USD at approximate market rates. Buy links search Unmanned Tech — UK's leading FPV retailer. Prices may differ from listed estimates."}
+        {region==="eu"&&"Prices shown in EUR (€) converted from USD at approximate market rates. Buy links search Banggood — widely used across Europe for FPV components. Import duties may apply."}
+        {region==="au"&&"Prices shown in AUD (A$) converted from USD at approximate market rates. Buy links search GetFPV — international shipping available to Australia. Duties and GST may apply."}
+        {region==="ca"&&"Prices shown in CAD (C$) converted from USD at approximate market rates. Buy links search GetFPV — ships to Canada. Duties and taxes may apply at the border."}
+        {region==="us"&&"Prices shown in USD ($) based on typical US market rates. Buy links search GetFPV — one of the largest FPV retailers in the US. Always verify stock and pricing before ordering."}
+        {" "}For motors, the price shown is per motor × quantity ({build.frame?build.frame.mc:4} motors for this build). Frame cost is not included as it varies widely.
       </div>
     </div>
   </div>);
@@ -992,7 +998,15 @@ function BuilderApp({goHome,goModeSelect,onSaveBuild}){
 
   var handleSelect=function(type,item){setSel(function(prev){var n={};for(var k in prev)n[k]=prev[k];n[type]=prev[type]&&prev[type].id===item.id?null:item;return n;});};
   var resetAll=function(){setSel(emptySel);};
+  var svdFlash=useState(false),savedFlash=svdFlash[0],setSavedFlash=svdFlash[1];
   var saveBuild=function(){
+    var name="Build "+(savedBuilds.length+1)+" — "+(frame?frame.name:"")+" "+(size?size.l:"");
+    var b={id:Date.now(),name:name,frame:frame,size:size,frameMat:frameMat,sel:sel,battPos:battPos,fcPos:fcPos,escPos:escPos,flight:flight};
+    setSavedBuilds(function(prev){return prev.concat([b]);});
+    setSavedFlash(true);
+    setTimeout(function(){setSavedFlash(false);},2000);
+  };
+  var saveAndCheckout=function(){
     var name="Build "+(savedBuilds.length+1)+" — "+(frame?frame.name:"")+" "+(size?size.l:"");
     var b={id:Date.now(),name:name,frame:frame,size:size,frameMat:frameMat,sel:sel,battPos:battPos,fcPos:fcPos,escPos:escPos,flight:flight};
     setSavedBuilds(function(prev){return prev.concat([b]);});
@@ -1168,8 +1182,12 @@ function BuilderApp({goHome,goModeSelect,onSaveBuild}){
               {tabs.map(function(tb2){var s=sel[tb2.k],st2=getStatus(tb2.k);var pBg=s?(st2==="error"?t.rdL:st2==="warning"?t.amL:t.acL):t.bg2;var pC=s?(st2==="error"?t.rd:st2==="warning"?t.am:t.ac):t.td;
                 return <div key={tb2.k} onClick={function(){setTab(tb2.k);setMobileTab("components");}} title={tb2.l} style={{padding:"5px 12px",borderRadius:20,fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:SN,background:pBg,color:pC,border:"1px solid "+pC+"55"}}>{s?s.b+" "+s.m:tb2.l}</div>;})}
             </div>
-            {/* Save button */}
-            <button onClick={saveBuild} style={{width:"100%",padding:"12px 0",borderRadius:10,fontSize:14,cursor:"pointer",fontFamily:SN,fontWeight:700,background:t.acL,border:"1px solid "+t.ac,color:t.ac,marginBottom:14}}>💾 Save Build</button>
+            {/* Save / Checkout buttons */}
+            <div style={{display:"flex",gap:6,marginBottom:8}}>
+              <button onClick={saveBuild} style={{flex:1,padding:"10px 0",borderRadius:9,fontSize:13,cursor:"pointer",fontFamily:SN,fontWeight:700,background:savedFlash?t.acL:t.bg2,border:"1px solid "+(savedFlash?t.ac:t.bd),color:savedFlash?t.ac:t.td,transition:"all 0.2s"}}>{savedFlash?"✓ Saved!":"💾 Save Build"}</button>
+              {savedBuilds.length>0&&<button onClick={function(){setShowCompare(true);}} style={{flex:1,padding:"10px 0",borderRadius:9,fontSize:13,cursor:"pointer",fontFamily:SN,fontWeight:700,background:t.bg2,border:"1px solid "+t.bd,color:t.tb}}>⇄ Compare ({savedBuilds.length})</button>}
+            </div>
+            <button onClick={saveAndCheckout} style={{width:"100%",padding:"11px 0",borderRadius:9,fontSize:13,cursor:"pointer",fontFamily:SN,fontWeight:700,background:t.ac,border:"none",color:"#fff",marginBottom:14}}>🛒 Save & Checkout →</button>
             {/* Placement */}
             <div style={{background:t.sf,borderRadius:12,padding:"12px 14px",boxShadow:t.sh,marginBottom:10}}>
               <div style={{fontSize:11,fontWeight:700,color:t.ac,letterSpacing:1.2,marginBottom:10,fontFamily:MN}}>COMPONENT PLACEMENT</div>
@@ -1209,10 +1227,15 @@ function BuilderApp({goHome,goModeSelect,onSaveBuild}){
               var pC=s?(st2==="error"?t.rd:st2==="warning"?t.am:t.ac):t.td;
               return <div key={tb2.k} onClick={function(){setTab(tb2.k);}} title={tb2.l} style={{padding:"3px 9px",borderRadius:20,fontSize:10,fontWeight:600,cursor:"pointer",fontFamily:SN,background:pBg,color:pC,border:"1px solid "+pC+"55",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis",maxWidth:140}}>{s?s.b+" "+s.m:tb2.l}</div>;})}
           </div>
-          {/* Save / Compare */}
-          <div style={{padding:"6px 10px",display:"flex",gap:6,flexShrink:0,borderBottom:"1px solid "+t.bdL,background:t.bg}}>
-            <button onClick={saveBuild} style={{flex:1,padding:"8px 0",borderRadius:8,fontSize:12,cursor:"pointer",fontFamily:SN,fontWeight:700,background:t.acL,border:"1px solid "+t.ac,color:t.ac}}>💾 Save Build</button>
-            {savedBuilds.length>0&&<button onClick={function(){setShowCompare(true);}} style={{flex:1,padding:"8px 0",borderRadius:8,fontSize:12,cursor:"pointer",fontFamily:SN,fontWeight:700,background:t.bg2,border:"1px solid "+t.bd,color:t.tb}}>⇄ Compare ({savedBuilds.length})</button>}
+          {/* Save / Checkout / Compare */}
+          <div style={{padding:"6px 10px",display:"flex",flexDirection:"column",gap:5,flexShrink:0,borderBottom:"1px solid "+t.bdL,background:t.bg}}>
+            <div style={{display:"flex",gap:5}}>
+              <button onClick={saveBuild} style={{flex:1,padding:"8px 0",borderRadius:8,fontSize:11,cursor:"pointer",fontFamily:SN,fontWeight:700,background:savedFlash?t.acL:t.bg2,border:"1px solid "+(savedFlash?t.ac:t.bd),color:savedFlash?t.ac:t.td,transition:"all 0.2s"}}>
+                {savedFlash?"✓ Saved!":"💾 Save Build"}
+              </button>
+              {savedBuilds.length>0&&<button onClick={function(){setShowCompare(true);}} style={{flex:1,padding:"8px 0",borderRadius:8,fontSize:11,cursor:"pointer",fontFamily:SN,fontWeight:700,background:t.bg2,border:"1px solid "+t.bd,color:t.tb}}>⇄ Compare ({savedBuilds.length})</button>}
+            </div>
+            <button onClick={saveAndCheckout} style={{width:"100%",padding:"9px 0",borderRadius:8,fontSize:12,cursor:"pointer",fontFamily:SN,fontWeight:700,background:t.ac,border:"none",color:"#fff"}}>🛒 Save & Checkout →</button>
           </div>
           {/* Component Placement */}
           <div style={{padding:"10px 12px",borderBottom:"1px solid "+t.bdL,background:t.bg,flexShrink:0}}>
