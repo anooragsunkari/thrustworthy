@@ -528,15 +528,17 @@ function detectRegion(lat,lon){
 }
 function getBuyUrl(brand,model,region){
   var q=encodeURIComponent(brand+" "+model);
-  if(region==="in")return"https://www.amazon.in/s?k="+q+"&i=electronics";
+  if(region==="in")return"https://robu.in/?s="+q;
   if(region==="uk")return"https://www.amazon.co.uk/s?k="+q+"&i=electronics";
   if(region==="eu")return"https://www.banggood.com/search/"+encodeURIComponent(brand+"-"+model)+".html";
   if(region==="au")return"https://www.amazon.com.au/s?k="+q;
   if(region==="ca")return"https://www.amazon.ca/s?k="+q+"&i=electronics";
   return"https://www.getfpv.com/search?q="+q;
 }
-var REGION_LABELS={"us":"GetFPV (US)","uk":"Amazon UK","eu":"Banggood (EU)","in":"Amazon India","au":"Amazon AU","ca":"Amazon CA"};
+var REGION_LABELS={"us":"GetFPV (US)","uk":"Amazon UK","eu":"Banggood (EU)","in":"robu.in (India)","au":"Amazon AU","ca":"Amazon CA"};
 var REGION_FLAGS={"us":"🇺🇸","uk":"🇬🇧","eu":"🇪🇺","in":"🇮🇳","au":"🇦🇺","ca":"🇨🇦"};
+var CURRENCY={us:{sym:"$",rate:1},uk:{sym:"£",rate:0.79},eu:{sym:"€",rate:0.92},in:{sym:"₹",rate:84},au:{sym:"A$",rate:1.53},ca:{sym:"C$",rate:1.36}};
+function fmtPrice(usd,region){var c=CURRENCY[region]||CURRENCY.us;var val=Math.round(usd*c.rate);return c.sym+val.toLocaleString();}
 
 // ════════════════════════════════════════════════════
 // BUILD SUMMARY PAGE
@@ -662,9 +664,9 @@ function BuildSummaryPage({build,onBack,onBackToBuilder}){
             {/* Qty */}
             <div style={{fontSize:14,fontWeight:600,color:t.tb,textAlign:"right",paddingRight:8}}>{r.ct.qty}×</div>
             {/* Unit price */}
-            <div style={{fontSize:14,fontWeight:600,color:t.td,textAlign:"right",paddingRight:8}}>{r.unitPrice>0?"$"+r.unitPrice:"—"}</div>
+            <div style={{fontSize:14,fontWeight:600,color:t.td,textAlign:"right",paddingRight:8}}>{r.unitPrice>0?fmtPrice(r.unitPrice,region):"—"}</div>
             {/* Total */}
-            <div style={{fontSize:15,fontWeight:700,color:t.tb,textAlign:"right",paddingRight:8}}>{r.total>0?"$"+r.total:"—"}</div>
+            <div style={{fontSize:15,fontWeight:700,color:t.tb,textAlign:"right",paddingRight:8}}>{r.total>0?fmtPrice(r.total,region):"—"}</div>
             {/* Buy button */}
             <div style={{textAlign:"right"}}>
               <a href={url} target="_blank" rel="noopener noreferrer" style={{display:"inline-block",padding:"7px 14px",borderRadius:8,background:t.acL,color:t.ac,fontSize:12,fontWeight:700,fontFamily:SN,textDecoration:"none",border:"1px solid "+t.ac+"66",transition:"all 0.15s"}}
@@ -687,7 +689,7 @@ function BuildSummaryPage({build,onBack,onBackToBuilder}){
           </div>
         </div>
         <div style={{fontSize:36,fontWeight:800,color:t.ac,fontFamily:SN,whiteSpace:"nowrap",marginLeft:24}}>
-          ${grandTotal.toLocaleString()}
+          {fmtPrice(grandTotal,region)}
         </div>
       </div>}
 
@@ -873,21 +875,22 @@ function LandingPage({onLaunch}){
 function BuilderApp({goHome,goModeSelect,onSaveBuild}){
   var T=useTheme();var t=T.t;var isDark=T.mode==="dark";
   var ds=useState(false),showDocs=ds[0],setShowDocs=ds[1];
-  var fs=useState(null),frame=fs[0],setFrame=fs[1];
-  var sz=useState(null),size=sz[0],setSize=sz[1];
   var emptySel={motor:null,esc:null,fc:null,battery:null,prop:null,vtx:null,camera:null,rx:null,gps:null};
-  var ss=useState(emptySel),sel=ss[0],setSel=ss[1];
-  var ts2=useState("motor"),tab=ts2[0],setTab=ts2[1];
-  var bs=useState("top"),battPos=bs[0],setBattPos=bs[1];
-  var as2=useState(0),altitude=as2[0],setAltitude=as2[1];
+  var _sb=useState(function(){var s=loadBuilder();return s?s.frame:null;}),frame=_sb[0],setFrame=_sb[1];
+  var _sz=useState(function(){var s=loadBuilder();return s?s.size:null;}),size=_sz[0],setSize=_sz[1];
+  var _fm=useState(function(){var s=loadBuilder();return s?s.frameMat:null;}),frameMat=_fm[0],setFrameMat=_fm[1];
+  var ss=useState(function(){var s=loadBuilder();return s&&s.sel?s.sel:emptySel;}),sel=ss[0],setSel=ss[1];
+  var ts2=useState(function(){var s=loadBuilder();return s&&s.tab?s.tab:"motor";}),tab=ts2[0],setTab=ts2[1];
+  var bs=useState(function(){var s=loadBuilder();return s&&s.battPos?s.battPos:"top";}),battPos=bs[0],setBattPos=bs[1];
+  var as2=useState(function(){var s=loadBuilder();return s&&s.altitude!=null?s.altitude:0;}),altitude=as2[0],setAltitude=as2[1];
+  var fp=useState(function(){var s=loadBuilder();return s&&s.fcPos?s.fcPos:"between";}),fcPos=fp[0],setFcPos=fp[1];
+  var ep=useState(function(){var s=loadBuilder();return s&&s.escPos?s.escPos:"between";}),escPos=ep[0],setEscPos=ep[1];
+  var _st=useState(function(){var s=loadBuilder();return s&&s.step!=null?s.step:0;}),step=_st[0],setStep=_st[1];
   var us=useState(false),showUpload=us[0],setShowUpload=us[1];
-  var st=useState(0),step=st[0],setStep=st[1];
   var ns=useState(false),navOpen=ns[0],setNavOpen=ns[1];
-  var fp=useState("between"),fcPos=fp[0],setFcPos=fp[1];
-  var ep=useState("between"),escPos=ep[0],setEscPos=ep[1];
-  var fm=useState(null),frameMat=fm[0],setFrameMat=fm[1];
   var svs=useState([]),savedBuilds=svs[0],setSavedBuilds=svs[1];
   var cms=useState(false),showCompare=cms[0],setShowCompare=cms[1];
+  useEffect(function(){try{localStorage.setItem("mb_builder",JSON.stringify({frame:frame,size:size,frameMat:frameMat,sel:sel,tab:tab,battPos:battPos,altitude:altitude,fcPos:fcPos,escPos:escPos,step:step}));}catch(e){};},[frame,size,frameMat,sel,tab,battPos,altitude,fcPos,escPos,step]);
 
   var handleSelect=function(type,item){setSel(function(prev){var n={};for(var k in prev)n[k]=prev[k];n[type]=prev[type]&&prev[type].id===item.id?null:item;return n;});};
   var resetAll=function(){setSel(emptySel);};
@@ -1037,15 +1040,12 @@ function BuilderApp({goHome,goModeSelect,onSaveBuild}){
       </div>
     </div>}
 
-    {step===1&&(<div style={{display:"grid",gridTemplateColumns:"300px 1fr 1.4fr",height:"calc(100vh - 54px)",overflow:"hidden"}}>
+    {step===1&&(<div style={{display:"grid",gridTemplateColumns:"260px 1.2fr 1.4fr",height:"calc(100vh - 54px)",overflow:"hidden"}}>
 
-      {/* Col 1 — 3D Drone viewer, always visible, fixed height, no scroll */}
+      {/* Col 1 — Controls: chips, save, placement, issues */}
       <div style={{borderRight:"1px solid "+t.bd,background:t.bg,display:"flex",flexDirection:"column",overflow:"hidden"}}>
-        <div style={{flexShrink:0,padding:"10px 12px 6px"}}>
-          <DroneViewer frameType={frame} droneSize={size} selections={sel} batteryPos={battPos} fcPos={fcPos} escPos={escPos} frameMat={frameMat}/>
-        </div>
         {/* Component chips */}
-        <div style={{padding:"6px 12px",display:"flex",flexWrap:"wrap",gap:4,flexShrink:0}}>
+        <div style={{padding:"8px 12px 4px",display:"flex",flexWrap:"wrap",gap:4,flexShrink:0}}>
           {tabs.map(function(tb2){var s=sel[tb2.k],st2=getStatus(tb2.k);
             var pBg=s?(st2==="error"?t.rdL:st2==="warning"?t.amL:t.acL):t.bg2;
             var pC=s?(st2==="error"?t.rd:st2==="warning"?t.am:t.ac):t.td;
@@ -1056,8 +1056,8 @@ function BuilderApp({goHome,goModeSelect,onSaveBuild}){
           <button onClick={saveBuild} style={{flex:1,padding:"9px 0",borderRadius:9,fontSize:12,cursor:"pointer",fontFamily:SN,fontWeight:700,background:t.acL,border:"1px solid "+t.ac,color:t.ac}}>💾 Save Build</button>
           {savedBuilds.length>0&&<button onClick={function(){setShowCompare(true);}} style={{flex:1,padding:"9px 0",borderRadius:9,fontSize:12,cursor:"pointer",fontFamily:SN,fontWeight:700,background:t.bg2,border:"1px solid "+t.bd,color:t.tb}}>⇄ {savedBuilds.length}</button>}
         </div>
-        {/* Placement controls — scrollable if needed */}
-        <div style={{flex:1,overflowY:"auto",padding:"6px 12px 12px"}}>
+        {/* Placement controls — scrollable */}
+        <div style={{flex:1,overflowY:"auto",padding:"4px 12px 12px"}}>
           <div style={{background:t.sf,borderRadius:12,padding:"12px 14px",boxShadow:t.sh,marginBottom:8}}>
             <div style={{fontSize:11,fontWeight:700,color:t.ac,letterSpacing:1.2,marginBottom:10,fontFamily:MN}}>COMPONENT PLACEMENT</div>
             <div style={{display:"flex",flexWrap:"wrap",gap:6,alignItems:"center",marginBottom:8}}>
@@ -1082,10 +1082,15 @@ function BuilderApp({goHome,goModeSelect,onSaveBuild}){
         </div>
       </div>
 
-      {/* Col 2 — Physics Breakdown + Flight Estimates, scrollable */}
-      <div style={{borderRight:"1px solid "+t.bd,overflowY:"auto",background:t.bg2,padding:"14px 16px"}}>
-        <MathPanel insights={insights} flight={flight}/>
-        {!insights.length&&!flight&&<div style={{color:t.td,fontSize:14,textAlign:"center",padding:"40px 20px",fontFamily:SN}}>Select a motor and battery to see physics calculations and flight time estimates.</div>}
+      {/* Col 2 — 3D Drone (center/top) + Physics + Flight below, scrollable */}
+      <div style={{borderRight:"1px solid "+t.bd,overflowY:"auto",background:t.bg2,display:"flex",flexDirection:"column"}}>
+        <div style={{flexShrink:0,background:t.bg,borderBottom:"1px solid "+t.bd}}>
+          <DroneViewer frameType={frame} droneSize={size} selections={sel} batteryPos={battPos} fcPos={fcPos} escPos={escPos} frameMat={frameMat}/>
+        </div>
+        <div style={{flex:1,padding:"14px 16px",overflowY:"auto"}}>
+          <MathPanel insights={insights} flight={flight}/>
+          {!insights.length&&!flight&&<div style={{color:t.td,fontSize:14,textAlign:"center",padding:"40px 20px",fontFamily:SN}}>Select a motor and battery to see physics calculations and flight time estimates.</div>}
+        </div>
       </div>
 
       {/* Col 3 — Component picker */}
@@ -1161,13 +1166,18 @@ function ModeSelectPage({onSelect,onBack}){
 // ════════════════════════════════════════════════════
 // ROOT
 // ════════════════════════════════════════════════════
+function loadRoot(){try{var s=localStorage.getItem("mb_root");return s?JSON.parse(s):null;}catch(e){return null;}}
+function loadBuilder(){try{var s=localStorage.getItem("mb_builder");return s?JSON.parse(s):null;}catch(e){return null;}}
+
 export default function App(){
-  var ps=useState("landing"),page=ps[0],setPage=ps[1];
-  var sbs=useState(null),summaryBuild=sbs[0],setSummaryBuild=sbs[1];
-  var ms=useState("dark"),mode=ms[0],setMode=ms[1];
+  var saved=useState(function(){return loadRoot();})[0];
+  var ps=useState(saved&&saved.page&&saved.page!=="landing"?saved.page:"landing"),page=ps[0],setPage=ps[1];
+  var sbs=useState(saved&&saved.summaryBuild?saved.summaryBuild:null),summaryBuild=sbs[0],setSummaryBuild=sbs[1];
+  var ms=useState(saved&&saved.mode?saved.mode:"dark"),mode=ms[0],setMode=ms[1];
   var t=mode==="dark"?DARK:LIGHT;
   var ctx={t:t,mode:mode,toggle:function(){setMode(mode==="dark"?"light":"dark");}};
   var goHome=function(){setPage("landing");};
+  useEffect(function(){try{localStorage.setItem("mb_root",JSON.stringify({page:page,mode:mode,summaryBuild:summaryBuild}));}catch(e){};},[page,mode,summaryBuild]);
   return(<ThemeCtx.Provider value={ctx}>
     {page==="landing"&&<LandingPage onLaunch={function(){setPage("mode-select");}}/>}
     {page==="mode-select"&&<ModeSelectPage onSelect={function(){setPage("builder");}} onBack={goHome}/>}
