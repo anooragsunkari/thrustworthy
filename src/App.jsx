@@ -21,14 +21,14 @@ const LIGHT = {
 };
 const DARK = {
   bg:"#16181e",bg2:"#1c1f27",bg3:"#232730",sf:"#232730",sfH:"#2a2e38",
-  bd:"rgba(255,255,255,0.07)",bdL:"rgba(255,255,255,0.04)",
-  tx:"#b8bcc8",td:"#686d7a",tb:"#dce0ea",
-  ac:"#5b9cf6",acL:"#1a2840",acT:"#4b8cf0",
-  bl:"#5b9cf6",blL:"#1a2840",
-  am:"#e8a838",amL:"#2e2410",
-  rd:"#ef5555",rdL:"#2e1414",
-  sh:"0 1px 3px rgba(0,0,0,0.15), 0 4px 12px rgba(0,0,0,0.12)",
-  shH:"0 2px 8px rgba(0,0,0,0.2), 0 10px 24px rgba(0,0,0,0.18)",
+  bd:"rgba(255,255,255,0.14)",bdL:"rgba(255,255,255,0.07)",
+  tx:"#d0d4e0",td:"#9ea3b2",tb:"#eceef6",
+  ac:"#6aaeff",acL:"#1e3050",acT:"#5b9cf6",
+  bl:"#6aaeff",blL:"#1e3050",
+  am:"#f0b840",amL:"#382a10",
+  rd:"#ff6b6b",rdL:"#3a1818",
+  sh:"0 1px 3px rgba(0,0,0,0.25), 0 4px 12px rgba(0,0,0,0.2)",
+  shH:"0 2px 8px rgba(0,0,0,0.3), 0 10px 24px rgba(0,0,0,0.25)",
   canvas:"#12141a",
 };
 const MN = "'DM Mono', 'IBM Plex Mono', monospace";
@@ -414,7 +414,7 @@ function buildDroneScene(canvas,ft,ds,sel,bPos,isDark,fcPos,escPos,cameraState,f
   var onD=function(ev){isDown=true;var p=ev.touches?ev.touches[0]:ev;lX=p.clientX;lY=p.clientY;};
   var onMv=function(ev){if(!isDown)return;ev.preventDefault();var p=ev.touches?ev.touches[0]:ev;tDt-=(p.clientX-lX)*0.005;pDt2-=(p.clientY-lY)*0.005;lX=p.clientX;lY=p.clientY;};
   var onU=function(){isDown=false;};
-  var onWh=function(ev){ev.preventDefault();sDt*=(1+Math.sign(ev.deltaY)*0.08);};
+  var onWh=function(ev){ev.preventDefault();sDt*=(1+Math.sign(ev.deltaY)*0.03);};
   canvas.addEventListener("mousedown",onD);canvas.addEventListener("mousemove",onMv);canvas.addEventListener("mouseup",onU);canvas.addEventListener("mouseleave",onU);
   canvas.addEventListener("touchstart",onD,{passive:true});canvas.addEventListener("touchmove",onMv,{passive:false});canvas.addEventListener("touchend",onU);
   canvas.addEventListener("wheel",onWh,{passive:false});
@@ -456,11 +456,13 @@ function DroneViewer({frameType,droneSize,selections,batteryPos,fcPos,escPos,fra
 }
 function CompCard({item,type,onSelect,selected,rating}){
   var T=useTheme();var t=T.t;
-  var bc=selected?(rating==="red"?t.rd:rating==="amber"?t.am:t.ac):(rating==="red"?t.rd+"44":rating==="amber"?t.am+"44":t.ac+"44");
-  var bg=selected?(rating==="red"?t.rdL:rating==="amber"?t.amL:t.acL):t.sf;
-  var dot=rating==="red"?t.rd:rating==="amber"?t.am:t.ac;
-  var label=type==="motor"?item.kv+"KV · "+item.sz+" · "+item.w+"g · "+item.t+"g"
-    :type==="esc"?item.cc+"A · "+item.fw+" · "+item.vn+"–"+item.vx+"V"
+  var ratingColor=rating==="red"?t.rd:rating==="amber"?t.am:t.ac;
+  var ratingBg=rating==="red"?t.rdL:rating==="amber"?t.amL:t.acL;
+  var bc=selected?ratingColor:(rating==="red"?t.rd+"88":rating==="amber"?t.am+"88":t.ac+"44");
+  var bw=selected?"2.5px":"2px";
+  var bg=selected?ratingBg:t.sf;
+  var label=type==="motor"?item.kv+"KV · "+item.sz+" · "+item.w+"g · "+item.t+"g thrust"
+    :type==="esc"?item.cc+"A cont · "+item.fw+" · "+item.vn+"–"+item.vx+"V"
     :type==="fc"?item.mcu+" · "+item.fw.join("/")+" · "+item.w+"g"
     :type==="battery"?item.c+"S "+item.v+"V · "+item.cap+"mAh · "+item.dr+"C"
     :type==="prop"?item.d+"\" "+item.bl+"-blade · "+item.w+"g"
@@ -468,10 +470,10 @@ function CompCard({item,type,onSelect,selected,rating}){
     :type==="camera"?item.sys+" · "+item.w+"g"
     :type==="rx"?item.pr+" "+item.fr+" · "+item.w+"g"
     :type==="gps"?item.chip+" · "+item.w+"g":"";
-  return(<div onClick={function(){onSelect(item);}} style={{border:"1.5px solid "+bc,background:bg,borderRadius:10,padding:"10px 12px",cursor:"pointer",marginBottom:5,transition:"all 0.15s",position:"relative",boxShadow:selected?t.sh:"none"}}>
-    <div style={{position:"absolute",top:8,right:8,width:7,height:7,borderRadius:"50%",background:dot,opacity:0.8}}/>
-    <div style={{fontSize:12,fontWeight:600,color:t.tb,fontFamily:SN}}>{item.b} <span style={{color:t.ac,fontWeight:700}}>{item.m}</span></div>
-    <div style={{fontSize:10,color:t.td,marginTop:3,fontFamily:MN,lineHeight:1.4}}>{label}</div>
+  return(<div onClick={function(){onSelect(item);}} style={{border:bw+" solid "+bc,background:bg,borderRadius:10,padding:"12px 14px",cursor:"pointer",marginBottom:6,transition:"all 0.15s",position:"relative",boxShadow:selected?t.sh:"none"}}>
+    <div style={{position:"absolute",top:10,right:10,width:9,height:9,borderRadius:"50%",background:ratingColor,opacity:selected?1:0.7,flexShrink:0}}/>
+    <div style={{fontSize:14,fontWeight:600,color:t.tb,fontFamily:SN,paddingRight:16}}>{item.b} <span style={{color:t.ac,fontWeight:700}}>{item.m}</span></div>
+    <div style={{fontSize:12,color:t.td,marginTop:4,fontFamily:MN,lineHeight:1.5}}>{label}</div>
   </div>);
 }
 // Definitions for physics line items
@@ -541,7 +543,7 @@ function LandingPage({onLaunch}){
     <nav style={{position:"fixed",top:0,left:0,right:0,zIndex:50,padding:"14px 32px",display:"flex",justifyContent:"space-between",alignItems:"center",background:t.bg+"e6",backdropFilter:"blur(16px)",borderBottom:"1px solid "+t.bd}}>
       <div style={{fontFamily:MN,fontWeight:700,fontSize:15,letterSpacing:1.2}}><span style={{color:t.tb}}>Multirotor</span><span style={{color:t.ac}}>.</span><span style={{color:t.tb}}>build</span></div>
       <div style={{display:"flex",gap:12,alignItems:"center"}}>
-        <button onClick={function(){T.toggle();}} style={{background:t.sf,border:"1px solid "+t.bd,borderRadius:8,padding:"6px 10px",cursor:"pointer",fontSize:12,color:t.td}}>{isDark?"☀":"☾"}</button>
+        <button onClick={function(){T.toggle();}} style={{background:isDark?"#3a4055":t.sf,border:"2px solid "+(isDark?"#6aaeff":t.bd),borderRadius:8,padding:"6px 12px",cursor:"pointer",fontSize:14,color:isDark?"#eceef6":t.td,fontWeight:600,transition:"all 0.2s"}}>{isDark?"☀ Light":"☾ Dark"}</button>
         <button onClick={function(){setNavOpen(!navOpen);}} style={{background:"none",border:"none",cursor:"pointer",padding:4,display:"flex",flexDirection:"column",gap:3}}>
           <span style={{display:"block",width:20,height:2,background:t.tb,borderRadius:1,transition:"all 0.3s",transform:navOpen?"rotate(45deg) translateY(5px)":"none"}}/>
           <span style={{display:"block",width:20,height:2,background:t.tb,borderRadius:1,transition:"all 0.3s",opacity:navOpen?0:1}}/>
@@ -593,16 +595,22 @@ function BuilderApp({goHome}){
   var ns=useState(false),navOpen=ns[0],setNavOpen=ns[1];
   var fp=useState("between"),fcPos=fp[0],setFcPos=fp[1];
   var ep=useState("between"),escPos=ep[0],setEscPos=ep[1];
-  var fm=useState(FRAME_MATERIALS[0]),frameMat=fm[0],setFrameMat=fm[1];
+  var fm=useState(null),frameMat=fm[0],setFrameMat=fm[1];
+  var svs=useState([]),savedBuilds=svs[0],setSavedBuilds=svs[1];
+  var cms=useState(false),showCompare=cms[0],setShowCompare=cms[1];
 
   var handleSelect=function(type,item){setSel(function(prev){var n={};for(var k in prev)n[k]=prev[k];n[type]=prev[type]&&prev[type].id===item.id?null:item;return n;});};
   var resetAll=function(){setSel(emptySel);};
+  var saveBuild=function(){
+    var name="Build "+(savedBuilds.length+1)+" — "+(frame?frame.name:"")+" "+(size?size.l:"");
+    setSavedBuilds(function(prev){return prev.concat([{id:Date.now(),name:name,frame:frame,size:size,frameMat:frameMat,sel:sel,battPos:battPos,fcPos:fcPos,escPos:escPos,flight:flight}]);});
+  };
 
   var compat=useMemo(function(){var filled=Object.values(sel).filter(Boolean);if(filled.length<2)return null;return checkCompat(sel,size,frame,frameMat);},[sel,size,frame,frameMat]);
   var flight=useMemo(function(){return calcFlight(sel,size,frame,battPos,altitude,fcPos,escPos,frameMat);},[sel,size,frame,battPos,altitude,fcPos,escPos,frameMat]);
   var insights=useMemo(function(){return getMathInsights(sel,size,frame,fcPos,escPos,frameMat);},[sel,size,frame,fcPos,escPos,frameMat]);
   var getStatus=function(type){if(!compat)return null;if(compat.errors.some(function(e){return e.c.indexOf(type)>=0;}))return"error";if(compat.warnings.some(function(w){return w.c.indexOf(type)>=0;}))return"warning";return sel[type]?"ok":null;};
-  var tabs=[{k:"motor",l:"Motors",db:MOTORS},{k:"esc",l:"ESCs",db:ESCS},{k:"fc",l:"FC",db:FCS},{k:"battery",l:"Battery",db:BATTS},{k:"prop",l:"Props",db:PROPS},{k:"vtx",l:"VTX",db:VTXS},{k:"camera",l:"Camera",db:CAMS},{k:"rx",l:"RX",db:RXS},{k:"gps",l:"GPS",db:GPSS}];
+  var tabs=[{k:"motor",l:"Motors",db:MOTORS},{k:"esc",l:"Speed Controllers",db:ESCS},{k:"fc",l:"Flight Controller",db:FCS},{k:"battery",l:"Battery",db:BATTS},{k:"prop",l:"Props",db:PROPS},{k:"vtx",l:"Video Transmitter",db:VTXS},{k:"camera",l:"Camera",db:CAMS},{k:"rx",l:"Receiver",db:RXS},{k:"gps",l:"GPS Module",db:GPSS}];
   var currentTab=tabs.find(function(t2){return t2.k===tab;});
   var sizeFiltered=size?currentTab.db.filter(function(it){return it.s&&it.s.indexOf(size.id)>=0;}):currentTab.db;
   var otherItems=currentTab.db.filter(function(it){return sizeFiltered.indexOf(it)<0;});
@@ -627,7 +635,7 @@ function BuilderApp({goHome}){
       <div onClick={goHome} style={{fontFamily:MN,fontWeight:700,fontSize:14,letterSpacing:1.2,cursor:"pointer"}}><span style={{color:t.tb}}>Multirotor</span><span style={{color:t.ac}}>.</span><span style={{color:t.tb}}>build</span></div>
       <div style={{display:"flex",gap:8,alignItems:"center"}}>
         {step===1&&<button onClick={function(){setStep(0);}} style={{background:t.sf,border:"1px solid "+t.bd,color:t.td,padding:"5px 14px",borderRadius:8,cursor:"pointer",fontSize:10,fontFamily:SN,fontWeight:500}}>← Frame</button>}
-        <button onClick={function(){T.toggle();}} style={{background:t.sf,border:"1px solid "+t.bd,borderRadius:8,padding:"5px 10px",cursor:"pointer",fontSize:12,color:t.td}}>{isDark?"☀":"☾"}</button>
+        <button onClick={function(){T.toggle();}} style={{background:isDark?"#3a4055":t.sf,border:"2px solid "+(isDark?"#6aaeff":t.bd),borderRadius:8,padding:"5px 12px",cursor:"pointer",fontSize:13,color:isDark?"#eceef6":t.td,fontWeight:600,transition:"all 0.2s"}}>{isDark?"☀ Light":"☾ Dark"}</button>
         <button onClick={function(){setNavOpen(!navOpen);}} style={{background:"none",border:"none",cursor:"pointer",padding:4,display:"flex",flexDirection:"column",gap:3}}>
           <span style={{display:"block",width:18,height:2,background:t.tb,borderRadius:1,transition:"all 0.3s",transform:navOpen?"rotate(45deg) translateY(5px)":"none"}}/>
           <span style={{display:"block",width:18,height:2,background:t.tb,borderRadius:1,transition:"all 0.3s",opacity:navOpen?0:1}}/>
@@ -656,54 +664,123 @@ function BuilderApp({goHome}){
             <div style={{fontSize:8,color:t.td,marginTop:3}}>{mat.desc}</div>
             <div style={{fontSize:8,color:t.td,marginTop:2,fontFamily:MN}}>Density: {mat.df}× · Stiffness: {Math.round(mat.stiffness*100)}%</div>
           </div>;})}</div></div>
+      {!frameMat&&<div style={{fontSize:12,color:t.td,fontFamily:MN,marginBottom:8}}>← Select a frame material to continue</div>}
       {frame&&size&&frameMat&&<button onClick={function(){setSel(emptySel);setStep(1);}} style={{background:t.ac,color:"#fff",border:"none",padding:"13px 36px",borderRadius:10,fontSize:14,fontWeight:700,cursor:"pointer",fontFamily:SN,boxShadow:"0 4px 16px "+t.ac+"33"}}>Start Building →</button>}
     </div>)}
 
+    {/* Compare modal */}
+    {showCompare&&<div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.6)",zIndex:100,display:"flex",alignItems:"center",justifyContent:"center",padding:16}}>
+      <div style={{background:t.bg3,borderRadius:20,padding:24,maxWidth:900,width:"100%",maxHeight:"85vh",overflowY:"auto",boxShadow:t.shH}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
+          <div style={{fontSize:16,fontWeight:700,color:t.tb}}>Compare Builds</div>
+          <button onClick={function(){setShowCompare(false);}} style={{background:"none",border:"none",color:t.td,fontSize:22,cursor:"pointer",lineHeight:1}}>×</button>
+        </div>
+        {savedBuilds.length===0&&<div style={{color:t.td,fontSize:13,textAlign:"center",padding:"32px 0"}}>No saved builds yet. Save a build first using the "Save Build" button.</div>}
+        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(220px,1fr))",gap:14}}>
+          {savedBuilds.map(function(b){
+            var bf=b.flight;
+            return <div key={b.id} style={{background:t.bg2,borderRadius:14,padding:16,border:"1px solid "+t.bd}}>
+              <div style={{fontSize:13,fontWeight:700,color:t.tb,marginBottom:10}}>{b.name}</div>
+              <div style={{fontSize:11,color:t.td,marginBottom:4}}>{b.frame?b.frame.name:"-"} · {b.size?b.size.l:"-"} · {b.frameMat?b.frameMat.name:"-"}</div>
+              {bf&&<>
+                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6,marginTop:10}}>
+                  <div style={{background:t.acL,borderRadius:8,padding:"8px 6px",textAlign:"center"}}>
+                    <div style={{fontSize:20,fontWeight:800,color:t.ac}}>{bf.hoverTime}<span style={{fontSize:9}}> min</span></div>
+                    <div style={{fontSize:8,color:t.td}}>HOVER</div>
+                  </div>
+                  <div style={{background:t.blL,borderRadius:8,padding:"8px 6px",textAlign:"center"}}>
+                    <div style={{fontSize:20,fontWeight:800,color:t.bl}}>{bf.cruiseTime}<span style={{fontSize:9}}> min</span></div>
+                    <div style={{fontSize:8,color:t.td}}>CRUISE</div>
+                  </div>
+                </div>
+                <div style={{marginTop:8,fontSize:11,color:t.td,fontFamily:MN,display:"flex",flexDirection:"column",gap:3}}>
+                  <div style={{display:"flex",justifyContent:"space-between"}}><span>AUW</span><span style={{color:t.tb,fontWeight:600}}>{bf.auw}g</span></div>
+                  <div style={{display:"flex",justifyContent:"space-between"}}><span>T/W Ratio</span><span style={{color:bf.twr>=4?t.ac:bf.twr>=2?t.am:t.rd,fontWeight:700}}>{bf.twr}:1</span></div>
+                  <div style={{display:"flex",justifyContent:"space-between"}}><span>Hover Power</span><span style={{color:t.tb}}>{bf.hoverPower}W</span></div>
+                </div>
+              </>}
+              {!bf&&<div style={{fontSize:11,color:t.td,marginTop:10}}>No flight data — select motor + battery to calculate.</div>}
+              <div style={{marginTop:12,display:"flex",gap:6}}>
+                <button onClick={function(){setShowCompare(false);}} style={{flex:1,padding:"6px 0",borderRadius:7,fontSize:11,cursor:"pointer",fontFamily:SN,fontWeight:600,background:t.acL,border:"1px solid "+t.ac,color:t.ac}}>Load</button>
+                <button onClick={function(){setSavedBuilds(function(prev){return prev.filter(function(x){return x.id!==b.id;});});}} style={{padding:"6px 10px",borderRadius:7,fontSize:11,cursor:"pointer",fontFamily:SN,background:"none",border:"1px solid "+t.rd+"66",color:t.rd}}>×</button>
+              </div>
+            </div>;
+          })}
+        </div>
+      </div>
+    </div>}
+
     {step===1&&(<div style={{display:"grid",gridTemplateColumns:"1fr 1fr",height:"calc(100vh - 50px)"}}>
-      <div style={{padding:"14px 18px",borderRight:"1px solid "+t.bd,overflowY:"auto",background:t.bg}}>
+      {/* Left panel: 3D viewer top, below it 2-column (controls+status | physics+flight) */}
+      <div style={{padding:"12px 16px",borderRight:"1px solid "+t.bd,overflowY:"auto",background:t.bg,display:"flex",flexDirection:"column",gap:10}}>
         <DroneViewer frameType={frame} droneSize={size} selections={sel} batteryPos={battPos} fcPos={fcPos} escPos={escPos} frameMat={frameMat}/>
-        <div style={{marginTop:10,display:"flex",flexWrap:"wrap",gap:4,alignItems:"center"}}>
-          <span style={{fontSize:9,color:t.td,fontFamily:MN}}>FC:</span>
-          {["above","between","below"].map(function(p){return <button key={"fc"+p} onClick={function(){setFcPos(p);}} style={{padding:"3px 10px",borderRadius:6,fontSize:9,cursor:"pointer",fontFamily:SN,fontWeight:500,background:fcPos===p?t.acL:t.sf,border:"1px solid "+(fcPos===p?t.ac:t.bd),color:fcPos===p?t.ac:t.td}}>{p}</button>;})}
-          <span style={{fontSize:9,color:t.td,fontFamily:MN,marginLeft:8}}>ESC:</span>
-          {["above","between","below"].map(function(p){return <button key={"esc"+p} onClick={function(){setEscPos(p);}} style={{padding:"3px 10px",borderRadius:6,fontSize:9,cursor:"pointer",fontFamily:SN,fontWeight:500,background:escPos===p?t.acL:t.sf,border:"1px solid "+(escPos===p?t.ac:t.bd),color:escPos===p?t.ac:t.td}}>{p}</button>;})}
-          {sel.battery&&<><span style={{fontSize:9,color:t.td,fontFamily:MN,marginLeft:8}}>Batt:</span>
-            {["top","between","bottom"].map(function(p){return <button key={p} onClick={function(){setBattPos(p);}} style={{padding:"3px 10px",borderRadius:6,fontSize:9,cursor:"pointer",fontFamily:SN,fontWeight:500,background:battPos===p?t.acL:t.sf,border:"1px solid "+(battPos===p?t.ac:t.bd),color:battPos===p?t.ac:t.td}}>{p}</button>;})}</>}
+
+        {/* Component placement + altitude */}
+        <div style={{background:t.sf,borderRadius:12,padding:"10px 12px",boxShadow:t.sh}}>
+          <div style={{fontSize:10,fontWeight:700,color:t.ac,letterSpacing:1.2,marginBottom:8,fontFamily:MN}}>PLACEMENT</div>
+          <div style={{display:"flex",flexWrap:"wrap",gap:6,alignItems:"center",marginBottom:6}}>
+            <span style={{fontSize:10,color:t.td,fontFamily:MN,minWidth:110}}>Flight Controller:</span>
+            {["above","between","below"].map(function(p){return <button key={"fc"+p} onClick={function(){setFcPos(p);}} style={{padding:"3px 9px",borderRadius:6,fontSize:10,cursor:"pointer",fontFamily:SN,fontWeight:500,background:fcPos===p?t.acL:t.bg2,border:"1px solid "+(fcPos===p?t.ac:t.bd),color:fcPos===p?t.ac:t.td}}>{p}</button>;})}
+          </div>
+          <div style={{display:"flex",flexWrap:"wrap",gap:6,alignItems:"center",marginBottom:6}}>
+            <span style={{fontSize:10,color:t.td,fontFamily:MN,minWidth:110}}>Speed Controller:</span>
+            {["above","between","below"].map(function(p){return <button key={"esc"+p} onClick={function(){setEscPos(p);}} style={{padding:"3px 9px",borderRadius:6,fontSize:10,cursor:"pointer",fontFamily:SN,fontWeight:500,background:escPos===p?t.acL:t.bg2,border:"1px solid "+(escPos===p?t.ac:t.bd),color:escPos===p?t.ac:t.td}}>{p}</button>;})}
+          </div>
+          {sel.battery&&<div style={{display:"flex",flexWrap:"wrap",gap:6,alignItems:"center",marginBottom:6}}>
+            <span style={{fontSize:10,color:t.td,fontFamily:MN,minWidth:110}}>Battery:</span>
+            {["top","between","bottom"].map(function(p){return <button key={p} onClick={function(){setBattPos(p);}} style={{padding:"3px 9px",borderRadius:6,fontSize:10,cursor:"pointer",fontFamily:SN,fontWeight:500,background:battPos===p?t.acL:t.bg2,border:"1px solid "+(battPos===p?t.ac:t.bd),color:battPos===p?t.ac:t.td}}>{p}</button>;})}
+          </div>}
+          <div style={{display:"flex",gap:8,alignItems:"center"}}>
+            <span style={{fontSize:10,color:t.td,fontFamily:MN,minWidth:110}}>Altitude:</span>
+            <input type="range" min={0} max={5000} step={100} value={altitude} onChange={function(e){setAltitude(+e.target.value);}} style={{flex:1,accentColor:t.ac}}/>
+            <span style={{fontSize:11,color:t.ac,fontFamily:MN,minWidth:44,textAlign:"right"}}>{altitude}m</span>
+          </div>
         </div>
-        <div style={{marginTop:6,display:"flex",gap:6,alignItems:"center"}}>
-          <span style={{fontSize:9,color:t.td,fontFamily:MN}}>Alt:</span>
-          <input type="range" min={0} max={5000} step={100} value={altitude} onChange={function(e){setAltitude(+e.target.value);}} style={{flex:1,accentColor:t.ac}}/>
-          <span style={{fontSize:10,color:t.ac,fontFamily:MN,minWidth:40}}>{altitude}m</span>
-        </div>
-        <div style={{marginTop:8,display:"flex",flexWrap:"wrap",gap:4}}>
+
+        {/* Quick-select component chips */}
+        <div style={{display:"flex",flexWrap:"wrap",gap:4}}>
           {tabs.map(function(tb2){var s=sel[tb2.k],st2=getStatus(tb2.k);
             var pBg=s?(st2==="error"?t.rdL:st2==="warning"?t.amL:t.acL):t.sf;
             var pC=s?(st2==="error"?t.rd:st2==="warning"?t.am:t.ac):t.td;
-            return <div key={tb2.k} onClick={function(){setTab(tb2.k);}} style={{padding:"3px 10px",borderRadius:20,fontSize:8,fontWeight:600,cursor:"pointer",fontFamily:SN,background:pBg,color:pC,border:"1px solid "+pC+"33"}}>{s?s.b+" "+s.m:tb2.l}</div>;})}
+            return <div key={tb2.k} onClick={function(){setTab(tb2.k);}} style={{padding:"4px 10px",borderRadius:20,fontSize:9,fontWeight:600,cursor:"pointer",fontFamily:SN,background:pBg,color:pC,border:"1px solid "+pC+"44"}}>{s?s.b+" "+s.m:tb2.l}</div>;})}
         </div>
-        <div style={{marginTop:8}}><IssuesPanel compat={compat}/></div>
-        <div style={{marginTop:8}}><MathPanel insights={insights} flight={flight}/></div>
+
+        {/* Bottom row: issues + physics+flight side by side */}
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,alignItems:"start"}}>
+          <div><IssuesPanel compat={compat}/></div>
+          <div><MathPanel insights={insights} flight={flight}/></div>
+        </div>
+
+        {/* Save build button */}
+        <div style={{display:"flex",gap:8}}>
+          <button onClick={saveBuild} style={{flex:1,padding:"9px 0",borderRadius:9,fontSize:12,cursor:"pointer",fontFamily:SN,fontWeight:700,background:t.acL,border:"1px solid "+t.ac,color:t.ac}}>💾 Save Build</button>
+          {savedBuilds.length>0&&<button onClick={function(){setShowCompare(true);}} style={{flex:1,padding:"9px 0",borderRadius:9,fontSize:12,cursor:"pointer",fontFamily:SN,fontWeight:700,background:t.bg2,border:"1px solid "+t.bd,color:t.tb}}>⇄ Compare ({savedBuilds.length})</button>}
+        </div>
       </div>
+
+      {/* Right panel: component picker */}
       <div style={{display:"flex",flexDirection:"column",background:t.bg2}}>
         <div style={{display:"flex",borderBottom:"1px solid "+t.bd,alignItems:"center",padding:"0 4px",background:t.bg2}}>
           <div style={{display:"flex",flex:1,overflowX:"auto"}}>
             {tabs.map(function(tb2){var active=tab===tb2.k;var st2=getStatus(tb2.k);
-              return <button key={tb2.k} onClick={function(){setTab(tb2.k);}} style={{padding:"10px 6px",background:active?t.sf:"transparent",border:"none",borderBottom:"2px solid "+(active?t.ac:"transparent"),
+              return <button key={tb2.k} onClick={function(){setTab(tb2.k);}} style={{padding:"11px 8px",background:active?t.sf:"transparent",border:"none",borderBottom:"2px solid "+(active?t.ac:"transparent"),
                 color:active?t.ac:st2==="error"?t.rd:st2==="warning"?t.am:st2==="ok"?t.ac:t.td,
-                fontSize:10,fontWeight:active?700:400,cursor:"pointer",fontFamily:SN,whiteSpace:"nowrap",minWidth:50}}>{tb2.l}</button>;})}
+                fontSize:11,fontWeight:active?700:400,cursor:"pointer",fontFamily:SN,whiteSpace:"nowrap",minWidth:54}}>{tb2.l}</button>;})}
           </div>
           <div style={{display:"flex",gap:4,paddingRight:4}}>
-            <button onClick={function(){setShowUpload(true);}} style={{background:"none",border:"1px solid "+t.bd,color:t.td,padding:"4px 8px",borderRadius:6,cursor:"pointer",fontSize:9,fontFamily:SN,whiteSpace:"nowrap"}}>+ Upload</button>
-            <button onClick={resetAll} style={{background:"none",border:"1px solid "+t.bd,color:t.rd,padding:"4px 8px",borderRadius:6,cursor:"pointer",fontSize:9,fontFamily:SN,whiteSpace:"nowrap"}}>Reset All</button>
+            <button onClick={function(){setShowUpload(true);}} style={{background:"none",border:"1px solid "+t.bd,color:t.td,padding:"5px 9px",borderRadius:6,cursor:"pointer",fontSize:10,fontFamily:SN,whiteSpace:"nowrap"}}>+ Upload</button>
+            <button onClick={resetAll} style={{background:"none",border:"1px solid "+t.bd,color:t.rd,padding:"5px 9px",borderRadius:6,cursor:"pointer",fontSize:10,fontFamily:SN,whiteSpace:"nowrap"}}>Reset</button>
           </div>
         </div>
-        <div style={{flex:1,overflowY:"auto",padding:"10px 14px"}}>
-          {sizeFiltered.length>0&&<><div style={{fontSize:9,color:t.td,marginBottom:6,letterSpacing:1,fontFamily:MN,fontWeight:500}}>RECOMMENDED FOR {size?size.l.toUpperCase():""}</div>
+        <div style={{flex:1,overflowY:"auto",padding:"12px 14px"}}>
+          {sizeFiltered.length>0&&<>
+            <div style={{fontSize:11,color:t.td,marginBottom:8,letterSpacing:1,fontFamily:MN,fontWeight:600}}>RECOMMENDED FOR {size?size.l.toUpperCase():""}</div>
             {recommended.greens.slice(0,3).map(function(r){return <CompCard key={r.item.id} item={r.item} type={tab} selected={sel[tab]&&sel[tab].id===r.item.id} onSelect={function(it){handleSelect(tab,it);}} rating="green"/>;})}
             {recommended.ambers.slice(0,3).map(function(r){return <CompCard key={r.item.id} item={r.item} type={tab} selected={sel[tab]&&sel[tab].id===r.item.id} onSelect={function(it){handleSelect(tab,it);}} rating="amber"/>;})}
             {recommended.reds.slice(0,3).map(function(r){return <CompCard key={r.item.id} item={r.item} type={tab} selected={sel[tab]&&sel[tab].id===r.item.id} onSelect={function(it){handleSelect(tab,it);}} rating="red"/>;})}
           </>}
-          {otherItems.length>0&&<><div style={{fontSize:9,color:t.td,marginTop:14,marginBottom:6,letterSpacing:1,fontFamily:MN,fontWeight:500}}>OTHER OPTIONS</div>
+          {otherItems.length>0&&<>
+            <div style={{fontSize:11,color:t.td,marginTop:16,marginBottom:8,letterSpacing:1,fontFamily:MN,fontWeight:600}}>OTHER OPTIONS</div>
             {otherSorted.greens.map(function(r){return <CompCard key={r.item.id} item={r.item} type={tab} selected={sel[tab]&&sel[tab].id===r.item.id} onSelect={function(it){handleSelect(tab,it);}} rating="green"/>;})}
             {otherSorted.ambers.map(function(r){return <CompCard key={r.item.id} item={r.item} type={tab} selected={sel[tab]&&sel[tab].id===r.item.id} onSelect={function(it){handleSelect(tab,it);}} rating="amber"/>;})}
             {otherSorted.reds.map(function(r){return <CompCard key={r.item.id} item={r.item} type={tab} selected={sel[tab]&&sel[tab].id===r.item.id} onSelect={function(it){handleSelect(tab,it);}} rating="red"/>;})}
@@ -711,6 +788,44 @@ function BuilderApp({goHome}){
         </div>
       </div>
     </div>)}
+  </div>);
+}
+
+// ════════════════════════════════════════════════════
+// MODE SELECT PAGE
+// ════════════════════════════════════════════════════
+function ModeSelectPage({onSelect,onBack}){
+  var T=useTheme();var t=T.t;var isDark=T.mode==="dark";
+  var modes=[
+    {id:"beginner",icon:"🟢",title:"Beginner",sub:"First build",desc:"Guided setup with curated component choices and simplified compatibility feedback. Perfect if you are new to multirotors."},
+    {id:"enthusiast",icon:"🔵",title:"Enthusiast",sub:"Full builder",desc:"Complete component library with real-time physics simulation, 3D visualization, and detailed compatibility analysis."},
+    {id:"researcher",icon:"🟣",title:"Researcher",sub:"Advanced mode",desc:"All Enthusiast features plus full physics breakdown, figure-of-merit tuning, material science data, and export tools."},
+  ];
+  return(<div style={{background:t.bg,minHeight:"100vh",fontFamily:SN,color:t.tx}}>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+    <nav style={{padding:"14px 32px",display:"flex",justifyContent:"space-between",alignItems:"center",borderBottom:"1px solid "+t.bd,background:t.bg+"e6",backdropFilter:"blur(16px)"}}>
+      <div style={{fontFamily:MN,fontWeight:700,fontSize:15,letterSpacing:1.2,cursor:"pointer"}} onClick={onBack}><span style={{color:t.tb}}>Multirotor</span><span style={{color:t.ac}}>.</span><span style={{color:t.tb}}>build</span></div>
+      <button onClick={function(){T.toggle();}} style={{background:isDark?"#3a4055":t.sf,border:"2px solid "+(isDark?"#6aaeff":t.bd),borderRadius:8,padding:"6px 12px",cursor:"pointer",fontSize:14,color:isDark?"#eceef6":t.td,fontWeight:600}}>{isDark?"☀ Light":"☾ Dark"}</button>
+    </nav>
+    <div style={{maxWidth:760,margin:"0 auto",padding:"60px 24px",textAlign:"center"}}>
+      <div style={{fontSize:11,fontWeight:700,color:t.ac,letterSpacing:2,marginBottom:16,fontFamily:MN}}>SELECT YOUR MODE</div>
+      <h2 style={{fontSize:32,fontWeight:800,color:t.tb,margin:"0 0 12px",letterSpacing:-0.5}}>How do you want to build?</h2>
+      <p style={{fontSize:14,color:t.td,marginBottom:48,lineHeight:1.7}}>Choose the experience that matches your level. You can switch modes at any time.</p>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:18}}>
+        {modes.map(function(m){
+          return <div key={m.id} onClick={function(){onSelect(m.id);}} style={{background:t.sf,border:"2px solid "+t.bd,borderRadius:20,padding:"32px 24px",cursor:"pointer",textAlign:"left",transition:"all 0.2s",boxShadow:t.sh}}
+            onMouseEnter={function(e){e.currentTarget.style.borderColor=t.ac;e.currentTarget.style.boxShadow=t.shH;}}
+            onMouseLeave={function(e){e.currentTarget.style.borderColor=t.bd;e.currentTarget.style.boxShadow=t.sh;}}>
+            <div style={{fontSize:36,marginBottom:16}}>{m.icon}</div>
+            <div style={{fontSize:18,fontWeight:800,color:t.tb,marginBottom:4}}>{m.title}</div>
+            <div style={{fontSize:11,color:t.ac,fontFamily:MN,fontWeight:600,marginBottom:12,letterSpacing:1}}>{m.sub.toUpperCase()}</div>
+            <div style={{fontSize:13,color:t.td,lineHeight:1.65}}>{m.desc}</div>
+            <div style={{marginTop:20,padding:"10px 0",borderRadius:10,background:t.acL,textAlign:"center",fontSize:13,fontWeight:700,color:t.ac}}>Select {m.title} →</div>
+          </div>;
+        })}
+      </div>
+      <button onClick={onBack} style={{marginTop:36,background:"none",border:"none",color:t.td,fontSize:13,cursor:"pointer",textDecoration:"underline"}}>← Back to home</button>
+    </div>
   </div>);
 }
 
@@ -724,6 +839,8 @@ export default function App(){
   var ctx={t:t,mode:mode,toggle:function(){setMode(mode==="dark"?"light":"dark");}};
   var goHome=function(){setPage("landing");};
   return(<ThemeCtx.Provider value={ctx}>
-    {page==="landing"?<LandingPage onLaunch={function(){setPage("builder");}}/>:<BuilderApp goHome={goHome}/>}
+    {page==="landing"&&<LandingPage onLaunch={function(){setPage("mode-select");}}/>}
+    {page==="mode-select"&&<ModeSelectPage onSelect={function(){setPage("builder");}} onBack={goHome}/>}
+    {page==="builder"&&<BuilderApp goHome={goHome}/>}
   </ThemeCtx.Provider>);
 }
