@@ -7,6 +7,12 @@ import * as THREE from "three";
 const ThemeCtx = createContext();
 const useTheme = () => useContext(ThemeCtx);
 
+function useIsMobile(){
+  var ws=useState(function(){return typeof window!=="undefined"&&window.innerWidth<768;}),v=ws[0],sv=ws[1];
+  useEffect(function(){var h=function(){sv(window.innerWidth<768);};window.addEventListener("resize",h);return function(){window.removeEventListener("resize",h);};},[]);
+  return v;
+}
+
 const LIGHT = {
   bg:"#f4f5f7",bg2:"#edeef1",bg3:"#ffffff",sf:"#ffffff",sfH:"#f8f9fb",
   bd:"rgba(0,0,0,0.07)",bdL:"rgba(0,0,0,0.04)",
@@ -545,6 +551,7 @@ function fmtPrice(usd,region){var c=CURRENCY[region]||CURRENCY.us;var val=Math.r
 // ════════════════════════════════════════════════════
 function BuildSummaryPage({build,onBack,onBackToBuilder}){
   var T=useTheme();var t=T.t;var isDark=T.mode==="dark";
+  var isMobile=useIsMobile();
   var rs=useState("us"),region=rs[0],setRegion=rs[1];
   var ls=useState("idle"),locState=ls[0],setLocState=ls[1];
 
@@ -634,53 +641,70 @@ function BuildSummaryPage({build,onBack,onBackToBuilder}){
 
       {/* Component list */}
       <div style={{background:t.sf,borderRadius:16,boxShadow:t.sh,overflow:"hidden",marginBottom:24}}>
-        {/* Table header */}
-        <div style={{display:"grid",gridTemplateColumns:"2fr 1fr 80px 80px 100px 130px",gap:0,padding:"12px 20px",background:t.bg2,borderBottom:"1px solid "+t.bd}}>
+        {!isMobile&&<div style={{display:"grid",gridTemplateColumns:"2fr 1fr 80px 80px 100px 130px",gap:0,padding:"12px 20px",background:t.bg2,borderBottom:"1px solid "+t.bd}}>
           {["Component","Specs","Qty","Unit Price","Total",""].map(function(h,i){
             return <div key={i} style={{fontSize:11,fontWeight:700,color:t.td,fontFamily:SN,letterSpacing:0.5,textAlign:i>=2?"right":undefined,paddingRight:i>=2&&i<5?8:0}}>{h}</div>;
           })}
-        </div>
+        </div>}
         {rows.length===0&&<div style={{padding:"40px 20px",textAlign:"center",fontSize:14,color:t.td,fontFamily:SN}}>No components selected. Go back to the builder to select components.</div>}
-        {rows.map(function(r,i){
-          var url=getBuyUrl(r.item.b,r.item.m,region);
-          return <div key={r.item.id} style={{display:"grid",gridTemplateColumns:"2fr 1fr 80px 80px 100px 130px",gap:0,padding:"16px 20px",borderBottom:i<rows.length-1?"1px solid "+t.bdL:"none",alignItems:"center",background:i%2===0?t.sf:t.bg+"44"}}>
-            {/* Name */}
-            <div>
-              <div style={{fontSize:11,fontWeight:600,color:t.ac,letterSpacing:1,fontFamily:MN,marginBottom:3}}>{r.ct.label.toUpperCase()}</div>
-              <div style={{fontSize:15,fontWeight:700,color:t.tb,fontFamily:SN}}>{r.item.b} <span style={{color:t.ac}}>{r.item.m}</span></div>
-            </div>
-            {/* Specs */}
-            <div style={{fontSize:11,color:t.td,fontFamily:MN,lineHeight:1.5}}>
-              {r.ct.key==="motor"&&<>{r.item.kv}KV · {r.item.sz}<br/>{r.item.w}g · {r.item.t}g thrust</>}
-              {r.ct.key==="esc"&&<>{r.item.cc}A · {r.item.fw}<br/>{r.item.vn}–{r.item.vx}V</>}
-              {r.ct.key==="fc"&&<>{r.item.mcu}<br/>{r.item.fw.join("/")}</>}
-              {r.ct.key==="battery"&&<>{r.item.c}S {r.item.v}V<br/>{r.item.cap}mAh · {r.item.dr}C</>}
-              {r.ct.key==="prop"&&<>{r.item.d}" {r.item.bl}-blade<br/>pitch {r.item.pi}"</>}
-              {r.ct.key==="vtx"&&<>{r.item.sys}<br/>{r.item.pw.join("/")}mW</>}
-              {r.ct.key==="camera"&&<>{r.item.sys} · {r.item.w}g</>}
-              {r.ct.key==="rx"&&<>{r.item.pr} · {r.item.fr}</>}
-              {r.ct.key==="gps"&&<>{r.item.chip}<br/>{r.item.w}g</>}
-            </div>
-            {/* Qty */}
-            <div style={{fontSize:14,fontWeight:600,color:t.tb,textAlign:"right",paddingRight:8}}>{r.ct.qty}×</div>
-            {/* Unit price */}
-            <div style={{fontSize:14,fontWeight:600,color:t.td,textAlign:"right",paddingRight:8}}>{r.unitPrice>0?fmtPrice(r.unitPrice,region):"—"}</div>
-            {/* Total */}
-            <div style={{fontSize:15,fontWeight:700,color:t.tb,textAlign:"right",paddingRight:8}}>{r.total>0?fmtPrice(r.total,region):"—"}</div>
-            {/* Buy button */}
-            <div style={{textAlign:"right"}}>
-              <a href={url} target="_blank" rel="noopener noreferrer" style={{display:"inline-block",padding:"7px 14px",borderRadius:8,background:t.acL,color:t.ac,fontSize:12,fontWeight:700,fontFamily:SN,textDecoration:"none",border:"1px solid "+t.ac+"66",transition:"all 0.15s"}}
-                onMouseEnter={function(e){e.currentTarget.style.background=t.ac;e.currentTarget.style.color="#fff";}}
-                onMouseLeave={function(e){e.currentTarget.style.background=t.acL;e.currentTarget.style.color=t.ac;}}>
-                Buy {REGION_FLAGS[region]}
-              </a>
-            </div>
-          </div>;
-        })}
+        {isMobile
+          ? rows.map(function(r,i){
+              var url=getBuyUrl(r.item.b,r.item.m,region);
+              return <div key={r.item.id} style={{padding:"14px 16px",borderBottom:i<rows.length-1?"1px solid "+t.bdL:"none",background:i%2===0?t.sf:t.bg+"44"}}>
+                <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:6}}>
+                  <div>
+                    <div style={{fontSize:10,fontWeight:600,color:t.ac,letterSpacing:1,fontFamily:MN,marginBottom:2}}>{r.ct.label.toUpperCase()}</div>
+                    <div style={{fontSize:14,fontWeight:700,color:t.tb,fontFamily:SN}}>{r.item.b} <span style={{color:t.ac}}>{r.item.m}</span></div>
+                  </div>
+                  <a href={url} target="_blank" rel="noopener noreferrer" style={{display:"inline-block",padding:"6px 12px",borderRadius:8,background:t.acL,color:t.ac,fontSize:11,fontWeight:700,fontFamily:SN,textDecoration:"none",border:"1px solid "+t.ac+"66",whiteSpace:"nowrap",marginLeft:8}}>Buy {REGION_FLAGS[region]}</a>
+                </div>
+                <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                  <div style={{fontSize:11,color:t.td,fontFamily:MN}}>{r.ct.qty}× · {fmtPrice(r.unitPrice,region)} each</div>
+                  <div style={{fontSize:14,fontWeight:700,color:t.tb,fontFamily:SN}}>{fmtPrice(r.total,region)}</div>
+                </div>
+              </div>;
+            })
+          : rows.map(function(r,i){
+              var url=getBuyUrl(r.item.b,r.item.m,region);
+              return <div key={r.item.id} style={{display:"grid",gridTemplateColumns:"2fr 1fr 80px 80px 100px 130px",gap:0,padding:"16px 20px",borderBottom:i<rows.length-1?"1px solid "+t.bdL:"none",alignItems:"center",background:i%2===0?t.sf:t.bg+"44"}}>
+                {/* Name */}
+                <div>
+                  <div style={{fontSize:11,fontWeight:600,color:t.ac,letterSpacing:1,fontFamily:MN,marginBottom:3}}>{r.ct.label.toUpperCase()}</div>
+                  <div style={{fontSize:15,fontWeight:700,color:t.tb,fontFamily:SN}}>{r.item.b} <span style={{color:t.ac}}>{r.item.m}</span></div>
+                </div>
+                {/* Specs */}
+                <div style={{fontSize:11,color:t.td,fontFamily:MN,lineHeight:1.5}}>
+                  {r.ct.key==="motor"&&<>{r.item.kv}KV · {r.item.sz}<br/>{r.item.w}g · {r.item.t}g thrust</>}
+                  {r.ct.key==="esc"&&<>{r.item.cc}A · {r.item.fw}<br/>{r.item.vn}–{r.item.vx}V</>}
+                  {r.ct.key==="fc"&&<>{r.item.mcu}<br/>{r.item.fw.join("/")}</>}
+                  {r.ct.key==="battery"&&<>{r.item.c}S {r.item.v}V<br/>{r.item.cap}mAh · {r.item.dr}C</>}
+                  {r.ct.key==="prop"&&<>{r.item.d}" {r.item.bl}-blade<br/>pitch {r.item.pi}"</>}
+                  {r.ct.key==="vtx"&&<>{r.item.sys}<br/>{r.item.pw.join("/")}mW</>}
+                  {r.ct.key==="camera"&&<>{r.item.sys} · {r.item.w}g</>}
+                  {r.ct.key==="rx"&&<>{r.item.pr} · {r.item.fr}</>}
+                  {r.ct.key==="gps"&&<>{r.item.chip}<br/>{r.item.w}g</>}
+                </div>
+                {/* Qty */}
+                <div style={{fontSize:14,fontWeight:600,color:t.tb,textAlign:"right",paddingRight:8}}>{r.ct.qty}×</div>
+                {/* Unit price */}
+                <div style={{fontSize:14,fontWeight:600,color:t.td,textAlign:"right",paddingRight:8}}>{r.unitPrice>0?fmtPrice(r.unitPrice,region):"—"}</div>
+                {/* Total */}
+                <div style={{fontSize:15,fontWeight:700,color:t.tb,textAlign:"right",paddingRight:8}}>{r.total>0?fmtPrice(r.total,region):"—"}</div>
+                {/* Buy button */}
+                <div style={{textAlign:"right"}}>
+                  <a href={url} target="_blank" rel="noopener noreferrer" style={{display:"inline-block",padding:"7px 14px",borderRadius:8,background:t.acL,color:t.ac,fontSize:12,fontWeight:700,fontFamily:SN,textDecoration:"none",border:"1px solid "+t.ac+"66",transition:"all 0.15s"}}
+                    onMouseEnter={function(e){e.currentTarget.style.background=t.ac;e.currentTarget.style.color="#fff";}}
+                    onMouseLeave={function(e){e.currentTarget.style.background=t.acL;e.currentTarget.style.color=t.ac;}}>
+                    Buy {REGION_FLAGS[region]}
+                  </a>
+                </div>
+              </div>;
+            })
+        }
       </div>
 
       {/* Total cost */}
-      {grandTotal>0&&<div style={{background:isDark?"#1e2a40":t.acL,borderRadius:16,padding:"20px 24px",display:"flex",justifyContent:"space-between",alignItems:"center",boxShadow:t.sh,border:"2px solid "+t.ac+"44",marginBottom:24}}>
+      {grandTotal>0&&<div style={{background:isDark?"#1e2a40":t.acL,borderRadius:16,padding:"20px 24px",display:"flex",flexDirection:isMobile?"column":"row",justifyContent:"space-between",alignItems:isMobile?"flex-start":"center",boxShadow:t.sh,border:"2px solid "+t.ac+"44",marginBottom:24,gap:isMobile?10:0}}>
         <div>
           <div style={{fontSize:13,fontWeight:700,color:t.ac,letterSpacing:1.2,fontFamily:MN,marginBottom:4}}>ESTIMATED TOTAL COST</div>
           <div style={{fontSize:12,color:t.td,fontFamily:SN}}>
@@ -736,46 +760,78 @@ const DOCS = [
 
 function DocsModal({onClose}){
   var T=useTheme();var t=T.t;
+  var isMobile=useIsMobile();
   var as=useState(null),active=as[0],setActive=as[1];
   return(<div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.7)",zIndex:200,display:"flex",alignItems:"stretch",justifyContent:"center"}}>
     <div style={{background:t.bg,width:"100%",maxWidth:1100,display:"flex",height:"100vh",flexDirection:"column"}}>
       {/* Header */}
-      <div style={{padding:"18px 28px",borderBottom:"1px solid "+t.bd,display:"flex",justifyContent:"space-between",alignItems:"center",background:t.bg2,flexShrink:0}}>
+      <div style={{padding:isMobile?"14px 16px":"18px 28px",borderBottom:"1px solid "+t.bd,display:"flex",justifyContent:"space-between",alignItems:"center",background:t.bg2,flexShrink:0}}>
         <div>
-          <div style={{fontSize:20,fontWeight:800,color:t.tb,fontFamily:SN}}>Technical Documentation</div>
-          <div style={{fontSize:13,color:t.td,marginTop:2,fontFamily:SN}}>Component guides, physics theory, and the mathematics powering this simulator</div>
+          <div style={{fontSize:isMobile?16:20,fontWeight:800,color:t.tb,fontFamily:SN}}>Technical Documentation</div>
+          {!isMobile&&<div style={{fontSize:13,color:t.td,marginTop:2,fontFamily:SN}}>Component guides, physics theory, and the mathematics powering this simulator</div>}
         </div>
         <button onClick={onClose} style={{background:"none",border:"1px solid "+t.bd,color:t.td,fontSize:22,cursor:"pointer",borderRadius:8,width:36,height:36,display:"flex",alignItems:"center",justifyContent:"center",lineHeight:1}}>×</button>
       </div>
-      {/* Body */}
-      <div style={{display:"grid",gridTemplateColumns:"220px 1fr",flex:1,overflow:"hidden"}}>
-        {/* Sidebar */}
-        <div style={{borderRight:"1px solid "+t.bd,overflowY:"auto",padding:"12px 0",background:t.bg2}}>
-          {DOCS.map(function(sec){return <div key={sec.section}>
-            <div style={{padding:"8px 20px 4px",fontSize:10,fontWeight:700,color:t.ac,letterSpacing:1.5,fontFamily:MN}}>{sec.section.toUpperCase()}</div>
-            {sec.items.map(function(item){var isA=active&&active.title===item.title;
-              return <div key={item.title} onClick={function(){setActive(item);}} style={{padding:"9px 20px",fontSize:13,fontWeight:isA?700:400,color:isA?t.ac:t.tx,cursor:"pointer",background:isA?t.acL:"transparent",borderLeft:"3px solid "+(isA?t.ac:"transparent"),fontFamily:SN,transition:"all 0.1s"}}>{item.title}</div>;})}
-          </div>;})}
+      {isMobile?(
+        /* Mobile: horizontal scrollable nav + content */
+        <div style={{display:"flex",flexDirection:"column",flex:1,overflow:"hidden"}}>
+          {active?(
+            <div style={{flex:1,overflowY:"auto",padding:"16px 16px"}}>
+              <button onClick={function(){setActive(null);}} style={{background:"none",border:"none",color:t.ac,fontSize:13,cursor:"pointer",fontFamily:SN,marginBottom:12,padding:0}}>← Back to topics</button>
+              <div style={{fontSize:20,fontWeight:800,color:t.tb,marginBottom:8,fontFamily:SN}}>{active.title}</div>
+              <div style={{width:48,height:3,background:t.ac,borderRadius:2,marginBottom:20}}/>
+              {active.body.split("\n\n").map(function(para,i){
+                var isFormula=para.startsWith("  ")||para.includes("= ")||para.includes("÷")||para.includes("×");
+                if(isFormula){return <pre key={i} style={{background:t.bg2,border:"1px solid "+t.bd,borderRadius:10,padding:"12px 14px",fontFamily:MN,fontSize:12,color:t.ac,lineHeight:1.8,overflowX:"auto",marginBottom:14,whiteSpace:"pre-wrap"}}>{para.trim()}</pre>;}
+                var isBulletBlock=para.startsWith("•")||para.includes("\n•");
+                if(isBulletBlock){return <div key={i} style={{marginBottom:14}}>{para.split("\n").map(function(line,j){
+                  if(line.startsWith("•")){return <div key={j} style={{display:"flex",gap:10,marginBottom:6}}><span style={{color:t.ac,flexShrink:0,fontSize:14}}>•</span><span style={{fontSize:14,color:t.tx,lineHeight:1.7,fontFamily:SN}}>{line.slice(1).trim()}</span></div>;}
+                  return <div key={j} style={{fontSize:14,color:t.tx,lineHeight:1.7,fontFamily:SN,marginBottom:4}}>{line}</div>;
+                })}</div>;}
+                return <p key={i} style={{fontSize:14,color:t.tx,lineHeight:1.8,marginBottom:14,fontFamily:SN}}>{para}</p>;
+              })}
+            </div>
+          ):(
+            <div style={{flex:1,overflowY:"auto",padding:"8px 0"}}>
+              {DOCS.map(function(sec){return <div key={sec.section}>
+                <div style={{padding:"10px 16px 4px",fontSize:10,fontWeight:700,color:t.ac,letterSpacing:1.5,fontFamily:MN}}>{sec.section.toUpperCase()}</div>
+                {sec.items.map(function(item){
+                  return <div key={item.title} onClick={function(){setActive(item);}} style={{padding:"14px 16px",fontSize:14,fontWeight:500,color:t.tx,cursor:"pointer",borderBottom:"1px solid "+t.bdL,fontFamily:SN,display:"flex",justifyContent:"space-between",alignItems:"center"}}>{item.title}<span style={{color:t.td,fontSize:18}}>›</span></div>;})}
+              </div>;})}
+            </div>
+          )}
         </div>
-        {/* Content */}
-        <div style={{overflowY:"auto",padding:"32px 40px"}}>
-          {!active&&<div style={{color:t.td,fontSize:15,marginTop:40,textAlign:"center",fontFamily:SN}}>← Select a topic from the left to read its documentation.</div>}
-          {active&&<>
-            <div style={{fontSize:24,fontWeight:800,color:t.tb,marginBottom:8,fontFamily:SN}}>{active.title}</div>
-            <div style={{width:48,height:3,background:t.ac,borderRadius:2,marginBottom:24}}/>
-            {active.body.split("\n\n").map(function(para,i){
-              var isFormula=para.startsWith("  ")||para.includes("= ")||para.includes("÷")||para.includes("×");
-              if(isFormula){return <pre key={i} style={{background:t.bg2,border:"1px solid "+t.bd,borderRadius:10,padding:"14px 18px",fontFamily:MN,fontSize:13,color:t.ac,lineHeight:1.8,overflowX:"auto",marginBottom:16,whiteSpace:"pre-wrap"}}>{para.trim()}</pre>;}
-              var isBulletBlock=para.startsWith("•")||para.includes("\n•");
-              if(isBulletBlock){return <div key={i} style={{marginBottom:16}}>{para.split("\n").map(function(line,j){
-                if(line.startsWith("•")){return <div key={j} style={{display:"flex",gap:10,marginBottom:6}}><span style={{color:t.ac,flexShrink:0,fontSize:15}}>•</span><span style={{fontSize:15,color:t.tx,lineHeight:1.7,fontFamily:SN}}>{line.slice(1).trim()}</span></div>;}
-                return <div key={j} style={{fontSize:15,color:t.tx,lineHeight:1.7,fontFamily:SN,marginBottom:4}}>{line}</div>;
-              })}</div>;}
-              return <p key={i} style={{fontSize:15,color:t.tx,lineHeight:1.8,marginBottom:16,fontFamily:SN}}>{para}</p>;
-            })}
-          </>}
+      ):(
+        /* Desktop: sidebar + content */
+        <div style={{display:"grid",gridTemplateColumns:"220px 1fr",flex:1,overflow:"hidden"}}>
+          {/* Sidebar */}
+          <div style={{borderRight:"1px solid "+t.bd,overflowY:"auto",padding:"12px 0",background:t.bg2}}>
+            {DOCS.map(function(sec){return <div key={sec.section}>
+              <div style={{padding:"8px 20px 4px",fontSize:10,fontWeight:700,color:t.ac,letterSpacing:1.5,fontFamily:MN}}>{sec.section.toUpperCase()}</div>
+              {sec.items.map(function(item){var isA=active&&active.title===item.title;
+                return <div key={item.title} onClick={function(){setActive(item);}} style={{padding:"9px 20px",fontSize:13,fontWeight:isA?700:400,color:isA?t.ac:t.tx,cursor:"pointer",background:isA?t.acL:"transparent",borderLeft:"3px solid "+(isA?t.ac:"transparent"),fontFamily:SN,transition:"all 0.1s"}}>{item.title}</div>;})}
+            </div>;})}
+          </div>
+          {/* Content */}
+          <div style={{overflowY:"auto",padding:"32px 40px"}}>
+            {!active&&<div style={{color:t.td,fontSize:15,marginTop:40,textAlign:"center",fontFamily:SN}}>← Select a topic from the left to read its documentation.</div>}
+            {active&&<>
+              <div style={{fontSize:24,fontWeight:800,color:t.tb,marginBottom:8,fontFamily:SN}}>{active.title}</div>
+              <div style={{width:48,height:3,background:t.ac,borderRadius:2,marginBottom:24}}/>
+              {active.body.split("\n\n").map(function(para,i){
+                var isFormula=para.startsWith("  ")||para.includes("= ")||para.includes("÷")||para.includes("×");
+                if(isFormula){return <pre key={i} style={{background:t.bg2,border:"1px solid "+t.bd,borderRadius:10,padding:"14px 18px",fontFamily:MN,fontSize:13,color:t.ac,lineHeight:1.8,overflowX:"auto",marginBottom:16,whiteSpace:"pre-wrap"}}>{para.trim()}</pre>;}
+                var isBulletBlock=para.startsWith("•")||para.includes("\n•");
+                if(isBulletBlock){return <div key={i} style={{marginBottom:16}}>{para.split("\n").map(function(line,j){
+                  if(line.startsWith("•")){return <div key={j} style={{display:"flex",gap:10,marginBottom:6}}><span style={{color:t.ac,flexShrink:0,fontSize:15}}>•</span><span style={{fontSize:15,color:t.tx,lineHeight:1.7,fontFamily:SN}}>{line.slice(1).trim()}</span></div>;}
+                  return <div key={j} style={{fontSize:15,color:t.tx,lineHeight:1.7,fontFamily:SN,marginBottom:4}}>{line}</div>;
+                })}</div>;}
+                return <p key={i} style={{fontSize:15,color:t.tx,lineHeight:1.8,marginBottom:16,fontFamily:SN}}>{para}</p>;
+              })}
+            </>}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   </div>);
 }
@@ -827,11 +883,12 @@ function IssuesPanel({compat}){var T=useTheme();var t=T.t;if(!compat)return null
 // ════════════════════════════════════════════════════
 function LandingPage({onLaunch}){
   var T=useTheme();var t=T.t;var isDark=T.mode==="dark";
+  var isMobile=useIsMobile();
   var ns=useState(false),navOpen=ns[0],setNavOpen=ns[1];
   var ds=useState(false),showDocs=ds[0],setShowDocs=ds[1];
   return(<div style={{background:t.bg,color:t.tx,fontFamily:SN,minHeight:"100vh"}}>
     {showDocs&&<DocsModal onClose={function(){setShowDocs(false);}}/>}
-    <nav style={{position:"fixed",top:0,left:0,right:0,zIndex:50,padding:"14px 32px",display:"flex",justifyContent:"space-between",alignItems:"center",background:t.bg+"e6",backdropFilter:"blur(16px)",borderBottom:"1px solid "+t.bd}}>
+    <nav style={{position:"fixed",top:0,left:0,right:0,zIndex:50,padding:isMobile?"14px 16px":"14px 32px",display:"flex",justifyContent:"space-between",alignItems:"center",background:t.bg+"e6",backdropFilter:"blur(16px)",borderBottom:"1px solid "+t.bd}}>
       <div style={{fontFamily:MN,fontWeight:700,fontSize:15,letterSpacing:1.2}}><span style={{color:t.tb}}>Multirotor</span><span style={{color:t.ac}}>.</span><span style={{color:t.tb}}>build</span></div>
       <div style={{display:"flex",gap:12,alignItems:"center"}}>
         <button onClick={function(){T.toggle();}} style={{background:isDark?"#3a4055":t.sf,border:"2px solid "+(isDark?"#6aaeff":t.bd),borderRadius:8,padding:"6px 12px",cursor:"pointer",fontSize:14,color:isDark?"#eceef6":t.td,fontWeight:600,transition:"all 0.2s"}}>{isDark?"☀ Light":"☾ Dark"}</button>
@@ -852,13 +909,13 @@ function LandingPage({onLaunch}){
         <rect x="82" y="82" width="36" height="36" rx="3" fill="none" stroke={t.ac} strokeWidth="1.2" opacity="0.5"/>
         <polygon points="100,72 95,80 105,80" fill={t.ac} opacity="0.4"/>
       </svg>
-      <h1 style={{fontSize:44,fontWeight:800,letterSpacing:-1.5,margin:0,lineHeight:1.1}}>
+      <h1 style={{fontSize:isMobile?28:44,fontWeight:800,letterSpacing:-1.5,margin:0,lineHeight:1.1}}>
         <span style={{color:t.tb}}>Build.</span> <span style={{color:t.ac}}>Validate.</span> <span style={{color:t.bl}}>Fly.</span></h1>
-      <p style={{fontSize:15,color:t.td,maxWidth:460,margin:"20px auto 36px",lineHeight:1.7}}>Interactive multi-rotor configurator with real-time compatibility checking, physics-based flight time estimation, and 3D visualization.</p>
+      <p style={{fontSize:15,color:t.td,maxWidth:460,margin:"20px auto 36px",lineHeight:1.7,padding:isMobile?"0 4px":undefined}}>Interactive multi-rotor configurator with real-time compatibility checking, physics-based flight time estimation, and 3D visualization.</p>
       <button onClick={onLaunch} style={{background:t.ac,color:"#fff",border:"none",padding:"14px 40px",borderRadius:12,fontSize:14,fontWeight:700,cursor:"pointer",fontFamily:SN,letterSpacing:0.5,boxShadow:"0 4px 20px "+t.ac+"33"}}>Launch Builder →</button>
     </div>
-    <div style={{padding:"60px 32px 80px",maxWidth:880,margin:"0 auto"}}>
-      <div style={{display:"grid",gridTemplateColumns:"repeat(3, 1fr)",gap:16}}>
+    <div style={{padding:isMobile?"32px 16px 48px":"60px 32px 80px",maxWidth:880,margin:"0 auto"}}>
+      <div style={{display:"grid",gridTemplateColumns:isMobile?"1fr":"repeat(3,1fr)",gap:16}}>
         {[{i:"◈",ti:"3D Visualization",d:"360° drone viewer with component placement. FC/ESC stack position and battery mount affect CG calculations."},
           {i:"⚡",ti:"Compatibility Engine",d:"Voltage, current, protocol, mounting, and VTX ecosystem validation with green/amber/red feedback."},
           {i:"◷",ti:"Flight Physics",d:"Momentum-theory with Peukert correction, ISA density, figure-of-merit efficiency, and CG shift modeling."}
@@ -874,6 +931,7 @@ function LandingPage({onLaunch}){
 // ════════════════════════════════════════════════════
 function BuilderApp({goHome,goModeSelect,onSaveBuild}){
   var T=useTheme();var t=T.t;var isDark=T.mode==="dark";
+  var isMobile=useIsMobile();
   var ds=useState(false),showDocs=ds[0],setShowDocs=ds[1];
   var emptySel={motor:null,esc:null,fc:null,battery:null,prop:null,vtx:null,camera:null,rx:null,gps:null};
   var _sb=useState(function(){var s=loadBuilder();return s?s.frame:null;}),frame=_sb[0],setFrame=_sb[1];
@@ -888,6 +946,7 @@ function BuilderApp({goHome,goModeSelect,onSaveBuild}){
   var _st=useState(function(){var s=loadBuilder();return s&&s.step!=null?s.step:0;}),step=_st[0],setStep=_st[1];
   var us=useState(false),showUpload=us[0],setShowUpload=us[1];
   var ns=useState(false),navOpen=ns[0],setNavOpen=ns[1];
+  var mobileTab=useState("components"),mobileTabV=mobileTab[0],setMobileTab=mobileTab[1];
   var svs=useState([]),savedBuilds=svs[0],setSavedBuilds=svs[1];
   var cms=useState(false),showCompare=cms[0],setShowCompare=cms[1];
   useEffect(function(){try{localStorage.setItem("mb_builder",JSON.stringify({frame:frame,size:size,frameMat:frameMat,sel:sel,tab:tab,battPos:battPos,altitude:altitude,fcPos:fcPos,escPos:escPos,step:step}));}catch(e){};},[frame,size,frameMat,sel,tab,battPos,altitude,fcPos,escPos,step]);
@@ -927,11 +986,11 @@ function BuilderApp({goHome,goModeSelect,onSaveBuild}){
       </div></div>}
 
     {/* Header */}
-    <div style={{padding:"12px 24px",borderBottom:"1px solid "+t.bd,display:"flex",justifyContent:"space-between",alignItems:"center",background:t.bg+"e6",backdropFilter:"blur(12px)",position:"sticky",top:0,zIndex:40}}>
+    <div style={{padding:isMobile?"10px 12px":"12px 24px",borderBottom:"1px solid "+t.bd,display:"flex",justifyContent:"space-between",alignItems:"center",background:t.bg+"e6",backdropFilter:"blur(12px)",position:"sticky",top:0,zIndex:40}}>
       <div onClick={goHome} style={{fontFamily:MN,fontWeight:700,fontSize:15,letterSpacing:1.2,cursor:"pointer"}}><span style={{color:t.tb}}>Multirotor</span><span style={{color:t.ac}}>.</span><span style={{color:t.tb}}>build</span></div>
       <div style={{display:"flex",gap:8,alignItems:"center"}}>
-        {step===0&&goModeSelect&&<button onClick={goModeSelect} style={{background:t.sf,border:"1px solid "+t.bd,color:t.td,padding:"7px 16px",borderRadius:8,cursor:"pointer",fontSize:13,fontFamily:SN,fontWeight:500}}>← Change Mode</button>}
-        {step===1&&<button onClick={function(){setStep(0);}} style={{background:t.sf,border:"1px solid "+t.bd,color:t.td,padding:"7px 16px",borderRadius:8,cursor:"pointer",fontSize:13,fontFamily:SN,fontWeight:500}}>← Frame Setup</button>}
+        {step===0&&goModeSelect&&<button onClick={goModeSelect} style={{background:t.sf,border:"1px solid "+t.bd,color:t.td,padding:"7px 16px",borderRadius:8,cursor:"pointer",fontSize:isMobile?13:13,fontFamily:SN,fontWeight:500}}>{isMobile?"←":"← Change Mode"}</button>}
+        {step===1&&<button onClick={function(){setStep(0);}} style={{background:t.sf,border:"1px solid "+t.bd,color:t.td,padding:"7px 16px",borderRadius:8,cursor:"pointer",fontSize:isMobile?13:13,fontFamily:SN,fontWeight:500}}>{isMobile?"←":"← Frame Setup"}</button>}
         <button onClick={function(){T.toggle();}} style={{background:isDark?"#3a4055":t.sf,border:"2px solid "+(isDark?"#6aaeff":t.bd),borderRadius:8,padding:"7px 14px",cursor:"pointer",fontSize:13,color:isDark?"#eceef6":t.td,fontWeight:600,transition:"all 0.2s"}}>{isDark?"☀ Light":"☾ Dark"}</button>
         <button onClick={function(){setNavOpen(!navOpen);}} style={{background:"none",border:"none",cursor:"pointer",padding:6,display:"flex",flexDirection:"column",gap:4}}>
           <span style={{display:"block",width:20,height:2,background:t.tb,borderRadius:1,transition:"all 0.3s",transform:navOpen?"rotate(45deg) translateY(6px)":"none"}}/>
@@ -947,7 +1006,7 @@ function BuilderApp({goHome,goModeSelect,onSaveBuild}){
       ].map(function(item){return <div key={item.l} onClick={item.fn} style={{padding:"12px 22px",fontSize:14,color:t.tb,cursor:"pointer",fontWeight:500,fontFamily:SN}}>{item.l}</div>;})}
     </div>}
 
-    {step===0&&(<div style={{padding:"36px 32px",maxWidth:960,margin:"0 auto"}}>
+    {step===0&&(<div style={{padding:isMobile?"20px 14px":"36px 32px",maxWidth:960,margin:"0 auto"}}>
       {/* ① Frame Type */}
       <div style={{marginBottom:36}}>
         <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:16}}>
@@ -995,7 +1054,7 @@ function BuilderApp({goHome,goModeSelect,onSaveBuild}){
         </div></div>
 
       {!frameMat&&<div style={{fontSize:14,color:t.td,fontFamily:SN,marginBottom:12}}>Select a frame material above to continue.</div>}
-      {frame&&size&&frameMat&&<button onClick={function(){setSel(emptySel);setStep(1);}} style={{background:t.ac,color:"#fff",border:"none",padding:"15px 44px",borderRadius:12,fontSize:16,fontWeight:700,cursor:"pointer",fontFamily:SN,boxShadow:"0 4px 20px "+t.ac+"44"}}>Start Building →</button>}
+      {frame&&size&&frameMat&&<button onClick={function(){setSel(emptySel);setStep(1);}} style={{background:t.ac,color:"#fff",border:"none",padding:"15px 44px",borderRadius:12,fontSize:16,fontWeight:700,cursor:"pointer",fontFamily:SN,boxShadow:"0 4px 20px "+t.ac+"44",width:isMobile?"100%":"auto"}}>Start Building →</button>}
     </div>)}
 
     {/* Compare modal */}
@@ -1040,7 +1099,59 @@ function BuilderApp({goHome,goModeSelect,onSaveBuild}){
       </div>
     </div>}
 
-    {step===1&&(<div style={{display:"grid",gridTemplateColumns:"260px 1.2fr 1.4fr",height:"calc(100vh - 54px)",overflow:"hidden"}}>
+    {step===1&&(isMobile?(
+      <div style={{display:"flex",flexDirection:"column",height:"calc(100vh - 54px)"}}>
+        {/* Mobile content area */}
+        <div style={{flex:1,overflowY:"auto",background:t.bg2}}>
+          {mobileTabV==="drone"&&<div style={{background:t.bg}}><DroneViewer frameType={frame} droneSize={size} selections={sel} batteryPos={battPos} fcPos={fcPos} escPos={escPos} frameMat={frameMat}/></div>}
+          {mobileTabV==="physics"&&<div style={{padding:"14px 16px"}}><MathPanel insights={insights} flight={flight}/>{!insights.length&&!flight&&<div style={{color:t.td,fontSize:14,textAlign:"center",padding:"40px 20px",fontFamily:SN}}>Select a motor and battery to see physics.</div>}</div>}
+          {mobileTabV==="components"&&<div style={{display:"flex",flexDirection:"column",height:"100%"}}>
+            <div style={{display:"flex",overflowX:"auto",borderBottom:"1px solid "+t.bd,background:t.bg,flexShrink:0}}>
+              {tabs.map(function(tb2){var active=tab===tb2.k;var st2=getStatus(tb2.k);
+                return <button key={tb2.k} onClick={function(){setTab(tb2.k);}} style={{padding:"12px 10px",background:active?t.bg2:"transparent",border:"none",borderBottom:"2.5px solid "+(active?t.ac:"transparent"),color:active?t.ac:st2==="error"?t.rd:st2==="warning"?t.am:st2==="ok"?t.ac:t.td,fontSize:11,fontWeight:active?700:500,cursor:"pointer",fontFamily:SN,whiteSpace:"nowrap",minWidth:55}}>{tb2.l}</button>;})}
+            </div>
+            <div style={{flex:1,overflowY:"auto",padding:"12px 14px"}}>
+              {sizeFiltered.length>0&&<><div style={{fontSize:11,color:t.td,marginBottom:8,letterSpacing:0.8,fontFamily:SN,fontWeight:600}}>RECOMMENDED FOR {size?size.l.toUpperCase():""}</div>
+                {recommended.greens.slice(0,3).map(function(r){return <CompCard key={r.item.id} item={r.item} type={tab} selected={sel[tab]&&sel[tab].id===r.item.id} onSelect={function(it){handleSelect(tab,it);}} rating="green"/>;})}
+                {recommended.ambers.slice(0,3).map(function(r){return <CompCard key={r.item.id} item={r.item} type={tab} selected={sel[tab]&&sel[tab].id===r.item.id} onSelect={function(it){handleSelect(tab,it);}} rating="amber"/>;})}
+                {recommended.reds.slice(0,3).map(function(r){return <CompCard key={r.item.id} item={r.item} type={tab} selected={sel[tab]&&sel[tab].id===r.item.id} onSelect={function(it){handleSelect(tab,it);}} rating="red"/>;})}
+              </>}
+              {otherItems.length>0&&<><div style={{fontSize:11,color:t.td,marginTop:14,marginBottom:8,letterSpacing:0.8,fontFamily:SN,fontWeight:600}}>OTHER OPTIONS</div>
+                {otherSorted.greens.map(function(r){return <CompCard key={r.item.id} item={r.item} type={tab} selected={sel[tab]&&sel[tab].id===r.item.id} onSelect={function(it){handleSelect(tab,it);}} rating="green"/>;})}
+                {otherSorted.ambers.map(function(r){return <CompCard key={r.item.id} item={r.item} type={tab} selected={sel[tab]&&sel[tab].id===r.item.id} onSelect={function(it){handleSelect(tab,it);}} rating="amber"/>;})}
+                {otherSorted.reds.map(function(r){return <CompCard key={r.item.id} item={r.item} type={tab} selected={sel[tab]&&sel[tab].id===r.item.id} onSelect={function(it){handleSelect(tab,it);}} rating="red"/>;})}
+              </>}
+            </div>
+          </div>}
+          {mobileTabV==="controls"&&<div style={{padding:"12px 14px",overflowY:"auto"}}>
+            {/* Component chips */}
+            <div style={{display:"flex",flexWrap:"wrap",gap:5,marginBottom:12}}>
+              {tabs.map(function(tb2){var s=sel[tb2.k],st2=getStatus(tb2.k);var pBg=s?(st2==="error"?t.rdL:st2==="warning"?t.amL:t.acL):t.bg2;var pC=s?(st2==="error"?t.rd:st2==="warning"?t.am:t.ac):t.td;
+                return <div key={tb2.k} onClick={function(){setTab(tb2.k);setMobileTab("components");}} title={tb2.l} style={{padding:"5px 12px",borderRadius:20,fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:SN,background:pBg,color:pC,border:"1px solid "+pC+"55"}}>{s?s.b+" "+s.m:tb2.l}</div>;})}
+            </div>
+            {/* Save button */}
+            <button onClick={saveBuild} style={{width:"100%",padding:"12px 0",borderRadius:10,fontSize:14,cursor:"pointer",fontFamily:SN,fontWeight:700,background:t.acL,border:"1px solid "+t.ac,color:t.ac,marginBottom:14}}>💾 Save Build</button>
+            {/* Placement */}
+            <div style={{background:t.sf,borderRadius:12,padding:"12px 14px",boxShadow:t.sh,marginBottom:10}}>
+              <div style={{fontSize:11,fontWeight:700,color:t.ac,letterSpacing:1.2,marginBottom:10,fontFamily:MN}}>COMPONENT PLACEMENT</div>
+              <div style={{display:"flex",flexWrap:"wrap",gap:6,alignItems:"center",marginBottom:8}}><span style={{fontSize:12,color:t.tb,fontFamily:SN,fontWeight:600,minWidth:130}}>Flight Controller</span>{["above","between","below"].map(function(p){return <button key={"fc"+p} onClick={function(){setFcPos(p);}} style={{padding:"5px 12px",borderRadius:7,fontSize:11,cursor:"pointer",fontFamily:SN,fontWeight:500,background:fcPos===p?t.acL:t.bg2,border:"1px solid "+(fcPos===p?t.ac:t.bd),color:fcPos===p?t.ac:t.td}}>{p}</button>;})}</div>
+              <div style={{display:"flex",flexWrap:"wrap",gap:6,alignItems:"center",marginBottom:8}}><span style={{fontSize:12,color:t.tb,fontFamily:SN,fontWeight:600,minWidth:130}}>Speed Controller</span>{["above","between","below"].map(function(p){return <button key={"esc"+p} onClick={function(){setEscPos(p);}} style={{padding:"5px 12px",borderRadius:7,fontSize:11,cursor:"pointer",fontFamily:SN,fontWeight:500,background:escPos===p?t.acL:t.bg2,border:"1px solid "+(escPos===p?t.ac:t.bd),color:escPos===p?t.ac:t.td}}>{p}</button>;})}</div>
+              {sel.battery&&<div style={{display:"flex",flexWrap:"wrap",gap:6,alignItems:"center",marginBottom:8}}><span style={{fontSize:12,color:t.tb,fontFamily:SN,fontWeight:600,minWidth:130}}>Battery</span>{["top","between","bottom"].map(function(p){return <button key={p} onClick={function(){setBattPos(p);}} style={{padding:"5px 12px",borderRadius:7,fontSize:11,cursor:"pointer",fontFamily:SN,fontWeight:500,background:battPos===p?t.acL:t.bg2,border:"1px solid "+(battPos===p?t.ac:t.bd),color:battPos===p?t.ac:t.td}}>{p}</button>;})}</div>}
+              <div style={{display:"flex",gap:8,alignItems:"center"}}><span style={{fontSize:12,color:t.tb,fontFamily:SN,fontWeight:600,minWidth:130}}>Altitude</span><input type="range" min={0} max={5000} step={100} value={altitude} onChange={function(e){setAltitude(+e.target.value);}} style={{flex:1,accentColor:t.ac}}/><span style={{fontSize:12,color:t.ac,fontFamily:MN,minWidth:46,textAlign:"right",fontWeight:700}}>{altitude}m</span></div>
+            </div>
+            <IssuesPanel compat={compat}/>
+          </div>}
+        </div>
+        {/* Bottom tab bar */}
+        <div style={{display:"flex",borderTop:"1px solid "+t.bd,background:t.bg,flexShrink:0}}>
+          {[{k:"drone",l:"Drone",i:"◈"},{k:"physics",l:"Physics",i:"⚡"},{k:"components",l:"Parts",i:"⚙"},{k:"controls",l:"Controls",i:"☰"}].map(function(tb2){var active=mobileTabV===tb2.k;
+            return <button key={tb2.k} onClick={function(){setMobileTab(tb2.k);}} style={{flex:1,padding:"10px 4px",background:active?t.acL:"none",border:"none",borderTop:"2px solid "+(active?t.ac:"transparent"),color:active?t.ac:t.td,fontSize:10,fontWeight:active?700:500,cursor:"pointer",fontFamily:SN,display:"flex",flexDirection:"column",alignItems:"center",gap:2}}>
+              <span style={{fontSize:16}}>{tb2.i}</span><span>{tb2.l}</span>
+            </button>;})}
+        </div>
+      </div>
+    ):(
+      <div style={{display:"grid",gridTemplateColumns:"260px 1.2fr 1.4fr",height:"calc(100vh - 54px)",overflow:"hidden"}}>
 
       {/* Col 1 — Controls: chips, save, placement, issues */}
       <div style={{borderRight:"1px solid "+t.bd,background:t.bg,display:"flex",flexDirection:"column",overflow:"hidden"}}>
@@ -1122,7 +1233,7 @@ function BuilderApp({goHome,goModeSelect,onSaveBuild}){
           </>}
         </div>
       </div>
-    </div>)}
+    </div>))}
   </div>);
 }
 
@@ -1131,21 +1242,22 @@ function BuilderApp({goHome,goModeSelect,onSaveBuild}){
 // ════════════════════════════════════════════════════
 function ModeSelectPage({onSelect,onBack}){
   var T=useTheme();var t=T.t;var isDark=T.mode==="dark";
+  var isMobile=useIsMobile();
   var modes=[
     {id:"beginner",icon:"🟢",title:"Beginner",sub:"First build",desc:"Guided setup with curated component choices and simplified compatibility feedback. Perfect if you are new to multirotors."},
     {id:"enthusiast",icon:"🔵",title:"Enthusiast",sub:"Full builder",desc:"Complete component library with real-time physics simulation, 3D visualization, and detailed compatibility analysis."},
     {id:"researcher",icon:"🟣",title:"Researcher",sub:"Advanced mode",desc:"All Enthusiast features plus full physics breakdown, figure-of-merit tuning, material science data, and export tools."},
   ];
   return(<div style={{background:t.bg,minHeight:"100vh",fontFamily:SN,color:t.tx}}>
-    <nav style={{padding:"14px 32px",display:"flex",justifyContent:"space-between",alignItems:"center",borderBottom:"1px solid "+t.bd,background:t.bg+"e6",backdropFilter:"blur(16px)"}}>
+    <nav style={{padding:isMobile?"14px 16px":"14px 32px",display:"flex",justifyContent:"space-between",alignItems:"center",borderBottom:"1px solid "+t.bd,background:t.bg+"e6",backdropFilter:"blur(16px)"}}>
       <div style={{fontFamily:MN,fontWeight:700,fontSize:15,letterSpacing:1.2,cursor:"pointer"}} onClick={onBack}><span style={{color:t.tb}}>Multirotor</span><span style={{color:t.ac}}>.</span><span style={{color:t.tb}}>build</span></div>
       <button onClick={function(){T.toggle();}} style={{background:isDark?"#3a4055":t.sf,border:"2px solid "+(isDark?"#6aaeff":t.bd),borderRadius:8,padding:"6px 12px",cursor:"pointer",fontSize:14,color:isDark?"#eceef6":t.td,fontWeight:600}}>{isDark?"☀ Light":"☾ Dark"}</button>
     </nav>
-    <div style={{maxWidth:760,margin:"0 auto",padding:"60px 24px",textAlign:"center"}}>
+    <div style={{maxWidth:760,margin:"0 auto",padding:isMobile?"28px 16px":"60px 24px",textAlign:"center"}}>
       <div style={{fontSize:11,fontWeight:700,color:t.ac,letterSpacing:2,marginBottom:16,fontFamily:MN}}>SELECT YOUR MODE</div>
-      <h2 style={{fontSize:32,fontWeight:800,color:t.tb,margin:"0 0 12px",letterSpacing:-0.5}}>How do you want to build?</h2>
+      <h2 style={{fontSize:isMobile?24:32,fontWeight:800,color:t.tb,margin:"0 0 12px",letterSpacing:-0.5}}>How do you want to build?</h2>
       <p style={{fontSize:14,color:t.td,marginBottom:48,lineHeight:1.7}}>Choose the experience that matches your level. You can switch modes at any time.</p>
-      <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:18}}>
+      <div style={{display:"grid",gridTemplateColumns:isMobile?"1fr":"repeat(3,1fr)",gap:18}}>
         {modes.map(function(m){
           return <div key={m.id} onClick={function(){onSelect(m.id);}} style={{background:t.sf,border:"2px solid "+t.bd,borderRadius:20,padding:"32px 24px",cursor:"pointer",textAlign:"left",transition:"all 0.2s",boxShadow:t.sh}}
             onMouseEnter={function(e){e.currentTarget.style.borderColor=t.ac;e.currentTarget.style.boxShadow=t.shH;}}
