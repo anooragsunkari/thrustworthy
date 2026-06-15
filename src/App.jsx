@@ -51,11 +51,11 @@ const FRAME_TYPES = [
   {id:"bi",name:"Bicopter",desc:"2 motors · experimental",mc:2},
 ];
 const FRAME_MATERIALS = [
-  {id:"cf",name:"Carbon Fiber",desc:"Light · stiff · industry standard",df:1.0,stiffness:0.98,color:0x1a1a1f,colorL:0x2a2a30,cost:"$$$"},
-  {id:"al",name:"Aluminum 6061",desc:"Durable · heavier · easy to machine",df:1.75,stiffness:0.92,color:0x7a7a88,colorL:0x9a9aa8,cost:"$$"},
-  {id:"tpu",name:"3D Print (TPU)",desc:"Flexible · crash resistant · heaviest",df:1.4,stiffness:0.72,color:0x2a2a3a,colorL:0x444455,cost:"$"},
-  {id:"fg",name:"Fiberglass/FR4",desc:"Cheap · moderate weight · PCB-like",df:1.15,stiffness:0.82,color:0x2a3a20,colorL:0x4a5a38,cost:"$"},
-  {id:"ti",name:"Titanium",desc:"Strongest · heaviest · premium",df:2.8,stiffness:0.96,color:0x555565,colorL:0x888898,cost:"$$$$"},
+  {id:"cf",name:"Carbon Fiber",desc:"Light · stiff · industry standard",df:1.0,stiffness:0.98,color:0x40404e,colorL:0x28282e,cost:"$$$"},
+  {id:"al",name:"Aluminum 6061",desc:"Durable · heavier · easy to machine",df:1.75,stiffness:0.92,color:0x8a8a98,colorL:0x9a9aa8,cost:"$$"},
+  {id:"tpu",name:"3D Print (TPU)",desc:"Flexible · crash resistant · heaviest",df:1.4,stiffness:0.72,color:0x4a4a60,colorL:0x444455,cost:"$"},
+  {id:"fg",name:"Fiberglass/FR4",desc:"Cheap · moderate weight · PCB-like",df:1.15,stiffness:0.82,color:0x486040,colorL:0x4a5a38,cost:"$"},
+  {id:"ti",name:"Titanium",desc:"Strongest · heaviest · premium",df:2.8,stiffness:0.96,color:0x7878a0,colorL:0x888898,cost:"$$$$"},
 ];
 const SIZES=[
   {id:"65mm",l:"65mm",mm:65,auw:25,cat:"whoop"},{id:"75mm",l:"75mm",mm:75,auw:35,cat:"whoop"},
@@ -75,123 +75,134 @@ const FRAME_MATS=[
   {id:"ti",name:"Titanium",desc:"Ti-6Al-4V · ultralight strength",wf:1.2,color:[0x606068,0x707078],rough:0.2,metal:0.9},
 ];
 const MOTORS=[
-  {id:"m1",b:"T-Motor",m:"F40 Pro IV",kv:1950,sz:"2306",vn:14.8,vx:25.2,ic:36,w:32,t:1550,e:7.2,mt:16,s:["5in"]},
-  {id:"m2",b:"T-Motor",m:"F60 Pro V",kv:1750,sz:"2207",vn:14.8,vx:25.2,ic:42,w:34,t:1750,e:7.0,mt:16,s:["5in","6in"]},
-  {id:"m3",b:"T-Motor",m:"Velox V3 2207",kv:1950,sz:"2207",vn:14.8,vx:25.2,ic:40,w:31,t:1680,e:7.1,mt:16,s:["5in"]},
-  {id:"m4",b:"T-Motor",m:"F1507 3800KV",kv:3800,sz:"1507",vn:11.1,vx:14.8,ic:18,w:14,t:620,e:6.5,mt:12,s:["3in","4in"]},
-  {id:"m5",b:"T-Motor",m:"U5 KV400",kv:400,sz:"3508",vn:22.2,vx:44.4,ic:25,w:112,t:3200,e:10.5,mt:19,s:["10in","12in","13in"]},
-  {id:"m6",b:"T-Motor",m:"U7 V2 KV280",kv:280,sz:"4910",vn:22.2,vx:44.4,ic:30,w:175,t:5000,e:11.5,mt:19,s:["12in","13in","15in"]},
-  {id:"m7",b:"T-Motor",m:"U8 Lite KV85",kv:85,sz:"8108",vn:44.4,vx:51.8,ic:55,w:280,t:9800,e:12.0,mt:25,s:["13in","15in"]},
-  {id:"m8",b:"T-Motor",m:"MN3508 KV380",kv:380,sz:"3508",vn:22.2,vx:25.2,ic:18,w:102,t:2400,e:10.0,mt:19,s:["9in","10in"]},
-  {id:"m10",b:"EMAX",m:"ECO II 2207",kv:1900,sz:"2207",vn:11.1,vx:22.2,ic:35,w:30,t:1420,e:7.5,mt:16,s:["5in"]},
-  {id:"m11",b:"EMAX",m:"ECO II 2306",kv:1700,sz:"2306",vn:14.8,vx:25.2,ic:33,w:32,t:1500,e:7.6,mt:16,s:["5in","6in"]},
-  {id:"m12",b:"EMAX",m:"TH1103 7000KV",kv:7000,sz:"1103",vn:3.7,vx:11.1,ic:8,w:4.5,t:180,e:5.0,mt:9,s:["65mm","75mm","2in"]},
-  {id:"m13",b:"iFlight",m:"XING2 2207",kv:1855,sz:"2207",vn:14.8,vx:25.2,ic:40,w:31.5,t:1640,e:7.1,mt:16,s:["5in"]},
-  {id:"m14",b:"iFlight",m:"XING2 2806.5",kv:1350,sz:"2806",vn:14.8,vx:25.2,ic:38,w:41,t:1850,e:8.2,mt:16,s:["6in","7in"]},
-  {id:"m15",b:"iFlight",m:"XING2 1404",kv:3800,sz:"1404",vn:11.1,vx:14.8,ic:12,w:8.5,t:400,e:6.2,mt:12,s:["3in","3.5in"]},
-  {id:"m16",b:"BrotherHobby",m:"Avenger 2812",kv:900,sz:"2812",vn:22.2,vx:25.2,ic:32,w:48,t:2100,e:8.5,mt:19,s:["7in","8in"]},
-  {id:"m17",b:"KDE Direct",m:"KDE4012XF-400",kv:400,sz:"4012",vn:22.2,vx:44.4,ic:30,w:142,t:4500,e:11.0,mt:19,s:["10in","12in","13in"]},
-  {id:"m18",b:"KDE Direct",m:"KDE5215XF-220",kv:220,sz:"5215",vn:22.2,vx:51.8,ic:35,w:210,t:6200,e:11.8,mt:19,s:["12in","13in","15in"]},
-  {id:"m19",b:"Hobbywing",m:"XRotor X8",kv:100,sz:"8108",vn:44.4,vx:51.8,ic:80,w:480,t:15300,e:12.0,mt:25,s:["13in","15in"]},
-  {id:"m20",b:"BetaFPV",m:"1404 3800KV",kv:3800,sz:"1404",vn:11.1,vx:14.8,ic:14,w:9,t:430,e:6.0,mt:12,s:["3in","4in"]},
-  {id:"m21",b:"BetaFPV",m:"1102 18000KV",kv:18000,sz:"1102",vn:3.7,vx:3.8,ic:5,w:3.2,t:62,e:4.2,mt:6.6,s:["65mm","75mm"]},
-  {id:"m22",b:"Axis Flying",m:"C207 1960KV",kv:1960,sz:"2207",vn:14.8,vx:25.2,ic:42,w:30,t:1700,e:7.3,mt:16,s:["5in"]},
-  {id:"m23",b:"GEPRC",m:"SPEEDX2 2207.5",kv:1960,sz:"2207",vn:14.8,vx:25.2,ic:38,w:30,t:1600,e:7.2,mt:16,s:["5in"]},
-  {id:"m24",b:"Lumenier",m:"ZIP 2207",kv:1750,sz:"2207",vn:14.8,vx:25.2,ic:36,w:30,t:1580,e:7.3,mt:16,s:["5in"]},
-  {id:"m25",b:"RCInPower",m:"GTS V2 2207",kv:1860,sz:"2207",vn:14.8,vx:25.2,ic:39,w:30,t:1650,e:7.4,mt:16,s:["5in"]},
-  {id:"m26",b:"SunnySky",m:"X2216 1250KV",kv:1250,sz:"2216",vn:11.1,vx:14.8,ic:20,w:58,t:900,e:8.0,mt:16,s:["6in","7in"]},
-  {id:"m27",b:"MAD",m:"M40 KV90",kv:90,sz:"4010",vn:44.4,vx:51.8,ic:45,w:350,t:12000,e:11.5,mt:25,s:["12in","13in","15in"]},
-  {id:"m28",b:"HappyModel",m:"EX0802",kv:19000,sz:"0802",vn:3.7,vx:3.8,ic:4,w:2.5,t:50,e:3.8,mt:6.6,s:["65mm"]},
-  {id:"m29",b:"iFlight",m:"XING2 3110",kv:900,sz:"3110",vn:22.2,vx:25.2,ic:35,w:68,t:2400,e:9.5,mt:19,s:["7in","8in","9in"]},
-  {id:"m30",b:"Scorpion",m:"SII-4020",kv:630,sz:"4020",vn:22.2,vx:44.4,ic:25,w:150,t:4000,e:10.5,mt:19,s:["10in","12in"]},
-  {id:"m31",b:"Hacker",m:"Q80-8M V2",kv:100,sz:"8020",vn:44.4,vx:51.8,ic:65,w:450,t:16000,e:12.2,mt:25,s:["13in","15in"]},
+  {id:"m1",b:"T-Motor",m:"F40 Pro IV",kv:1950,sz:"2306",vn:14.8,vx:25.2,ic:36,w:32,t:1550,e:7.2,mt:16,s:["5in"],p:29},
+  {id:"m2",b:"T-Motor",m:"F60 Pro V",kv:1750,sz:"2207",vn:14.8,vx:25.2,ic:42,w:34,t:1750,e:7.0,mt:16,s:["5in","6in"],p:35},
+  {id:"m3",b:"T-Motor",m:"Velox V3 2207",kv:1950,sz:"2207",vn:14.8,vx:25.2,ic:40,w:31,t:1680,e:7.1,mt:16,s:["5in"],p:27},
+  {id:"m4",b:"T-Motor",m:"F1507 3800KV",kv:3800,sz:"1507",vn:11.1,vx:14.8,ic:18,w:14,t:620,e:6.5,mt:12,s:["3in","4in"],p:22},
+  {id:"m5",b:"T-Motor",m:"U5 KV400",kv:400,sz:"3508",vn:22.2,vx:44.4,ic:25,w:112,t:3200,e:10.5,mt:19,s:["10in","12in","13in"],p:89},
+  {id:"m6",b:"T-Motor",m:"U7 V2 KV280",kv:280,sz:"4910",vn:22.2,vx:44.4,ic:30,w:175,t:5000,e:11.5,mt:19,s:["12in","13in","15in"],p:149},
+  {id:"m7",b:"T-Motor",m:"U8 Lite KV85",kv:85,sz:"8108",vn:44.4,vx:51.8,ic:55,w:280,t:9800,e:12.0,mt:25,s:["13in","15in"],p:229},
+  {id:"m8",b:"T-Motor",m:"MN3508 KV380",kv:380,sz:"3508",vn:22.2,vx:25.2,ic:18,w:102,t:2400,e:10.0,mt:19,s:["9in","10in"],p:79},
+  {id:"m10",b:"EMAX",m:"ECO II 2207",kv:1900,sz:"2207",vn:11.1,vx:22.2,ic:35,w:30,t:1420,e:7.5,mt:16,s:["5in"],p:16},
+  {id:"m11",b:"EMAX",m:"ECO II 2306",kv:1700,sz:"2306",vn:14.8,vx:25.2,ic:33,w:32,t:1500,e:7.6,mt:16,s:["5in","6in"],p:18},
+  {id:"m12",b:"EMAX",m:"TH1103 7000KV",kv:7000,sz:"1103",vn:3.7,vx:11.1,ic:8,w:4.5,t:180,e:5.0,mt:9,s:["65mm","75mm","2in"],p:12},
+  {id:"m13",b:"iFlight",m:"XING2 2207",kv:1855,sz:"2207",vn:14.8,vx:25.2,ic:40,w:31.5,t:1640,e:7.1,mt:16,s:["5in"],p:22},
+  {id:"m14",b:"iFlight",m:"XING2 2806.5",kv:1350,sz:"2806",vn:14.8,vx:25.2,ic:38,w:41,t:1850,e:8.2,mt:16,s:["6in","7in"],p:28},
+  {id:"m15",b:"iFlight",m:"XING2 1404",kv:3800,sz:"1404",vn:11.1,vx:14.8,ic:12,w:8.5,t:400,e:6.2,mt:12,s:["3in","3.5in"],p:18},
+  {id:"m16",b:"BrotherHobby",m:"Avenger 2812",kv:900,sz:"2812",vn:22.2,vx:25.2,ic:32,w:48,t:2100,e:8.5,mt:19,s:["7in","8in"],p:45},
+  {id:"m17",b:"KDE Direct",m:"KDE4012XF-400",kv:400,sz:"4012",vn:22.2,vx:44.4,ic:30,w:142,t:4500,e:11.0,mt:19,s:["10in","12in","13in"],p:89},
+  {id:"m18",b:"KDE Direct",m:"KDE5215XF-220",kv:220,sz:"5215",vn:22.2,vx:51.8,ic:35,w:210,t:6200,e:11.8,mt:19,s:["12in","13in","15in"],p:149},
+  {id:"m19",b:"Hobbywing",m:"XRotor X8",kv:100,sz:"8108",vn:44.4,vx:51.8,ic:80,w:480,t:15300,e:12.0,mt:25,s:["13in","15in"],p:299},
+  {id:"m20",b:"BetaFPV",m:"1404 3800KV",kv:3800,sz:"1404",vn:11.1,vx:14.8,ic:14,w:9,t:430,e:6.0,mt:12,s:["3in","4in"],p:14},
+  {id:"m21",b:"BetaFPV",m:"1102 18000KV",kv:18000,sz:"1102",vn:3.7,vx:3.8,ic:5,w:3.2,t:62,e:4.2,mt:6.6,s:["65mm","75mm"],p:8},
+  {id:"m22",b:"Axis Flying",m:"C207 1960KV",kv:1960,sz:"2207",vn:14.8,vx:25.2,ic:42,w:30,t:1700,e:7.3,mt:16,s:["5in"],p:24},
+  {id:"m23",b:"GEPRC",m:"SPEEDX2 2207.5",kv:1960,sz:"2207",vn:14.8,vx:25.2,ic:38,w:30,t:1600,e:7.2,mt:16,s:["5in"],p:22},
+  {id:"m24",b:"Lumenier",m:"ZIP 2207",kv:1750,sz:"2207",vn:14.8,vx:25.2,ic:36,w:30,t:1580,e:7.3,mt:16,s:["5in"],p:26},
+  {id:"m25",b:"RCInPower",m:"GTS V2 2207",kv:1860,sz:"2207",vn:14.8,vx:25.2,ic:39,w:30,t:1650,e:7.4,mt:16,s:["5in"],p:20},
+  {id:"m26",b:"SunnySky",m:"X2216 1250KV",kv:1250,sz:"2216",vn:11.1,vx:14.8,ic:20,w:58,t:900,e:8.0,mt:16,s:["6in","7in"],p:28},
+  {id:"m27",b:"MAD",m:"M40 KV90",kv:90,sz:"4010",vn:44.4,vx:51.8,ic:45,w:350,t:12000,e:11.5,mt:25,s:["12in","13in","15in"],p:189},
+  {id:"m28",b:"HappyModel",m:"EX0802",kv:19000,sz:"0802",vn:3.7,vx:3.8,ic:4,w:2.5,t:50,e:3.8,mt:6.6,s:["65mm"],p:6},
+  {id:"m29",b:"iFlight",m:"XING2 3110",kv:900,sz:"3110",vn:22.2,vx:25.2,ic:35,w:68,t:2400,e:9.5,mt:19,s:["7in","8in","9in"],p:38},
+  {id:"m30",b:"Scorpion",m:"SII-4020",kv:630,sz:"4020",vn:22.2,vx:44.4,ic:25,w:150,t:4000,e:10.5,mt:19,s:["10in","12in"],p:89},
+  {id:"m31",b:"Hacker",m:"Q80-8M V2",kv:100,sz:"8020",vn:44.4,vx:51.8,ic:65,w:450,t:16000,e:12.2,mt:25,s:["13in","15in"],p:349},
 ];
 const ESCS=[
-  {id:"e1",b:"Hobbywing",m:"XRotor 60A 4in1",t:"4in1",vn:11.1,vx:25.2,cc:60,bc:80,fw:"BLHeli_32",pr:["DShot300","DShot600"],w:12,mt:"30.5",s:["5in","6in","7in"]},
-  {id:"e2",b:"T-Motor",m:"F55A Pro II",t:"4in1",vn:14.8,vx:25.2,cc:55,bc:65,fw:"BLHeli_32",pr:["DShot300","DShot600","DShot1200"],w:14,mt:"30.5",s:["5in","6in","7in"]},
-  {id:"e3",b:"iFlight",m:"BLITZ E80",t:"4in1",vn:14.8,vx:51.8,cc:80,bc:100,fw:"AM32",pr:["DShot300","DShot600","DShot1200"],w:18,mt:"30.5",s:["5in","6in","7in","8in"]},
-  {id:"e4",b:"SpeedyBee",m:"BLS 50A",t:"4in1",vn:11.1,vx:25.2,cc:50,bc:60,fw:"BLHeli_S",pr:["DShot300","DShot600"],w:8,mt:"30.5",s:["5in"]},
-  {id:"e5",b:"HGLRC",m:"Zeus 80A AM32",t:"4in1",vn:14.8,vx:51.8,cc:80,bc:100,fw:"AM32",pr:["DShot300","DShot600","DShot1200"],w:17,mt:"30.5",s:["5in","6in","7in","8in"]},
-  {id:"e6",b:"APD",m:"F Series 80F3",t:"single",vn:14.8,vx:51.8,cc:80,bc:120,fw:"APD",pr:["DShot600","PWM","CAN"],w:35,mt:"custom",s:["7in","8in","9in","10in","12in","13in"]},
-  {id:"e7",b:"KDE Direct",m:"UAS HVC 85A",t:"single",vn:22.2,vx:51.8,cc:85,bc:110,fw:"KDE",pr:["PWM","CAN"],w:65,mt:"custom",s:["10in","12in","13in","15in"]},
-  {id:"e8",b:"Castle",m:"Phoenix Edge 160",t:"single",vn:22.2,vx:50.4,cc:160,bc:200,fw:"Castle",pr:["PWM"],w:82,mt:"custom",s:["10in","12in","13in","15in"]},
-  {id:"e9",b:"BetaFPV",m:"12A Toothpick",t:"4in1",vn:7.4,vx:14.8,cc:12,bc:15,fw:"BLHeli_S",pr:["DShot300","DShot600"],w:3,mt:"16",s:["2in","3in"]},
-  {id:"e10",b:"Holybro",m:"Tekko32 45A",t:"4in1",vn:14.8,vx:25.2,cc:45,bc:55,fw:"BLHeli_32",pr:["DShot300","DShot600"],w:10,mt:"30.5",s:["5in","6in"]},
-  {id:"e11",b:"Diatone",m:"Mamba F50 Pro",t:"4in1",vn:14.8,vx:25.2,cc:50,bc:65,fw:"BLHeli_32",pr:["DShot300","DShot600"],w:11,mt:"30.5",s:["5in","6in"]},
-  {id:"e12",b:"BetaFPV",m:"F4 1S 5A AIO",t:"AIO",vn:3.7,vx:7.4,cc:5,bc:7,fw:"BLHeli_S",pr:["DShot300","DShot600"],w:2.8,mt:"25.5",s:["65mm","75mm","2in"]},
-  {id:"e13",b:"T-Motor",m:"ALPHA 60A HV",t:"single",vn:22.2,vx:51.8,cc:60,bc:80,fw:"T-Motor FOC",pr:["PWM","CAN","DShot600"],w:75,mt:"custom",s:["8in","9in","10in","12in","13in"]},
-  {id:"e14",b:"GEPRC",m:"TAKER G4 45A",t:"4in1",vn:14.8,vx:25.2,cc:45,bc:55,fw:"AM32",pr:["DShot300","DShot600"],w:10,mt:"30.5",s:["5in","6in"]},
+  {id:"e1",b:"Hobbywing",m:"XRotor 60A 4in1",t:"4in1",vn:11.1,vx:25.2,cc:60,bc:80,fw:"BLHeli_32",pr:["DShot300","DShot600"],w:12,mt:"30.5",s:["5in","6in","7in"],p:45},
+  {id:"e2",b:"T-Motor",m:"F55A Pro II",t:"4in1",vn:14.8,vx:25.2,cc:55,bc:65,fw:"BLHeli_32",pr:["DShot300","DShot600","DShot1200"],w:14,mt:"30.5",s:["5in","6in","7in"],p:55},
+  {id:"e3",b:"iFlight",m:"BLITZ E80",t:"4in1",vn:14.8,vx:51.8,cc:80,bc:100,fw:"AM32",pr:["DShot300","DShot600","DShot1200"],w:18,mt:"30.5",s:["5in","6in","7in","8in"],p:65},
+  {id:"e4",b:"SpeedyBee",m:"BLS 50A",t:"4in1",vn:11.1,vx:25.2,cc:50,bc:60,fw:"BLHeli_S",pr:["DShot300","DShot600"],w:8,mt:"30.5",s:["5in"],p:28},
+  {id:"e5",b:"HGLRC",m:"Zeus 80A AM32",t:"4in1",vn:14.8,vx:51.8,cc:80,bc:100,fw:"AM32",pr:["DShot300","DShot600","DShot1200"],w:17,mt:"30.5",s:["5in","6in","7in","8in"],p:62},
+  {id:"e6",b:"APD",m:"F Series 80F3",t:"single",vn:14.8,vx:51.8,cc:80,bc:120,fw:"APD",pr:["DShot600","PWM","CAN"],w:35,mt:"custom",s:["7in","8in","9in","10in","12in","13in"],p:149},
+  {id:"e7",b:"KDE Direct",m:"UAS HVC 85A",t:"single",vn:22.2,vx:51.8,cc:85,bc:110,fw:"KDE",pr:["PWM","CAN"],w:65,mt:"custom",s:["10in","12in","13in","15in"],p:189},
+  {id:"e8",b:"Castle",m:"Phoenix Edge 160",t:"single",vn:22.2,vx:50.4,cc:160,bc:200,fw:"Castle",pr:["PWM"],w:82,mt:"custom",s:["10in","12in","13in","15in"],p:249},
+  {id:"e9",b:"BetaFPV",m:"12A Toothpick",t:"4in1",vn:7.4,vx:14.8,cc:12,bc:15,fw:"BLHeli_S",pr:["DShot300","DShot600"],w:3,mt:"16",s:["2in","3in"],p:19},
+  {id:"e10",b:"Holybro",m:"Tekko32 45A",t:"4in1",vn:14.8,vx:25.2,cc:45,bc:55,fw:"BLHeli_32",pr:["DShot300","DShot600"],w:10,mt:"30.5",s:["5in","6in"],p:42},
+  {id:"e11",b:"Diatone",m:"Mamba F50 Pro",t:"4in1",vn:14.8,vx:25.2,cc:50,bc:65,fw:"BLHeli_32",pr:["DShot300","DShot600"],w:11,mt:"30.5",s:["5in","6in"],p:38},
+  {id:"e12",b:"BetaFPV",m:"F4 1S 5A AIO",t:"AIO",vn:3.7,vx:7.4,cc:5,bc:7,fw:"BLHeli_S",pr:["DShot300","DShot600"],w:2.8,mt:"25.5",s:["65mm","75mm","2in"],p:24},
+  {id:"e13",b:"T-Motor",m:"ALPHA 60A HV",t:"single",vn:22.2,vx:51.8,cc:60,bc:80,fw:"T-Motor FOC",pr:["PWM","CAN","DShot600"],w:75,mt:"custom",s:["8in","9in","10in","12in","13in"],p:129},
+  {id:"e14",b:"GEPRC",m:"TAKER G4 45A",t:"4in1",vn:14.8,vx:25.2,cc:45,bc:55,fw:"AM32",pr:["DShot300","DShot600"],w:10,mt:"30.5",s:["5in","6in"],p:38},
 ];
 const FCS=[
-  {id:"fc1",b:"SpeedyBee",m:"F405 V4",mcu:"STM32F405",imu:"ICM42688P",vn:7.4,vx:25.2,u:6,fw:["Betaflight","INAV","ArduPilot"],mt:"30.5",w:7,s:["5in","6in","7in"]},
-  {id:"fc2",b:"SpeedyBee",m:"F7 V3",mcu:"STM32F722",imu:"BMI270",vn:7.4,vx:25.2,u:7,fw:["Betaflight","INAV","ArduPilot"],mt:"30.5",w:9,s:["5in","6in","7in","8in"]},
-  {id:"fc3",b:"Holybro",m:"Pixhawk 6X",mcu:"STM32H753",imu:"ICM42688P×3",vn:14.8,vx:51.8,u:8,fw:["PX4","ArduPilot"],mt:"Pixhawk",w:52,s:["7in","8in","9in","10in","12in","13in","15in"]},
-  {id:"fc4",b:"CUAV",m:"Nora+",mcu:"STM32H743",imu:"ICM42688P×3",vn:14.8,vx:51.8,u:8,fw:["PX4","ArduPilot"],mt:"Pixhawk",w:48,s:["7in","8in","9in","10in","12in","13in","15in"]},
-  {id:"fc5",b:"CubePilot",m:"Cube Orange+",mcu:"STM32H757",imu:"ICM42688+ICM20948",vn:14.8,vx:51.8,u:8,fw:["ArduPilot","PX4"],mt:"Cube",w:75,s:["9in","10in","12in","13in","15in"]},
-  {id:"fc6",b:"iFlight",m:"Blitz F7 Pro",mcu:"STM32F722",imu:"BMI270",vn:7.4,vx:25.2,u:6,fw:["Betaflight","INAV"],mt:"30.5",w:8,s:["5in","6in","7in"]},
-  {id:"fc7",b:"Matek",m:"H743-SLIM V3",mcu:"STM32H743",imu:"ICM42688P",vn:7.4,vx:36,u:7,fw:["ArduPilot","INAV","Betaflight"],mt:"30.5",w:10,s:["5in","6in","7in","8in","9in"]},
-  {id:"fc8",b:"BetaFPV",m:"F4 1S AIO",mcu:"STM32F411",imu:"MPU6000",vn:3.7,vx:7.4,u:2,fw:["Betaflight"],mt:"25.5",w:3,s:["65mm","75mm","2in"]},
-  {id:"fc9",b:"HGLRC",m:"Zeus H743",mcu:"STM32H743",imu:"ICM42688P",vn:7.4,vx:36,u:7,fw:["Betaflight","INAV","ArduPilot"],mt:"30.5",w:10,s:["5in","6in","7in","8in"]},
-  {id:"fc10",b:"mRobotics",m:"Control Zero H7",mcu:"STM32H7",imu:"ICM20948",vn:14.8,vx:51.8,u:6,fw:["PX4","ArduPilot"],mt:"mRo",w:38,s:["7in","8in","9in","10in","12in","13in","15in"]},
-  {id:"fc11",b:"Diatone",m:"Mamba MK4 F722",mcu:"STM32F722",imu:"ICM42688P",vn:14.8,vx:25.2,u:6,fw:["Betaflight","INAV"],mt:"30.5",w:8,s:["5in","6in"]},
-  {id:"fc12",b:"Holybro",m:"Kakute H7 Mini",mcu:"STM32H743",imu:"BMI270",vn:7.4,vx:25.2,u:6,fw:["Betaflight","INAV"],mt:"20",w:6,s:["3in","3.5in","4in","5in"]},
+  {id:"fc1",b:"SpeedyBee",m:"F405 V4",mcu:"STM32F405",imu:"ICM42688P",vn:7.4,vx:25.2,u:6,fw:["Betaflight","INAV","ArduPilot"],mt:"30.5",w:7,s:["5in","6in","7in"],p:35},
+  {id:"fc2",b:"SpeedyBee",m:"F7 V3",mcu:"STM32F722",imu:"BMI270",vn:7.4,vx:25.2,u:7,fw:["Betaflight","INAV","ArduPilot"],mt:"30.5",w:9,s:["5in","6in","7in","8in"],p:48},
+  {id:"fc3",b:"Holybro",m:"Pixhawk 6X",mcu:"STM32H753",imu:"ICM42688P×3",vn:14.8,vx:51.8,u:8,fw:["PX4","ArduPilot"],mt:"Pixhawk",w:52,s:["7in","8in","9in","10in","12in","13in","15in"],p:299},
+  {id:"fc4",b:"CUAV",m:"Nora+",mcu:"STM32H743",imu:"ICM42688P×3",vn:14.8,vx:51.8,u:8,fw:["PX4","ArduPilot"],mt:"Pixhawk",w:48,s:["7in","8in","9in","10in","12in","13in","15in"],p:249},
+  {id:"fc5",b:"CubePilot",m:"Cube Orange+",mcu:"STM32H757",imu:"ICM42688+ICM20948",vn:14.8,vx:51.8,u:8,fw:["ArduPilot","PX4"],mt:"Cube",w:75,s:["9in","10in","12in","13in","15in"],p:399},
+  {id:"fc6",b:"iFlight",m:"Blitz F7 Pro",mcu:"STM32F722",imu:"BMI270",vn:7.4,vx:25.2,u:6,fw:["Betaflight","INAV"],mt:"30.5",w:8,s:["5in","6in","7in"],p:42},
+  {id:"fc7",b:"Matek",m:"H743-SLIM V3",mcu:"STM32H743",imu:"ICM42688P",vn:7.4,vx:36,u:7,fw:["ArduPilot","INAV","Betaflight"],mt:"30.5",w:10,s:["5in","6in","7in","8in","9in"],p:65},
+  {id:"fc8",b:"BetaFPV",m:"F4 1S AIO",mcu:"STM32F411",imu:"MPU6000",vn:3.7,vx:7.4,u:2,fw:["Betaflight"],mt:"25.5",w:3,s:["65mm","75mm","2in"],p:29},
+  {id:"fc9",b:"HGLRC",m:"Zeus H743",mcu:"STM32H743",imu:"ICM42688P",vn:7.4,vx:36,u:7,fw:["Betaflight","INAV","ArduPilot"],mt:"30.5",w:10,s:["5in","6in","7in","8in"],p:58},
+  {id:"fc10",b:"mRobotics",m:"Control Zero H7",mcu:"STM32H7",imu:"ICM20948",vn:14.8,vx:51.8,u:6,fw:["PX4","ArduPilot"],mt:"mRo",w:38,s:["7in","8in","9in","10in","12in","13in","15in"],p:299},
+  {id:"fc11",b:"Diatone",m:"Mamba MK4 F722",mcu:"STM32F722",imu:"ICM42688P",vn:14.8,vx:25.2,u:6,fw:["Betaflight","INAV"],mt:"30.5",w:8,s:["5in","6in"],p:38},
+  {id:"fc12",b:"Holybro",m:"Kakute H7 Mini",mcu:"STM32H743",imu:"BMI270",vn:7.4,vx:25.2,u:6,fw:["Betaflight","INAV"],mt:"20",w:6,s:["3in","3.5in","4in","5in"],p:45},
 ];
 const BATTS=[
-  {id:"b1",b:"Tattu",m:"R-Line V5 1550 6S",c:6,v:22.2,cap:1550,dr:150,w:218,cn:"XT60",ch:"LiPo",s:["5in"]},
-  {id:"b2",b:"Tattu",m:"R-Line V5 1300 6S",c:6,v:22.2,cap:1300,dr:150,w:195,cn:"XT60",ch:"LiPo",s:["5in"]},
-  {id:"b3",b:"CNHL",m:"Black 1500 6S",c:6,v:22.2,cap:1500,dr:100,w:210,cn:"XT60",ch:"LiPo",s:["5in"]},
-  {id:"b4",b:"GNB",m:"HV 660 4S",c:4,v:15.2,cap:660,dr:90,w:78,cn:"XT30",ch:"LiHV",s:["3in","4in"]},
-  {id:"b5",b:"GNB",m:"530 1S HV",c:1,v:3.8,cap:530,dr:90,w:14,cn:"BT2.0",ch:"LiHV",s:["65mm","75mm","2in"]},
-  {id:"b6",b:"Tattu",m:"Plus 16000 6S",c:6,v:22.2,cap:16000,dr:15,w:1950,cn:"AS150",ch:"LiPo",s:["10in","12in","13in"]},
-  {id:"b7",b:"Molicel",m:"P42A 6S Pack",c:6,v:21.6,cap:4200,dr:10,w:420,cn:"XT60",ch:"Li-Ion",s:["7in","8in","9in"]},
-  {id:"b8",b:"Tattu",m:"R-Line 1050 4S",c:4,v:14.8,cap:1050,dr:120,w:118,cn:"XT60",ch:"LiPo",s:["4in","5in"]},
-  {id:"b9",b:"Tattu",m:"Smart 30000 14S",c:14,v:51.8,cap:30000,dr:35,w:8200,cn:"ACES",ch:"LiPo",s:["13in","15in"]},
-  {id:"b10",b:"MaxAmps",m:"22000 12S",c:12,v:44.4,cap:22000,dr:25,w:5200,cn:"EC5",ch:"LiPo",s:["12in","13in","15in"]},
-  {id:"b11",b:"CNHL",m:"10000 6S",c:6,v:22.2,cap:10000,dr:40,w:1280,cn:"XT90",ch:"LiPo",s:["8in","9in","10in"]},
-  {id:"b12",b:"GNB",m:"850 3S",c:3,v:11.1,cap:850,dr:75,w:65,cn:"XT30",ch:"LiPo",s:["3in","3.5in","4in"]},
-  {id:"b13",b:"Ovonic",m:"1550 6S",c:6,v:22.2,cap:1550,dr:100,w:228,cn:"XT60",ch:"LiPo",s:["5in","6in"]},
-  {id:"b14",b:"Ovonic",m:"1550 4S",c:4,v:14.8,cap:1550,dr:100,w:174,cn:"XT60",ch:"LiPo",s:["5in"]},
-  {id:"b15",b:"GNB",m:"1100 4S HV",c:4,v:15.2,cap:1100,dr:100,w:120,cn:"XT60",ch:"LiHV",s:["4in","5in"]},
+  {id:"b1",b:"Tattu",m:"R-Line V5 1550 6S",c:6,v:22.2,cap:1550,dr:150,w:218,cn:"XT60",ch:"LiPo",s:["5in"],p:49},
+  {id:"b2",b:"Tattu",m:"R-Line V5 1300 6S",c:6,v:22.2,cap:1300,dr:150,w:195,cn:"XT60",ch:"LiPo",s:["5in"],p:44},
+  {id:"b3",b:"CNHL",m:"Black 1500 6S",c:6,v:22.2,cap:1500,dr:100,w:210,cn:"XT60",ch:"LiPo",s:["5in"],p:38},
+  {id:"b4",b:"GNB",m:"HV 660 4S",c:4,v:15.2,cap:660,dr:90,w:78,cn:"XT30",ch:"LiHV",s:["3in","4in"],p:22},
+  {id:"b5",b:"GNB",m:"530 1S HV",c:1,v:3.8,cap:530,dr:90,w:14,cn:"BT2.0",ch:"LiHV",s:["65mm","75mm","2in"],p:8},
+  {id:"b6",b:"Tattu",m:"Plus 16000 6S",c:6,v:22.2,cap:16000,dr:15,w:1950,cn:"AS150",ch:"LiPo",s:["10in","12in","13in"],p:289},
+  {id:"b7",b:"Molicel",m:"P42A 6S Pack",c:6,v:21.6,cap:4200,dr:10,w:420,cn:"XT60",ch:"Li-Ion",s:["7in","8in","9in"],p:89},
+  {id:"b8",b:"Tattu",m:"R-Line 1050 4S",c:4,v:14.8,cap:1050,dr:120,w:118,cn:"XT60",ch:"LiPo",s:["4in","5in"],p:32},
+  {id:"b9",b:"Tattu",m:"Smart 30000 14S",c:14,v:51.8,cap:30000,dr:35,w:8200,cn:"ACES",ch:"LiPo",s:["13in","15in"],p:1299},
+  {id:"b10",b:"MaxAmps",m:"22000 12S",c:12,v:44.4,cap:22000,dr:25,w:5200,cn:"EC5",ch:"LiPo",s:["12in","13in","15in"],p:699},
+  {id:"b11",b:"CNHL",m:"10000 6S",c:6,v:22.2,cap:10000,dr:40,w:1280,cn:"XT90",ch:"LiPo",s:["8in","9in","10in"],p:149},
+  {id:"b12",b:"GNB",m:"850 3S",c:3,v:11.1,cap:850,dr:75,w:65,cn:"XT30",ch:"LiPo",s:["3in","3.5in","4in"],p:18},
+  {id:"b13",b:"Ovonic",m:"1550 6S",c:6,v:22.2,cap:1550,dr:100,w:228,cn:"XT60",ch:"LiPo",s:["5in","6in"],p:35},
+  {id:"b14",b:"Ovonic",m:"1550 4S",c:4,v:14.8,cap:1550,dr:100,w:174,cn:"XT60",ch:"LiPo",s:["5in"],p:28},
+  {id:"b15",b:"GNB",m:"1100 4S HV",c:4,v:15.2,cap:1100,dr:100,w:120,cn:"XT60",ch:"LiHV",s:["4in","5in"],p:24},
 ];
 const PROPS=[
-  {id:"p1",b:"HQProp",m:"5x4.3x3 V2S",bl:3,d:5,pi:4.3,w:4.5,s:["5in"]},{id:"p2",b:"Gemfan",m:"51466 Hurricane",bl:3,d:5,pi:4.66,w:4.2,s:["5in"]},
-  {id:"p3",b:"Ethix",m:"S5 Light",bl:3,d:5,pi:4.0,w:3.8,s:["5in"]},{id:"p4",b:"Gemfan",m:"3018 2-blade",bl:2,d:3,pi:1.8,w:1.2,s:["3in","3.5in"]},
-  {id:"p5",b:"Gemfan",m:"2015 2-blade",bl:2,d:2,pi:1.5,w:0.5,s:["2in","65mm","75mm"]},{id:"p6",b:"HQProp",m:"4x3x3",bl:3,d:4,pi:3,w:2.8,s:["4in"]},
-  {id:"p7",b:"HQProp",m:"7x3.5x3",bl:3,d:7,pi:3.5,w:8.5,s:["7in"]},{id:"p8",b:"Gemfan",m:"6030",bl:2,d:6,pi:3,w:5.0,s:["6in"]},
-  {id:"p9",b:"T-Motor",m:"P9x3 CF",bl:2,d:9,pi:3,w:12,s:["9in"]},{id:"p10",b:"APC",m:"10x4.7 MR",bl:2,d:10,pi:4.7,w:15,s:["10in"]},
-  {id:"p11",b:"T-Motor",m:"G28x9.2 CF",bl:2,d:28,pi:9.2,w:45,s:["12in","13in"]},{id:"p12",b:"T-Motor",m:"G40x13 CF",bl:2,d:40,pi:13.1,w:120,s:["15in"]},
-  {id:"p13",b:"T-Motor",m:"P8x3 CF",bl:2,d:8,pi:3,w:10,s:["8in"]},{id:"p14",b:"DALPROP",m:"Cyclone T5045C",bl:3,d:5,pi:4.5,w:4.3,s:["5in"]},
+  {id:"p1",b:"HQProp",m:"5x4.3x3 V2S",bl:3,d:5,pi:4.3,w:4.5,s:["5in"],p:3},
+  {id:"p2",b:"Gemfan",m:"51466 Hurricane",bl:3,d:5,pi:4.66,w:4.2,s:["5in"],p:3},
+  {id:"p3",b:"Ethix",m:"S5 Light",bl:3,d:5,pi:4.0,w:3.8,s:["5in"],p:4},
+  {id:"p4",b:"Gemfan",m:"3018 2-blade",bl:2,d:3,pi:1.8,w:1.2,s:["3in","3.5in"],p:2},
+  {id:"p5",b:"Gemfan",m:"2015 2-blade",bl:2,d:2,pi:1.5,w:0.5,s:["2in","65mm","75mm"],p:2},
+  {id:"p6",b:"HQProp",m:"4x3x3",bl:3,d:4,pi:3,w:2.8,s:["4in"],p:3},
+  {id:"p7",b:"HQProp",m:"7x3.5x3",bl:3,d:7,pi:3.5,w:8.5,s:["7in"],p:5},
+  {id:"p8",b:"Gemfan",m:"6030",bl:2,d:6,pi:3,w:5.0,s:["6in"],p:4},
+  {id:"p9",b:"T-Motor",m:"P9x3 CF",bl:2,d:9,pi:3,w:12,s:["9in"],p:12},
+  {id:"p10",b:"APC",m:"10x4.7 MR",bl:2,d:10,pi:4.7,w:15,s:["10in"],p:8},
+  {id:"p11",b:"T-Motor",m:"G28x9.2 CF",bl:2,d:28,pi:9.2,w:45,s:["12in","13in"],p:35},
+  {id:"p12",b:"T-Motor",m:"G40x13 CF",bl:2,d:40,pi:13.1,w:120,s:["15in"],p:65},
+  {id:"p13",b:"T-Motor",m:"P8x3 CF",bl:2,d:8,pi:3,w:10,s:["8in"],p:14},
+  {id:"p14",b:"DALPROP",m:"Cyclone T5045C",bl:3,d:5,pi:4.5,w:4.3,s:["5in"],p:4},
 ];
 const VTXS=[
-  {id:"v1",b:"TBS",m:"Unify Pro32 HV",sys:"Analog",pw:[25,200,500,800],lat:1,w:7,vn:7.4,vx:25.2,s:["5in","6in","7in","8in"]},
-  {id:"v2",b:"DJI",m:"O3 Air Unit",sys:"DJI",pw:[25,700],lat:14,w:21,vn:7.4,vx:25.2,s:["3.5in","4in","5in","6in","7in"]},
-  {id:"v3",b:"DJI",m:"O4 Air Unit",sys:"DJI",pw:[25,1000],lat:12,w:18,vn:7.4,vx:25.2,s:["3.5in","4in","5in","6in","7in","8in"]},
-  {id:"v4",b:"Walksnail",m:"Avatar HD V2",sys:"Walksnail",pw:[25,700,1200],lat:18,w:18,vn:7.4,vx:25.2,s:["4in","5in","6in","7in"]},
-  {id:"v5",b:"HDZero",m:"Race V3",sys:"HDZero",pw:[25,200,400],lat:4,w:6,vn:7.4,vx:25.2,s:["4in","5in","6in"]},
-  {id:"v6",b:"HDZero",m:"Freestyle V2",sys:"HDZero",pw:[25,200,500,1000],lat:4,w:9,vn:7.4,vx:25.2,s:["5in","6in","7in","8in"]},
-  {id:"v7",b:"Rush",m:"Tank Solo",sys:"Analog",pw:[25,200,400,800],lat:1,w:5,vn:7.4,vx:25.2,s:["5in","6in","7in"]},
-  {id:"v8",b:"HDZero",m:"Whoop Lite",sys:"HDZero",pw:[25,200],lat:4,w:3,vn:3.3,vx:7.4,s:["65mm","75mm","2in","3in"]},
+  {id:"v1",b:"TBS",m:"Unify Pro32 HV",sys:"Analog",pw:[25,200,500,800],lat:1,w:7,vn:7.4,vx:25.2,s:["5in","6in","7in","8in"],p:49},
+  {id:"v2",b:"DJI",m:"O3 Air Unit",sys:"DJI",pw:[25,700],lat:14,w:21,vn:7.4,vx:25.2,s:["3.5in","4in","5in","6in","7in"],p:249},
+  {id:"v3",b:"DJI",m:"O4 Air Unit",sys:"DJI",pw:[25,1000],lat:12,w:18,vn:7.4,vx:25.2,s:["3.5in","4in","5in","6in","7in","8in"],p:289},
+  {id:"v4",b:"Walksnail",m:"Avatar HD V2",sys:"Walksnail",pw:[25,700,1200],lat:18,w:18,vn:7.4,vx:25.2,s:["4in","5in","6in","7in"],p:199},
+  {id:"v5",b:"HDZero",m:"Race V3",sys:"HDZero",pw:[25,200,400],lat:4,w:6,vn:7.4,vx:25.2,s:["4in","5in","6in"],p:79},
+  {id:"v6",b:"HDZero",m:"Freestyle V2",sys:"HDZero",pw:[25,200,500,1000],lat:4,w:9,vn:7.4,vx:25.2,s:["5in","6in","7in","8in"],p:99},
+  {id:"v7",b:"Rush",m:"Tank Solo",sys:"Analog",pw:[25,200,400,800],lat:1,w:5,vn:7.4,vx:25.2,s:["5in","6in","7in"],p:29},
+  {id:"v8",b:"HDZero",m:"Whoop Lite",sys:"HDZero",pw:[25,200],lat:4,w:3,vn:3.3,vx:7.4,s:["65mm","75mm","2in","3in"],p:59},
 ];
 const CAMS=[
-  {id:"c1",b:"RunCam",m:"Phoenix 2 Joshua",sys:"Analog",w:7,s:["4in","5in","6in","7in"]},{id:"c2",b:"Foxeer",m:"Razer Mini",sys:"Analog",w:4,s:["3in","3.5in","4in","5in"]},
-  {id:"c3",b:"Caddx",m:"Ratel 2 V2",sys:"Analog",w:7,s:["4in","5in","6in","7in"]},{id:"c4",b:"DJI",m:"O3 Camera",sys:"DJI",w:4,s:["3.5in","4in","5in","6in","7in"]},
-  {id:"c5",b:"DJI",m:"O4 Camera",sys:"DJI",w:4,s:["3.5in","4in","5in","6in","7in","8in"]},{id:"c6",b:"RunCam",m:"HDZero Micro V3",sys:"HDZero",w:5,s:["4in","5in","6in","7in"]},
-  {id:"c7",b:"Caddx",m:"Polar Starlight",sys:"Walksnail",w:5,s:["4in","5in","6in","7in"]},{id:"c8",b:"Caddx",m:"Ant Lite",sys:"Analog",w:2,s:["65mm","75mm","2in","3in"]},
+  {id:"c1",b:"RunCam",m:"Phoenix 2 Joshua",sys:"Analog",w:7,s:["4in","5in","6in","7in"],p:38},
+  {id:"c2",b:"Foxeer",m:"Razer Mini",sys:"Analog",w:4,s:["3in","3.5in","4in","5in"],p:22},
+  {id:"c3",b:"Caddx",m:"Ratel 2 V2",sys:"Analog",w:7,s:["4in","5in","6in","7in"],p:28},
+  {id:"c4",b:"DJI",m:"O3 Camera",sys:"DJI",w:4,s:["3.5in","4in","5in","6in","7in"],p:149},
+  {id:"c5",b:"DJI",m:"O4 Camera",sys:"DJI",w:4,s:["3.5in","4in","5in","6in","7in","8in"],p:199},
+  {id:"c6",b:"RunCam",m:"HDZero Micro V3",sys:"HDZero",w:5,s:["4in","5in","6in","7in"],p:89},
+  {id:"c7",b:"Caddx",m:"Polar Starlight",sys:"Walksnail",w:5,s:["4in","5in","6in","7in"],p:59},
+  {id:"c8",b:"Caddx",m:"Ant Lite",sys:"Analog",w:2,s:["65mm","75mm","2in","3in"],p:15},
 ];
 const RXS=[
-  {id:"r1",b:"HappyModel",m:"EP2 TCXO",pr:"ELRS",fr:"2.4G",w:1.2,s:["65mm","75mm","2in","3in","3.5in","4in","5in","6in","7in"]},
-  {id:"r2",b:"RadioMaster",m:"RP1 ELRS",pr:"ELRS",fr:"2.4G",w:1.0,s:["65mm","75mm","2in","3in","3.5in","4in","5in","6in","7in"]},
-  {id:"r3",b:"TBS",m:"Crossfire Nano",pr:"CRSF",fr:"915MHz",w:2,s:["3in","3.5in","4in","5in","6in","7in"]},
-  {id:"r4",b:"FrSky",m:"R-XSR",pr:"SBUS",fr:"2.4G",w:1.5,s:["3in","3.5in","4in","5in","6in","7in"]},
-  {id:"r5",b:"RadioMaster",m:"RP4TD Diversity",pr:"ELRS",fr:"2.4G",w:3.5,s:["5in","6in","7in","8in","9in"]},
-  {id:"r6",b:"TBS",m:"Crossfire Diversity",pr:"CRSF",fr:"915MHz",w:8,s:["5in","6in","7in","8in","9in","10in"]},
+  {id:"r1",b:"HappyModel",m:"EP2 TCXO",pr:"ELRS",fr:"2.4G",w:1.2,s:["65mm","75mm","2in","3in","3.5in","4in","5in","6in","7in"],p:14},
+  {id:"r2",b:"RadioMaster",m:"RP1 ELRS",pr:"ELRS",fr:"2.4G",w:1.0,s:["65mm","75mm","2in","3in","3.5in","4in","5in","6in","7in"],p:12},
+  {id:"r3",b:"TBS",m:"Crossfire Nano",pr:"CRSF",fr:"915MHz",w:2,s:["3in","3.5in","4in","5in","6in","7in"],p:29},
+  {id:"r4",b:"FrSky",m:"R-XSR",pr:"SBUS",fr:"2.4G",w:1.5,s:["3in","3.5in","4in","5in","6in","7in"],p:22},
+  {id:"r5",b:"RadioMaster",m:"RP4TD Diversity",pr:"ELRS",fr:"2.4G",w:3.5,s:["5in","6in","7in","8in","9in"],p:18},
+  {id:"r6",b:"TBS",m:"Crossfire Diversity",pr:"CRSF",fr:"915MHz",w:8,s:["5in","6in","7in","8in","9in","10in"],p:49},
 ];
 const GPSS=[
-  {id:"g1",b:"Holybro",m:"M10 Standard",chip:"u-blox M10",w:20,s:["5in","6in","7in","8in","9in","10in","12in","13in"]},
-  {id:"g2",b:"Holybro",m:"H-RTK F9P",chip:"u-blox F9P",w:52,s:["7in","8in","9in","10in","12in","13in","15in"]},
-  {id:"g3",b:"Beitian",m:"BN-880",chip:"u-blox M8N",w:18,s:["5in","6in","7in","8in"]},
-  {id:"g4",b:"Matek",m:"M10Q-5883",chip:"u-blox M10",w:8,s:["4in","5in","6in","7in","8in"]},
-  {id:"g5",b:"CUAV",m:"C-RTK 9P",chip:"u-blox F9P",w:55,s:["9in","10in","12in","13in","15in"]},
+  {id:"g1",b:"Holybro",m:"M10 Standard",chip:"u-blox M10",w:20,s:["5in","6in","7in","8in","9in","10in","12in","13in"],p:35},
+  {id:"g2",b:"Holybro",m:"H-RTK F9P",chip:"u-blox F9P",w:52,s:["7in","8in","9in","10in","12in","13in","15in"],p:249},
+  {id:"g3",b:"Beitian",m:"BN-880",chip:"u-blox M8N",w:18,s:["5in","6in","7in","8in"],p:22},
+  {id:"g4",b:"Matek",m:"M10Q-5883",chip:"u-blox M10",w:8,s:["4in","5in","6in","7in","8in"],p:28},
+  {id:"g5",b:"CUAV",m:"C-RTK 9P",chip:"u-blox F9P",w:55,s:["9in","10in","12in","13in","15in"],p:289},
 ];
 
 // ════════════════════════════════════════════════════
@@ -312,29 +323,32 @@ function rateComponent(item,type,sel,size,frame,frameMat){
 // ════════════════════════════════════════════════════
 function buildDroneScene(canvas,ft,ds,sel,bPos,isDark,fcPos,escPos,cameraState,frameMat){
   var W=canvas.clientWidth,H=canvas.clientHeight;
-  var renderer=new THREE.WebGLRenderer({canvas:canvas,antialias:true,alpha:true});
+  var renderer=new THREE.WebGLRenderer({canvas:canvas,antialias:true,alpha:false});
   renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));renderer.setSize(W,H);
-  renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.3;
+  renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=isDark?1.6:1.3;
+  renderer.setClearColor(isDark?0x1b2235:0xe5e7eb,1);
   var scene=new THREE.Scene();var camera=new THREE.PerspectiveCamera(38,W/H,0.01,100);
   var defTheta=0.785,defPhi=1.1,defRadius=0.5;
   var sph=new THREE.Spherical(cameraState.radius||defRadius,cameraState.phi||defPhi,cameraState.theta||defTheta);
   var off=new THREE.Vector3().setFromSpherical(sph);
   camera.position.copy(off);camera.lookAt(0,-0.002,0);
-  var hC=isDark?[0xcce0ff,0x222233]:[0xffffff,0xdde0e6];
-  scene.add(new THREE.HemisphereLight(hC[0],hC[1],isDark?0.5:0.7));
-  var kl=new THREE.DirectionalLight(0xffffff,isDark?1.0:1.2);kl.position.set(2,3,2);scene.add(kl);
-  scene.add(new THREE.DirectionalLight(isDark?0x88aaff:0xaaccff,0.3).translateX(-2).translateY(1).translateZ(-1));
-  var gA=isDark?0x1a2030:0xaaaaaa,gB=isDark?0x111822:0xcccccc;
+  // Lighting — significantly brighter in dark mode so drone is clearly visible
+  var hC=isDark?[0xddeeff,0x445577]:[0xffffff,0xdde0e6];
+  scene.add(new THREE.HemisphereLight(hC[0],hC[1],isDark?1.2:0.7));
+  var kl=new THREE.DirectionalLight(0xffffff,isDark?2.2:1.2);kl.position.set(2,3,2);scene.add(kl);
+  var fl=new THREE.DirectionalLight(isDark?0xaaccff:0xaaccff,isDark?0.8:0.3);fl.position.set(-2,1,-1);scene.add(fl);
+  var rl=new THREE.DirectionalLight(isDark?0x6699ff:0x88aacc,isDark?0.6:0.1);rl.position.set(0,-1,-3);scene.add(rl);
+  var gA=isDark?0x2a3a5a:0xaaaaaa,gB=isDark?0x1e2d48:0xcccccc;
   var gh=new THREE.GridHelper(0.5,20,gA,gB);gh.position.y=-0.06;scene.add(gh);
-  // Frame material color
-  var frameColor=frameMat?(isDark?frameMat.color:frameMat.colorL):(isDark?0x1a1a1f:0x2a2a30);
-  var frameMetalness=frameMat&&(frameMat.id==="al"||frameMat.id==="ti")?0.7:0.2;
-  var cM=new THREE.MeshStandardMaterial({color:frameColor,roughness:0.4,metalness:frameMetalness});
-  var mM=new THREE.MeshStandardMaterial({color:isDark?0x333340:0x555560,roughness:0.3,metalness:0.8});
-  var cuM=new THREE.MeshStandardMaterial({color:0xb87333,roughness:0.5,metalness:0.7});
-  var prM=new THREE.MeshStandardMaterial({color:isDark?0x333333:0x555555,roughness:0.4,transparent:true,opacity:0.65});
-  var acC=isDark?0x5b9cf6:0x2d7be5;
-  var aM=new THREE.MeshStandardMaterial({color:acC,roughness:0.4,metalness:0.5,emissive:isDark?0x0a1a33:0x081530,emissiveIntensity:0.3});
+  // Frame material color — lighter in dark mode so it reads against the background
+  var frameColor=frameMat?(isDark?frameMat.color:frameMat.colorL):(isDark?0x44445a:0x2a2a30);
+  var frameMetalness=frameMat&&(frameMat.id==="al"||frameMat.id==="ti")?0.8:isDark?0.3:0.2;
+  var cM=new THREE.MeshStandardMaterial({color:frameColor,roughness:isDark?0.35:0.4,metalness:frameMetalness});
+  var mM=new THREE.MeshStandardMaterial({color:isDark?0x707080:0x555560,roughness:0.25,metalness:0.85});
+  var cuM=new THREE.MeshStandardMaterial({color:0xcc8833,roughness:0.4,metalness:0.8});
+  var prM=new THREE.MeshStandardMaterial({color:isDark?0x556688:0x555555,roughness:0.3,transparent:true,opacity:isDark?0.75:0.65});
+  var acC=isDark?0x70b8ff:0x2d7be5;
+  var aM=new THREE.MeshStandardMaterial({color:acC,roughness:0.3,metalness:0.6,emissive:isDark?0x1a3a66:0x081530,emissiveIntensity:isDark?0.5:0.3});
   var drone=new THREE.Group();var sc=ds?ds.mm/220:1;var armL=0.1*sc;var mc=ft?ft.mc:4;
   // Determine if frame needs to be taller (components between plates need gap)
   var betweenCount=(fcPos==="between"?1:0)+(escPos==="between"?1:0);
@@ -448,7 +462,7 @@ function DroneViewer({frameType,droneSize,selections,batteryPos,fcPos,escPos,fra
     return function(){if(cleanupRef.current)cleanupRef.current();};
   },[frameType,droneSize,selections,batteryPos,isDark,fcPos,escPos,frameMat]);
   return(
-    <div style={{position:"relative",width:"100%",aspectRatio:"4/3",background:t.canvas,borderRadius:16,overflow:"hidden",boxShadow:t.sh}}>
+    <div style={{position:"relative",width:"100%",aspectRatio:"4/3",background:isDark?"#1b2235":t.canvas,borderRadius:16,overflow:"hidden",boxShadow:t.sh}}>
       <canvas ref={canvasRef} style={{width:"100%",height:"100%",display:"block",cursor:"grab"}}/>
       <div style={{position:"absolute",bottom:10,left:14,fontSize:9,color:t.td,fontFamily:MN,letterSpacing:0.8,opacity:0.6}}>Drag · Scroll to zoom</div>
       {frameType&&droneSize&&<div style={{position:"absolute",top:10,left:14,fontSize:10,color:t.ac,fontFamily:MN,fontWeight:600}}>{frameType.name} · {droneSize.l}{frameMat?" · "+frameMat.name:""}</div>}
@@ -494,6 +508,198 @@ var PHYSICS_DEFS={
   "Electronics Current":"Combined idle current draw from all selected electronic components (FC, VTX, receiver, GPS, camera) at typical operating voltage.",
   "CG Shift Penalty":"Moving FC or ESC away from the frame center shifts the center of gravity, requiring trim corrections that increase hover power consumption."
 };
+
+// ════════════════════════════════════════════════════
+// BUY LINKS & REGION DETECTION
+// ════════════════════════════════════════════════════
+function detectRegion(lat,lon){
+  // India
+  if(lat>6&&lat<37&&lon>67&&lon<98)return"in";
+  // UK (before broader EU check)
+  if(lat>49.5&&lat<61&&lon>-8&&lon<2)return"uk";
+  // Europe
+  if(lat>34&&lat<72&&lon>-25&&lon<45)return"eu";
+  // Australia / NZ
+  if(lat>-47&&lat<-10&&lon>112&&lon<180)return"au";
+  // Canada
+  if(lat>42&&lat<84&&lon>-141&&lon<-52)return"ca";
+  // Default US / international
+  return"us";
+}
+function getBuyUrl(brand,model,region){
+  var q=encodeURIComponent(brand+" "+model);
+  if(region==="in")return"https://www.amazon.in/s?k="+q+"&i=electronics";
+  if(region==="uk")return"https://www.amazon.co.uk/s?k="+q+"&i=electronics";
+  if(region==="eu")return"https://www.banggood.com/search/"+encodeURIComponent(brand+"-"+model)+".html";
+  if(region==="au")return"https://www.amazon.com.au/s?k="+q;
+  if(region==="ca")return"https://www.amazon.ca/s?k="+q+"&i=electronics";
+  return"https://www.getfpv.com/search?q="+q;
+}
+var REGION_LABELS={"us":"GetFPV (US)","uk":"Amazon UK","eu":"Banggood (EU)","in":"Amazon India","au":"Amazon AU","ca":"Amazon CA"};
+var REGION_FLAGS={"us":"🇺🇸","uk":"🇬🇧","eu":"🇪🇺","in":"🇮🇳","au":"🇦🇺","ca":"🇨🇦"};
+
+// ════════════════════════════════════════════════════
+// BUILD SUMMARY PAGE
+// ════════════════════════════════════════════════════
+function BuildSummaryPage({build,onBack,onBackToBuilder}){
+  var T=useTheme();var t=T.t;var isDark=T.mode==="dark";
+  var rs=useState("us"),region=rs[0],setRegion=rs[1];
+  var ls=useState("idle"),locState=ls[0],setLocState=ls[1];
+
+  useEffect(function(){
+    if(!navigator.geolocation){setLocState("denied");return;}
+    setLocState("asking");
+    navigator.geolocation.getCurrentPosition(
+      function(pos){
+        var r=detectRegion(pos.coords.latitude,pos.coords.longitude);
+        setRegion(r);setLocState("granted");
+      },
+      function(){
+        // Fallback: guess from browser language
+        var lang=(navigator.language||"en-US").toLowerCase();
+        if(lang.includes("en-in")||lang.includes("hi"))setRegion("in");
+        else if(lang.includes("en-gb"))setRegion("uk");
+        else if(lang.includes("en-au"))setRegion("au");
+        else if(lang.includes("en-ca"))setRegion("ca");
+        setLocState("denied");
+      },
+      {timeout:8000}
+    );
+  },[]);
+
+  var mc=build.frame?build.frame.mc:4;
+  var sel=build.sel||{};
+  var COMP_TYPES=[
+    {key:"motor",label:"Motor",qty:mc,unitKey:"p"},
+    {key:"esc",label:"Speed Controller",qty:1,unitKey:"p"},
+    {key:"fc",label:"Flight Controller",qty:1,unitKey:"p"},
+    {key:"battery",label:"Battery",qty:1,unitKey:"p"},
+    {key:"prop",label:"Propeller",qty:mc,unitKey:"p"},
+    {key:"vtx",label:"Video Transmitter",qty:1,unitKey:"p"},
+    {key:"camera",label:"Camera",qty:1,unitKey:"p"},
+    {key:"rx",label:"Receiver",qty:1,unitKey:"p"},
+    {key:"gps",label:"GPS Module",qty:1,unitKey:"p"},
+  ];
+  var rows=COMP_TYPES.filter(function(ct){return sel[ct.key];}).map(function(ct){
+    var item=sel[ct.key];
+    var unitPrice=item.p||0;
+    var total=unitPrice*ct.qty;
+    return{ct:ct,item:item,unitPrice:unitPrice,total:total};
+  });
+  var grandTotal=rows.reduce(function(s,r){return s+r.total;},0);
+
+  return(<div style={{minHeight:"100vh",background:t.bg,color:t.tx,fontFamily:SN}}>
+    {/* Header */}
+    <div style={{padding:"14px 28px",borderBottom:"1px solid "+t.bd,display:"flex",justifyContent:"space-between",alignItems:"center",background:t.bg+"e6",backdropFilter:"blur(12px)",position:"sticky",top:0,zIndex:40}}>
+      <div style={{fontFamily:MN,fontWeight:700,fontSize:15,letterSpacing:1.2}}><span style={{color:t.tb}}>Multirotor</span><span style={{color:t.ac}}>.</span><span style={{color:t.tb}}>build</span></div>
+      <div style={{display:"flex",gap:8,alignItems:"center"}}>
+        <button onClick={onBackToBuilder} style={{background:t.sf,border:"1px solid "+t.bd,color:t.td,padding:"7px 16px",borderRadius:8,cursor:"pointer",fontSize:13,fontFamily:SN,fontWeight:500}}>← Back to Builder</button>
+        <button onClick={function(){T.toggle();}} style={{background:isDark?"#3a4055":t.sf,border:"2px solid "+(isDark?"#6aaeff":t.bd),borderRadius:8,padding:"7px 14px",cursor:"pointer",fontSize:13,color:isDark?"#eceef6":t.td,fontWeight:600}}>{isDark?"☀ Light":"☾ Dark"}</button>
+      </div>
+    </div>
+
+    <div style={{maxWidth:900,margin:"0 auto",padding:"32px 24px"}}>
+      {/* Build title */}
+      <div style={{marginBottom:28}}>
+        <div style={{fontSize:11,fontWeight:700,color:t.ac,letterSpacing:1.5,fontFamily:MN,marginBottom:8}}>BUILD SUMMARY</div>
+        <h1 style={{fontSize:28,fontWeight:800,color:t.tb,margin:"0 0 6px",fontFamily:SN}}>{build.name||"My Build"}</h1>
+        <div style={{fontSize:14,color:t.td,fontFamily:SN}}>
+          {build.frame&&build.frame.name} · {build.size&&build.size.l} · {build.frameMat&&build.frameMat.name}
+          {build.flight&&<span> · {build.flight.hoverTime} min hover · {build.flight.auw}g AUW</span>}
+        </div>
+      </div>
+
+      {/* Location / region selector */}
+      <div style={{background:t.sf,borderRadius:14,padding:"14px 18px",marginBottom:24,display:"flex",alignItems:"center",gap:14,flexWrap:"wrap",boxShadow:t.sh}}>
+        <div style={{fontSize:18}}>{REGION_FLAGS[region]||"🌍"}</div>
+        <div style={{flex:1,minWidth:180}}>
+          <div style={{fontSize:13,fontWeight:700,color:t.tb,fontFamily:SN}}>
+            {locState==="asking"?"Detecting your location…":locState==="granted"?"Location detected — showing prices for your region":"Showing prices for: "+REGION_LABELS[region]}
+          </div>
+          <div style={{fontSize:11,color:t.td,marginTop:2,fontFamily:SN}}>
+            {locState==="denied"?"Location permission denied — select your region manually below":"Buy links route to the cheapest major retailer in your region"}
+          </div>
+        </div>
+        <select value={region} onChange={function(e){setRegion(e.target.value);}} style={{padding:"8px 12px",borderRadius:9,border:"1.5px solid "+t.bd,background:t.bg2,color:t.tb,fontSize:13,fontFamily:SN,cursor:"pointer",fontWeight:600}}>
+          <option value="us">🇺🇸 United States</option>
+          <option value="uk">🇬🇧 United Kingdom</option>
+          <option value="eu">🇪🇺 Europe</option>
+          <option value="in">🇮🇳 India</option>
+          <option value="au">🇦🇺 Australia</option>
+          <option value="ca">🇨🇦 Canada</option>
+        </select>
+      </div>
+
+      {/* Component list */}
+      <div style={{background:t.sf,borderRadius:16,boxShadow:t.sh,overflow:"hidden",marginBottom:24}}>
+        {/* Table header */}
+        <div style={{display:"grid",gridTemplateColumns:"2fr 1fr 80px 80px 100px 130px",gap:0,padding:"12px 20px",background:t.bg2,borderBottom:"1px solid "+t.bd}}>
+          {["Component","Specs","Qty","Unit Price","Total",""].map(function(h,i){
+            return <div key={i} style={{fontSize:11,fontWeight:700,color:t.td,fontFamily:SN,letterSpacing:0.5,textAlign:i>=2?"right":undefined,paddingRight:i>=2&&i<5?8:0}}>{h}</div>;
+          })}
+        </div>
+        {rows.length===0&&<div style={{padding:"40px 20px",textAlign:"center",fontSize:14,color:t.td,fontFamily:SN}}>No components selected. Go back to the builder to select components.</div>}
+        {rows.map(function(r,i){
+          var url=getBuyUrl(r.item.b,r.item.m,region);
+          return <div key={r.item.id} style={{display:"grid",gridTemplateColumns:"2fr 1fr 80px 80px 100px 130px",gap:0,padding:"16px 20px",borderBottom:i<rows.length-1?"1px solid "+t.bdL:"none",alignItems:"center",background:i%2===0?t.sf:t.bg+"44"}}>
+            {/* Name */}
+            <div>
+              <div style={{fontSize:11,fontWeight:600,color:t.ac,letterSpacing:1,fontFamily:MN,marginBottom:3}}>{r.ct.label.toUpperCase()}</div>
+              <div style={{fontSize:15,fontWeight:700,color:t.tb,fontFamily:SN}}>{r.item.b} <span style={{color:t.ac}}>{r.item.m}</span></div>
+            </div>
+            {/* Specs */}
+            <div style={{fontSize:11,color:t.td,fontFamily:MN,lineHeight:1.5}}>
+              {r.ct.key==="motor"&&<>{r.item.kv}KV · {r.item.sz}<br/>{r.item.w}g · {r.item.t}g thrust</>}
+              {r.ct.key==="esc"&&<>{r.item.cc}A · {r.item.fw}<br/>{r.item.vn}–{r.item.vx}V</>}
+              {r.ct.key==="fc"&&<>{r.item.mcu}<br/>{r.item.fw.join("/")}</>}
+              {r.ct.key==="battery"&&<>{r.item.c}S {r.item.v}V<br/>{r.item.cap}mAh · {r.item.dr}C</>}
+              {r.ct.key==="prop"&&<>{r.item.d}" {r.item.bl}-blade<br/>pitch {r.item.pi}"</>}
+              {r.ct.key==="vtx"&&<>{r.item.sys}<br/>{r.item.pw.join("/")}mW</>}
+              {r.ct.key==="camera"&&<>{r.item.sys} · {r.item.w}g</>}
+              {r.ct.key==="rx"&&<>{r.item.pr} · {r.item.fr}</>}
+              {r.ct.key==="gps"&&<>{r.item.chip}<br/>{r.item.w}g</>}
+            </div>
+            {/* Qty */}
+            <div style={{fontSize:14,fontWeight:600,color:t.tb,textAlign:"right",paddingRight:8}}>{r.ct.qty}×</div>
+            {/* Unit price */}
+            <div style={{fontSize:14,fontWeight:600,color:t.td,textAlign:"right",paddingRight:8}}>{r.unitPrice>0?"$"+r.unitPrice:"—"}</div>
+            {/* Total */}
+            <div style={{fontSize:15,fontWeight:700,color:t.tb,textAlign:"right",paddingRight:8}}>{r.total>0?"$"+r.total:"—"}</div>
+            {/* Buy button */}
+            <div style={{textAlign:"right"}}>
+              <a href={url} target="_blank" rel="noopener noreferrer" style={{display:"inline-block",padding:"7px 14px",borderRadius:8,background:t.acL,color:t.ac,fontSize:12,fontWeight:700,fontFamily:SN,textDecoration:"none",border:"1px solid "+t.ac+"66",transition:"all 0.15s"}}
+                onMouseEnter={function(e){e.currentTarget.style.background=t.ac;e.currentTarget.style.color="#fff";}}
+                onMouseLeave={function(e){e.currentTarget.style.background=t.acL;e.currentTarget.style.color=t.ac;}}>
+                Buy {REGION_FLAGS[region]}
+              </a>
+            </div>
+          </div>;
+        })}
+      </div>
+
+      {/* Total cost */}
+      {grandTotal>0&&<div style={{background:isDark?"#1e2a40":t.acL,borderRadius:16,padding:"20px 24px",display:"flex",justifyContent:"space-between",alignItems:"center",boxShadow:t.sh,border:"2px solid "+t.ac+"44",marginBottom:24}}>
+        <div>
+          <div style={{fontSize:13,fontWeight:700,color:t.ac,letterSpacing:1.2,fontFamily:MN,marginBottom:4}}>ESTIMATED TOTAL COST</div>
+          <div style={{fontSize:12,color:t.td,fontFamily:SN}}>
+            Prices are approximate ({REGION_LABELS[region]}). Check each retailer for current pricing, shipping, and taxes.
+            {build.frame&&<span> Frame not included — prices vary widely.</span>}
+          </div>
+        </div>
+        <div style={{fontSize:36,fontWeight:800,color:t.ac,fontFamily:SN,whiteSpace:"nowrap",marginLeft:24}}>
+          ${grandTotal.toLocaleString()}
+        </div>
+      </div>}
+
+      {/* Note */}
+      <div style={{background:t.bg2,borderRadius:12,padding:"14px 18px",fontSize:12,color:t.td,fontFamily:SN,lineHeight:1.7,border:"1px solid "+t.bd}}>
+        <strong style={{color:t.tb,fontWeight:700}}>Note on pricing:</strong> Prices shown are USD estimates based on typical market rates and are updated periodically.
+        Actual prices vary by region, stock availability, and promotions. The "Buy" button links to a product search on {REGION_LABELS[region]} —
+        always verify the correct model before purchasing. For motors, the price shown is per motor × quantity ({build.frame?build.frame.mc:4} motors for this build).
+      </div>
+    </div>
+  </div>);
+}
 
 // ════════════════════════════════════════════════════
 // DOCUMENTATION
@@ -664,7 +870,7 @@ function LandingPage({onLaunch}){
 // ════════════════════════════════════════════════════
 // BUILDER
 // ════════════════════════════════════════════════════
-function BuilderApp({goHome,goModeSelect}){
+function BuilderApp({goHome,goModeSelect,onSaveBuild}){
   var T=useTheme();var t=T.t;var isDark=T.mode==="dark";
   var ds=useState(false),showDocs=ds[0],setShowDocs=ds[1];
   var fs=useState(null),frame=fs[0],setFrame=fs[1];
@@ -687,7 +893,9 @@ function BuilderApp({goHome,goModeSelect}){
   var resetAll=function(){setSel(emptySel);};
   var saveBuild=function(){
     var name="Build "+(savedBuilds.length+1)+" — "+(frame?frame.name:"")+" "+(size?size.l:"");
-    setSavedBuilds(function(prev){return prev.concat([{id:Date.now(),name:name,frame:frame,size:size,frameMat:frameMat,sel:sel,battPos:battPos,fcPos:fcPos,escPos:escPos,flight:flight}]);});
+    var b={id:Date.now(),name:name,frame:frame,size:size,frameMat:frameMat,sel:sel,battPos:battPos,fcPos:fcPos,escPos:escPos,flight:flight};
+    setSavedBuilds(function(prev){return prev.concat([b]);});
+    if(onSaveBuild)onSaveBuild(b);
   };
 
   var compat=useMemo(function(){var filled=Object.values(sel).filter(Boolean);if(filled.length<2)return null;return checkCompat(sel,size,frame,frameMat);},[sel,size,frame,frameMat]);
@@ -955,6 +1163,7 @@ function ModeSelectPage({onSelect,onBack}){
 // ════════════════════════════════════════════════════
 export default function App(){
   var ps=useState("landing"),page=ps[0],setPage=ps[1];
+  var sbs=useState(null),summaryBuild=sbs[0],setSummaryBuild=sbs[1];
   var ms=useState("dark"),mode=ms[0],setMode=ms[1];
   var t=mode==="dark"?DARK:LIGHT;
   var ctx={t:t,mode:mode,toggle:function(){setMode(mode==="dark"?"light":"dark");}};
@@ -962,6 +1171,7 @@ export default function App(){
   return(<ThemeCtx.Provider value={ctx}>
     {page==="landing"&&<LandingPage onLaunch={function(){setPage("mode-select");}}/>}
     {page==="mode-select"&&<ModeSelectPage onSelect={function(){setPage("builder");}} onBack={goHome}/>}
-    {page==="builder"&&<BuilderApp goHome={goHome} goModeSelect={function(){setPage("mode-select");}}/>}
+    {page==="builder"&&<BuilderApp goHome={goHome} goModeSelect={function(){setPage("mode-select");}} onSaveBuild={function(b){setSummaryBuild(b);setPage("summary");}}/>}
+    {page==="summary"&&summaryBuild&&<BuildSummaryPage build={summaryBuild} onBackToBuilder={function(){setPage("builder");}} onBack={goHome}/>}
   </ThemeCtx.Provider>);
 }
