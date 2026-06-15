@@ -845,7 +845,7 @@ function InfoTip({label}){
 }
 function MathPanel({insights,flight}){
   var T=useTheme();var t=T.t;if(!insights.length&&!flight)return null;
-  return(<div style={{display:"grid",gridTemplateColumns:insights.length&&flight?"1fr 1fr":"1fr",gap:12,alignItems:"start"}}>
+  return(<div style={{display:"flex",flexDirection:"column",gap:12}}>
     {insights.length>0&&<div style={{background:t.sf,borderRadius:14,boxShadow:t.sh,padding:16,fontFamily:MN}}>
       <div style={{fontSize:11,fontWeight:700,color:t.ac,letterSpacing:1.5,marginBottom:12}}>PHYSICS BREAKDOWN</div>
       {insights.map(function(ins,i){var vc=ins.type==="good"?t.ac:ins.type==="bad"?t.rd:ins.type==="warn"?t.am:t.tb;
@@ -855,17 +855,25 @@ function MathPanel({insights,flight}){
     </div>}
     {flight&&<div style={{background:t.sf,borderRadius:14,boxShadow:t.sh,padding:16,fontFamily:MN}}>
       <div style={{fontSize:11,fontWeight:700,color:t.bl,letterSpacing:1.5,marginBottom:12}}>FLIGHT ESTIMATES</div>
-      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:12}}>
-        <div style={{textAlign:"center",background:t.acL,borderRadius:12,padding:14}}><div style={{fontSize:28,fontWeight:800,color:t.ac,fontFamily:SN}}>{flight.hoverTime}<span style={{fontSize:13,fontWeight:500}}> min</span></div><div style={{fontSize:11,color:t.td,marginTop:4,fontFamily:SN,fontWeight:600,letterSpacing:0.5}}>HOVER</div></div>
-        <div style={{textAlign:"center",background:t.blL,borderRadius:12,padding:14}}><div style={{fontSize:28,fontWeight:800,color:t.bl,fontFamily:SN}}>{flight.cruiseTime}<span style={{fontSize:13,fontWeight:500}}> min</span></div><div style={{fontSize:11,color:t.td,marginTop:4,fontFamily:SN,fontWeight:600,letterSpacing:0.5}}>CRUISE</div></div>
-      </div>
-      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6,marginBottom:12}}>
-        {[[flight.auw+"g","All-Up Weight",t.tb],[flight.twr+":1","Thrust/Weight",flight.twr>=4?t.ac:flight.twr>=2?t.am:t.rd],[flight.hoverThrottle+"%","Hover Throttle",t.tb],[flight.hoverPower+"W","Hover Power",t.tb]].map(function(r,i){
-          return <div key={i} style={{background:t.bg2,borderRadius:10,padding:"10px 8px",textAlign:"center"}}><div style={{fontWeight:700,fontSize:16,color:r[2],fontFamily:SN}}>{r[0]}</div><div style={{fontSize:10,color:t.td,marginTop:3,fontFamily:SN,fontWeight:500}}>{r[1]}</div></div>;})}</div>
-      <div style={{fontSize:12,color:t.td,lineHeight:1.7,fontFamily:MN}}>
-        {Object.entries(flight.breakdown).map(function(en){return <div key={en[0]} style={{display:"flex",justifyContent:"space-between"}}><span style={{textTransform:"capitalize"}}>{en[0]}</span><span>{en[1]}g</span></div>;})}
-        <div style={{borderTop:"1px solid "+t.bd,marginTop:4,paddingTop:4,fontWeight:700,color:t.tb,display:"flex",justifyContent:"space-between"}}><span>Total AUW</span><span>{flight.auw}g</span></div>
-        <div style={{marginTop:6,fontSize:11,color:t.td,fontFamily:MN}}>ρ={flight.rho} kg/m³ · FM={flight.FM} · {flight.altitude}m ASL</div>
+      {/* Cards 3 & 4 side-by-side */}
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
+        {/* Card 3 — HOVER / CRUISE + key stats */}
+        <div>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6,marginBottom:8}}>
+            <div style={{textAlign:"center",background:t.acL,borderRadius:12,padding:12}}><div style={{fontSize:24,fontWeight:800,color:t.ac,fontFamily:SN}}>{flight.hoverTime}<span style={{fontSize:11,fontWeight:500}}> min</span></div><div style={{fontSize:10,color:t.td,marginTop:3,fontFamily:SN,fontWeight:600,letterSpacing:0.5}}>HOVER</div></div>
+            <div style={{textAlign:"center",background:t.blL,borderRadius:12,padding:12}}><div style={{fontSize:24,fontWeight:800,color:t.bl,fontFamily:SN}}>{flight.cruiseTime}<span style={{fontSize:11,fontWeight:500}}> min</span></div><div style={{fontSize:10,color:t.td,marginTop:3,fontFamily:SN,fontWeight:600,letterSpacing:0.5}}>CRUISE</div></div>
+          </div>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:5}}>
+            {[[flight.auw+"g","All-Up Weight",t.tb],[flight.twr+":1","Thrust/Weight",flight.twr>=4?t.ac:flight.twr>=2?t.am:t.rd],[flight.hoverThrottle+"%","Hover Throttle",t.tb],[flight.hoverPower+"W","Hover Power",t.tb]].map(function(r,i){
+              return <div key={i} style={{background:t.bg2,borderRadius:9,padding:"8px 6px",textAlign:"center"}}><div style={{fontWeight:700,fontSize:14,color:r[2],fontFamily:SN}}>{r[0]}</div><div style={{fontSize:9,color:t.td,marginTop:2,fontFamily:SN,fontWeight:500}}>{r[1]}</div></div>;})}
+          </div>
+        </div>
+        {/* Card 4 — Weight breakdown */}
+        <div style={{background:t.bg2,borderRadius:12,padding:"10px 12px",fontSize:12,color:t.td,lineHeight:1.8,fontFamily:MN,alignSelf:"start"}}>
+          {Object.entries(flight.breakdown).map(function(en){return <div key={en[0]} style={{display:"flex",justifyContent:"space-between"}}><span style={{textTransform:"capitalize"}}>{en[0]}</span><span>{en[1]}g</span></div>;})}
+          <div style={{borderTop:"1px solid "+t.bd,marginTop:4,paddingTop:4,fontWeight:700,color:t.tb,display:"flex",justifyContent:"space-between"}}><span>Total AUW</span><span>{flight.auw}g</span></div>
+          <div style={{marginTop:6,fontSize:10,color:t.td,fontFamily:MN}}>ρ={flight.rho} kg/m³ · FM={flight.FM} · {flight.altitude}m ASL</div>
+        </div>
       </div>
     </div>}
   </div>);
@@ -1151,54 +1159,54 @@ function BuilderApp({goHome,goModeSelect,onSaveBuild}){
         </div>
       </div>
     ):(
-      <div style={{display:"grid",gridTemplateColumns:"260px 1.2fr 1.4fr",height:"calc(100vh - 54px)",overflow:"hidden"}}>
+      <div style={{display:"grid",gridTemplateColumns:"190px 1fr 1.6fr",height:"calc(100vh - 54px)",overflow:"hidden"}}>
 
-      {/* Col 1 — Controls: chips, save, placement, issues */}
+      {/* Col 1 — Controls only (end-to-end height): save, placement, issues */}
       <div style={{borderRight:"1px solid "+t.bd,background:t.bg,display:"flex",flexDirection:"column",overflow:"hidden"}}>
-        {/* Component chips */}
-        <div style={{padding:"8px 12px 4px",display:"flex",flexWrap:"wrap",gap:4,flexShrink:0}}>
-          {tabs.map(function(tb2){var s=sel[tb2.k],st2=getStatus(tb2.k);
-            var pBg=s?(st2==="error"?t.rdL:st2==="warning"?t.amL:t.acL):t.bg2;
-            var pC=s?(st2==="error"?t.rd:st2==="warning"?t.am:t.ac):t.td;
-            return <div key={tb2.k} onClick={function(){setTab(tb2.k);}} title={tb2.l} style={{padding:"4px 10px",borderRadius:20,fontSize:10,fontWeight:600,cursor:"pointer",fontFamily:SN,background:pBg,color:pC,border:"1px solid "+pC+"55",whiteSpace:"nowrap",maxWidth:140,overflow:"hidden",textOverflow:"ellipsis"}}>{s?s.b+" "+s.m:tb2.l}</div>;})}
-        </div>
         {/* Save/Compare buttons */}
-        <div style={{padding:"6px 12px",display:"flex",gap:6,flexShrink:0}}>
-          <button onClick={saveBuild} style={{flex:1,padding:"9px 0",borderRadius:9,fontSize:12,cursor:"pointer",fontFamily:SN,fontWeight:700,background:t.acL,border:"1px solid "+t.ac,color:t.ac}}>💾 Save Build</button>
-          {savedBuilds.length>0&&<button onClick={function(){setShowCompare(true);}} style={{flex:1,padding:"9px 0",borderRadius:9,fontSize:12,cursor:"pointer",fontFamily:SN,fontWeight:700,background:t.bg2,border:"1px solid "+t.bd,color:t.tb}}>⇄ {savedBuilds.length}</button>}
+        <div style={{padding:"8px 10px",display:"flex",gap:6,flexShrink:0}}>
+          <button onClick={saveBuild} style={{flex:1,padding:"8px 0",borderRadius:9,fontSize:11,cursor:"pointer",fontFamily:SN,fontWeight:700,background:t.acL,border:"1px solid "+t.ac,color:t.ac}}>💾 Save Build</button>
+          {savedBuilds.length>0&&<button onClick={function(){setShowCompare(true);}} style={{flex:1,padding:"8px 0",borderRadius:9,fontSize:11,cursor:"pointer",fontFamily:SN,fontWeight:700,background:t.bg2,border:"1px solid "+t.bd,color:t.tb}}>⇄ {savedBuilds.length}</button>}
         </div>
-        {/* Placement controls — scrollable */}
-        <div style={{flex:1,overflowY:"auto",padding:"4px 12px 12px"}}>
-          <div style={{background:t.sf,borderRadius:12,padding:"12px 14px",boxShadow:t.sh,marginBottom:8}}>
-            <div style={{fontSize:11,fontWeight:700,color:t.ac,letterSpacing:1.2,marginBottom:10,fontFamily:MN}}>COMPONENT PLACEMENT</div>
-            <div style={{display:"flex",flexWrap:"wrap",gap:6,alignItems:"center",marginBottom:8}}>
-              <span style={{fontSize:12,color:t.tb,fontFamily:SN,fontWeight:600,minWidth:130}}>Flight Controller</span>
-              {["above","between","below"].map(function(p){return <button key={"fc"+p} onClick={function(){setFcPos(p);}} style={{padding:"4px 10px",borderRadius:7,fontSize:11,cursor:"pointer",fontFamily:SN,fontWeight:500,background:fcPos===p?t.acL:t.bg2,border:"1px solid "+(fcPos===p?t.ac:t.bd),color:fcPos===p?t.ac:t.td}}>{p}</button>;})}
+        {/* Placement controls — scrollable, fills remaining height */}
+        <div style={{flex:1,overflowY:"auto",padding:"4px 10px 10px"}}>
+          <div style={{background:t.sf,borderRadius:12,padding:"10px 12px",boxShadow:t.sh,marginBottom:8}}>
+            <div style={{fontSize:10,fontWeight:700,color:t.ac,letterSpacing:1.2,marginBottom:8,fontFamily:MN}}>COMPONENT PLACEMENT</div>
+            <div style={{display:"flex",flexWrap:"wrap",gap:5,alignItems:"center",marginBottom:7}}>
+              <span style={{fontSize:11,color:t.tb,fontFamily:SN,fontWeight:600,minWidth:110}}>Flight Controller</span>
+              {["above","between","below"].map(function(p){return <button key={"fc"+p} onClick={function(){setFcPos(p);}} style={{padding:"3px 8px",borderRadius:7,fontSize:10,cursor:"pointer",fontFamily:SN,fontWeight:500,background:fcPos===p?t.acL:t.bg2,border:"1px solid "+(fcPos===p?t.ac:t.bd),color:fcPos===p?t.ac:t.td}}>{p}</button>;})}
             </div>
-            <div style={{display:"flex",flexWrap:"wrap",gap:6,alignItems:"center",marginBottom:8}}>
-              <span style={{fontSize:12,color:t.tb,fontFamily:SN,fontWeight:600,minWidth:130}}>Speed Controller</span>
-              {["above","between","below"].map(function(p){return <button key={"esc"+p} onClick={function(){setEscPos(p);}} style={{padding:"4px 10px",borderRadius:7,fontSize:11,cursor:"pointer",fontFamily:SN,fontWeight:500,background:escPos===p?t.acL:t.bg2,border:"1px solid "+(escPos===p?t.ac:t.bd),color:escPos===p?t.ac:t.td}}>{p}</button>;})}
+            <div style={{display:"flex",flexWrap:"wrap",gap:5,alignItems:"center",marginBottom:7}}>
+              <span style={{fontSize:11,color:t.tb,fontFamily:SN,fontWeight:600,minWidth:110}}>Speed Controller</span>
+              {["above","between","below"].map(function(p){return <button key={"esc"+p} onClick={function(){setEscPos(p);}} style={{padding:"3px 8px",borderRadius:7,fontSize:10,cursor:"pointer",fontFamily:SN,fontWeight:500,background:escPos===p?t.acL:t.bg2,border:"1px solid "+(escPos===p?t.ac:t.bd),color:escPos===p?t.ac:t.td}}>{p}</button>;})}
             </div>
-            {sel.battery&&<div style={{display:"flex",flexWrap:"wrap",gap:6,alignItems:"center",marginBottom:8}}>
-              <span style={{fontSize:12,color:t.tb,fontFamily:SN,fontWeight:600,minWidth:130}}>Battery</span>
-              {["top","between","bottom"].map(function(p){return <button key={p} onClick={function(){setBattPos(p);}} style={{padding:"4px 10px",borderRadius:7,fontSize:11,cursor:"pointer",fontFamily:SN,fontWeight:500,background:battPos===p?t.acL:t.bg2,border:"1px solid "+(battPos===p?t.ac:t.bd),color:battPos===p?t.ac:t.td}}>{p}</button>;})}
+            {sel.battery&&<div style={{display:"flex",flexWrap:"wrap",gap:5,alignItems:"center",marginBottom:7}}>
+              <span style={{fontSize:11,color:t.tb,fontFamily:SN,fontWeight:600,minWidth:110}}>Battery</span>
+              {["top","between","bottom"].map(function(p){return <button key={p} onClick={function(){setBattPos(p);}} style={{padding:"3px 8px",borderRadius:7,fontSize:10,cursor:"pointer",fontFamily:SN,fontWeight:500,background:battPos===p?t.acL:t.bg2,border:"1px solid "+(battPos===p?t.ac:t.bd),color:battPos===p?t.ac:t.td}}>{p}</button>;})}
             </div>}
-            <div style={{display:"flex",gap:8,alignItems:"center"}}>
-              <span style={{fontSize:12,color:t.tb,fontFamily:SN,fontWeight:600,minWidth:130}}>Altitude</span>
+            <div style={{display:"flex",gap:6,alignItems:"center"}}>
+              <span style={{fontSize:11,color:t.tb,fontFamily:SN,fontWeight:600,minWidth:110}}>Altitude</span>
               <input type="range" min={0} max={5000} step={100} value={altitude} onChange={function(e){setAltitude(+e.target.value);}} style={{flex:1,accentColor:t.ac}}/>
-              <span style={{fontSize:12,color:t.ac,fontFamily:MN,minWidth:46,textAlign:"right",fontWeight:700}}>{altitude}m</span>
+              <span style={{fontSize:11,color:t.ac,fontFamily:MN,minWidth:40,textAlign:"right",fontWeight:700}}>{altitude}m</span>
             </div>
           </div>
           <IssuesPanel compat={compat}/>
         </div>
       </div>
 
-      {/* Col 2 — 3D Drone (center/top) + Physics + Flight below, scrollable */}
+      {/* Col 2 — Drone (top) → Chips (horizontal strip) → Physics + Flight below */}
       <div style={{borderRight:"1px solid "+t.bd,overflowY:"auto",background:t.bg2,display:"flex",flexDirection:"column"}}>
         <div style={{flexShrink:0,background:t.bg,borderBottom:"1px solid "+t.bd}}>
           <DroneViewer frameType={frame} droneSize={size} selections={sel} batteryPos={battPos} fcPos={fcPos} escPos={escPos} frameMat={frameMat}/>
         </div>
-        <div style={{flex:1,padding:"14px 16px",overflowY:"auto"}}>
+        {/* Component chips — horizontal strip under drone */}
+        <div style={{padding:"6px 10px",display:"flex",flexWrap:"wrap",gap:4,flexShrink:0,borderBottom:"1px solid "+t.bdL,background:t.bg}}>
+          {tabs.map(function(tb2){var s=sel[tb2.k],st2=getStatus(tb2.k);
+            var pBg=s?(st2==="error"?t.rdL:st2==="warning"?t.amL:t.acL):t.bg2;
+            var pC=s?(st2==="error"?t.rd:st2==="warning"?t.am:t.ac):t.td;
+            return <div key={tb2.k} onClick={function(){setTab(tb2.k);}} title={tb2.l} style={{padding:"3px 9px",borderRadius:20,fontSize:10,fontWeight:600,cursor:"pointer",fontFamily:SN,background:pBg,color:pC,border:"1px solid "+pC+"55",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis",maxWidth:130}}>{s?s.b+" "+s.m:tb2.l}</div>;})}
+        </div>
+        <div style={{flex:1,padding:"12px 14px",overflowY:"auto"}}>
           <MathPanel insights={insights} flight={flight}/>
           {!insights.length&&!flight&&<div style={{color:t.td,fontSize:14,textAlign:"center",padding:"40px 20px",fontFamily:SN}}>Select a motor and battery to see physics calculations and flight time estimates.</div>}
         </div>
