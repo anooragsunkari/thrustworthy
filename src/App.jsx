@@ -1159,60 +1159,15 @@ function BuilderApp({goHome,goModeSelect,onSaveBuild}){
         </div>
       </div>
     ):(
-      <div style={{display:"grid",gridTemplateColumns:"minmax(380px,42%) 1fr",height:"calc(100vh - 54px)",overflow:"hidden"}}>
+      <div style={{display:"grid",gridTemplateColumns:"42% 58%",gridTemplateRows:"55% 45%",height:"calc(100vh - 54px)",overflow:"hidden"}}>
 
-      {/* LEFT col — Drone + controls (pos 4) + chips + physics (5) + flight (6) */}
-      <div style={{borderRight:"1px solid "+t.bd,background:t.bg,display:"flex",flexDirection:"column",overflow:"hidden"}}>
-
-        {/* Drone viewer — fills top */}
-        <div style={{flexShrink:0,borderBottom:"1px solid "+t.bd}}>
-          <DroneViewer frameType={frame} droneSize={size} selections={sel} batteryPos={battPos} fcPos={fcPos} escPos={escPos} frameMat={frameMat}/>
-        </div>
-
-        {/* Component chips — horizontal strip directly under drone */}
-        <div style={{padding:"5px 10px",display:"flex",flexWrap:"wrap",gap:4,flexShrink:0,borderBottom:"1px solid "+t.bdL,background:t.bg2}}>
-          {tabs.map(function(tb2){var s=sel[tb2.k],st2=getStatus(tb2.k);
-            var pBg=s?(st2==="error"?t.rdL:st2==="warning"?t.amL:t.acL):t.bg3;
-            var pC=s?(st2==="error"?t.rd:st2==="warning"?t.am:t.ac):t.td;
-            return <div key={tb2.k} onClick={function(){setTab(tb2.k);}} title={tb2.l} style={{padding:"3px 9px",borderRadius:20,fontSize:10,fontWeight:600,cursor:"pointer",fontFamily:SN,background:pBg,color:pC,border:"1px solid "+pC+"55",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis",maxWidth:140}}>{s?s.b+" "+s.m:tb2.l}</div>;})}
-        </div>
-
-        {/* Controls (position 4) — save + placement, compact */}
-        <div style={{flexShrink:0,padding:"6px 10px",borderBottom:"1px solid "+t.bdL,background:t.bg}}>
-          <div style={{display:"flex",gap:6,marginBottom:6}}>
-            <button onClick={saveBuild} style={{flex:1,padding:"7px 0",borderRadius:8,fontSize:11,cursor:"pointer",fontFamily:SN,fontWeight:700,background:t.acL,border:"1px solid "+t.ac,color:t.ac}}>💾 Save Build</button>
-            {savedBuilds.length>0&&<button onClick={function(){setShowCompare(true);}} style={{flex:1,padding:"7px 0",borderRadius:8,fontSize:11,cursor:"pointer",fontFamily:SN,fontWeight:700,background:t.bg2,border:"1px solid "+t.bd,color:t.tb}}>⇄ Compare ({savedBuilds.length})</button>}
-          </div>
-          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6}}>
-            <div>
-              <div style={{fontSize:10,color:t.td,fontFamily:SN,fontWeight:600,marginBottom:3}}>Flight Controller</div>
-              <div style={{display:"flex",gap:3}}>{["above","between","below"].map(function(p){return <button key={"fc"+p} onClick={function(){setFcPos(p);}} style={{flex:1,padding:"3px 0",borderRadius:6,fontSize:9,cursor:"pointer",fontFamily:SN,fontWeight:500,background:fcPos===p?t.acL:t.bg2,border:"1px solid "+(fcPos===p?t.ac:t.bd),color:fcPos===p?t.ac:t.td}}>{p}</button>;})}</div>
-            </div>
-            <div>
-              <div style={{fontSize:10,color:t.td,fontFamily:SN,fontWeight:600,marginBottom:3}}>Speed Controller</div>
-              <div style={{display:"flex",gap:3}}>{["above","between","below"].map(function(p){return <button key={"esc"+p} onClick={function(){setEscPos(p);}} style={{flex:1,padding:"3px 0",borderRadius:6,fontSize:9,cursor:"pointer",fontFamily:SN,fontWeight:500,background:escPos===p?t.acL:t.bg2,border:"1px solid "+(escPos===p?t.ac:t.bd),color:escPos===p?t.ac:t.td}}>{p}</button>;})}</div>
-            </div>
-            {sel.battery&&<div>
-              <div style={{fontSize:10,color:t.td,fontFamily:SN,fontWeight:600,marginBottom:3}}>Battery</div>
-              <div style={{display:"flex",gap:3}}>{["top","between","bottom"].map(function(p){return <button key={p} onClick={function(){setBattPos(p);}} style={{flex:1,padding:"3px 0",borderRadius:6,fontSize:9,cursor:"pointer",fontFamily:SN,fontWeight:500,background:battPos===p?t.acL:t.bg2,border:"1px solid "+(battPos===p?t.ac:t.bd),color:battPos===p?t.ac:t.td}}>{p}</button>;})}</div>
-            </div>}
-            <div style={{display:"flex",alignItems:"center",gap:6}}>
-              <span style={{fontSize:10,color:t.td,fontFamily:SN,fontWeight:600,whiteSpace:"nowrap"}}>Alt {altitude}m</span>
-              <input type="range" min={0} max={5000} step={100} value={altitude} onChange={function(e){setAltitude(+e.target.value);}} style={{flex:1,accentColor:t.ac}}/>
-            </div>
-          </div>
-        </div>
-
-        {/* Physics (5) + Flight Estimates (6) — scrollable */}
-        <div style={{flex:1,overflowY:"auto",padding:"10px 12px",background:t.bg2}}>
-          <IssuesPanel compat={compat}/>
-          <MathPanel insights={insights} flight={flight}/>
-          {!insights.length&&!flight&&<div style={{color:t.td,fontSize:13,textAlign:"center",padding:"30px 16px",fontFamily:SN}}>Select a motor and battery to see physics breakdown and flight estimates.</div>}
-        </div>
+      {/* Card 1 — top-left: Drone viewer */}
+      <div style={{borderRight:"1px solid "+t.bd,borderBottom:"1px solid "+t.bd,background:t.bg,overflow:"hidden"}}>
+        <DroneViewer frameType={frame} droneSize={size} selections={sel} batteryPos={battPos} fcPos={fcPos} escPos={escPos} frameMat={frameMat}/>
       </div>
 
-      {/* RIGHT col — Component picker (card 3), full width */}
-      <div style={{display:"flex",flexDirection:"column",background:t.bg2,overflow:"hidden"}}>
+      {/* Card 2 — top-right: Component picker */}
+      <div style={{borderBottom:"1px solid "+t.bd,display:"flex",flexDirection:"column",background:t.bg2,overflow:"hidden"}}>
         <div style={{display:"flex",borderBottom:"1px solid "+t.bd,alignItems:"center",padding:"0 6px",background:t.bg,flexShrink:0}}>
           <div style={{display:"flex",flex:1,overflowX:"auto"}}>
             {tabs.map(function(tb2){var active=tab===tb2.k;var st2=getStatus(tb2.k);
@@ -1240,6 +1195,54 @@ function BuilderApp({goHome,goModeSelect,onSaveBuild}){
           </>}
         </div>
       </div>
+
+      {/* Card 3 — bottom-left: Chips + Save + Placement controls + Issues */}
+      <div style={{borderRight:"1px solid "+t.bd,background:t.bg,display:"flex",flexDirection:"column",overflow:"hidden"}}>
+        {/* Component chips */}
+        <div style={{padding:"5px 10px",display:"flex",flexWrap:"wrap",gap:4,flexShrink:0,borderBottom:"1px solid "+t.bdL,background:t.bg2}}>
+          {tabs.map(function(tb2){var s=sel[tb2.k],st2=getStatus(tb2.k);
+            var pBg=s?(st2==="error"?t.rdL:st2==="warning"?t.amL:t.acL):t.bg3;
+            var pC=s?(st2==="error"?t.rd:st2==="warning"?t.am:t.ac):t.td;
+            return <div key={tb2.k} onClick={function(){setTab(tb2.k);}} title={tb2.l} style={{padding:"3px 9px",borderRadius:20,fontSize:10,fontWeight:600,cursor:"pointer",fontFamily:SN,background:pBg,color:pC,border:"1px solid "+pC+"55",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis",maxWidth:140}}>{s?s.b+" "+s.m:tb2.l}</div>;})}
+        </div>
+        {/* Save / Compare */}
+        <div style={{padding:"6px 10px",display:"flex",gap:6,flexShrink:0,borderBottom:"1px solid "+t.bdL}}>
+          <button onClick={saveBuild} style={{flex:1,padding:"7px 0",borderRadius:8,fontSize:11,cursor:"pointer",fontFamily:SN,fontWeight:700,background:t.acL,border:"1px solid "+t.ac,color:t.ac}}>💾 Save Build</button>
+          {savedBuilds.length>0&&<button onClick={function(){setShowCompare(true);}} style={{flex:1,padding:"7px 0",borderRadius:8,fontSize:11,cursor:"pointer",fontFamily:SN,fontWeight:700,background:t.bg2,border:"1px solid "+t.bd,color:t.tb}}>⇄ Compare ({savedBuilds.length})</button>}
+        </div>
+        {/* Placement controls */}
+        <div style={{flex:1,overflowY:"auto",padding:"8px 10px"}}>
+          <div style={{background:t.sf,borderRadius:10,padding:"10px 12px",boxShadow:t.sh,marginBottom:6}}>
+            <div style={{fontSize:10,fontWeight:700,color:t.ac,letterSpacing:1.2,marginBottom:8,fontFamily:MN}}>COMPONENT PLACEMENT</div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6}}>
+              <div>
+                <div style={{fontSize:10,color:t.td,fontFamily:SN,fontWeight:600,marginBottom:3}}>Flight Controller</div>
+                <div style={{display:"flex",gap:3}}>{["above","between","below"].map(function(p){return <button key={"fc"+p} onClick={function(){setFcPos(p);}} style={{flex:1,padding:"3px 0",borderRadius:5,fontSize:9,cursor:"pointer",fontFamily:SN,fontWeight:500,background:fcPos===p?t.acL:t.bg2,border:"1px solid "+(fcPos===p?t.ac:t.bd),color:fcPos===p?t.ac:t.td}}>{p}</button>;})}</div>
+              </div>
+              <div>
+                <div style={{fontSize:10,color:t.td,fontFamily:SN,fontWeight:600,marginBottom:3}}>Speed Controller</div>
+                <div style={{display:"flex",gap:3}}>{["above","between","below"].map(function(p){return <button key={"esc"+p} onClick={function(){setEscPos(p);}} style={{flex:1,padding:"3px 0",borderRadius:5,fontSize:9,cursor:"pointer",fontFamily:SN,fontWeight:500,background:escPos===p?t.acL:t.bg2,border:"1px solid "+(escPos===p?t.ac:t.bd),color:escPos===p?t.ac:t.td}}>{p}</button>;})}</div>
+              </div>
+              {sel.battery&&<div>
+                <div style={{fontSize:10,color:t.td,fontFamily:SN,fontWeight:600,marginBottom:3}}>Battery</div>
+                <div style={{display:"flex",gap:3}}>{["top","between","bottom"].map(function(p){return <button key={p} onClick={function(){setBattPos(p);}} style={{flex:1,padding:"3px 0",borderRadius:5,fontSize:9,cursor:"pointer",fontFamily:SN,fontWeight:500,background:battPos===p?t.acL:t.bg2,border:"1px solid "+(battPos===p?t.ac:t.bd),color:battPos===p?t.ac:t.td}}>{p}</button>;})}</div>
+              </div>}
+              <div style={{display:"flex",alignItems:"center",gap:6,gridColumn:"1/-1"}}>
+                <span style={{fontSize:10,color:t.td,fontFamily:SN,fontWeight:600,whiteSpace:"nowrap"}}>Altitude: {altitude}m</span>
+                <input type="range" min={0} max={5000} step={100} value={altitude} onChange={function(e){setAltitude(+e.target.value);}} style={{flex:1,accentColor:t.ac}}/>
+              </div>
+            </div>
+          </div>
+          <IssuesPanel compat={compat}/>
+        </div>
+      </div>
+
+      {/* Card 4 — bottom-right: Physics (5) + Flight Estimates (6) */}
+      <div style={{background:t.bg2,overflowY:"auto",padding:"12px 14px"}}>
+        <MathPanel insights={insights} flight={flight}/>
+        {!insights.length&&!flight&&<div style={{color:t.td,fontSize:13,textAlign:"center",padding:"30px 16px",fontFamily:SN}}>Select a motor and battery to see physics breakdown and flight estimates.</div>}
+      </div>
+
     </div>))}
   </div>);
 }
