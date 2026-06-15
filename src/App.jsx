@@ -957,6 +957,37 @@ function BuilderApp({goHome,goModeSelect,onSaveBuild}){
   var mobileTab=useState("components"),mobileTabV=mobileTab[0],setMobileTab=mobileTab[1];
   var svs=useState([]),savedBuilds=svs[0],setSavedBuilds=svs[1];
   var cms=useState(false),showCompare=cms[0],setShowCompare=cms[1];
+  // Resizable panel splits (percentages)
+  var csp=useState(function(){try{var s=localStorage.getItem("mb_splits");return s?JSON.parse(s).col:42;}catch(e){return 42;}}),colSplit=csp[0],setColSplit=csp[1];
+  var rsp=useState(function(){try{var s=localStorage.getItem("mb_splits");return s?JSON.parse(s).row:55;}catch(e){return 55;}}),rowSplit=rsp[0],setRowSplit=rsp[1];
+  var dragRef=useRef(null);
+  useEffect(function(){
+    try{localStorage.setItem("mb_splits",JSON.stringify({col:colSplit,row:rowSplit}));}catch(e){}
+  },[colSplit,rowSplit]);
+  var startColDrag=function(e){
+    e.preventDefault();
+    var container=e.currentTarget.parentElement;
+    var rect=container.getBoundingClientRect();
+    dragRef.current={type:"col",rect:rect};
+    var onMove=function(ev){
+      var pct=Math.min(Math.max(((ev.clientX-rect.left)/rect.width)*100,20),75);
+      setColSplit(Math.round(pct*10)/10);
+    };
+    var onUp=function(){window.removeEventListener("mousemove",onMove);window.removeEventListener("mouseup",onUp);dragRef.current=null;};
+    window.addEventListener("mousemove",onMove);window.addEventListener("mouseup",onUp);
+  };
+  var startRowDrag=function(e){
+    e.preventDefault();
+    var container=e.currentTarget.parentElement;
+    var rect=container.getBoundingClientRect();
+    dragRef.current={type:"row",rect:rect};
+    var onMove=function(ev){
+      var pct=Math.min(Math.max(((ev.clientY-rect.top)/rect.height)*100,20),80);
+      setRowSplit(Math.round(pct*10)/10);
+    };
+    var onUp=function(){window.removeEventListener("mousemove",onMove);window.removeEventListener("mouseup",onUp);dragRef.current=null;};
+    window.addEventListener("mousemove",onMove);window.addEventListener("mouseup",onUp);
+  };
   useEffect(function(){try{localStorage.setItem("mb_builder",JSON.stringify({frame:frame,size:size,frameMat:frameMat,sel:sel,tab:tab,battPos:battPos,altitude:altitude,fcPos:fcPos,escPos:escPos,step:step}));}catch(e){};},[frame,size,frameMat,sel,tab,battPos,altitude,fcPos,escPos,step]);
 
   var handleSelect=function(type,item){setSel(function(prev){var n={};for(var k in prev)n[k]=prev[k];n[type]=prev[type]&&prev[type].id===item.id?null:item;return n;});};
@@ -1159,7 +1190,20 @@ function BuilderApp({goHome,goModeSelect,onSaveBuild}){
         </div>
       </div>
     ):(
-      <div style={{display:"grid",gridTemplateColumns:"42% 58%",gridTemplateRows:"55% 45%",height:"calc(100vh - 54px)",overflow:"hidden"}}>
+      <div style={{display:"grid",gridTemplateColumns:colSplit+"% "+(100-colSplit)+"%",gridTemplateRows:rowSplit+"% "+(100-rowSplit)+"%",height:"calc(100vh - 54px)",overflow:"hidden",position:"relative",userSelect:dragRef.current?"none":"auto"}}>
+
+      {/* Vertical drag handle */}
+      <div onMouseDown={startColDrag} style={{position:"absolute",top:0,bottom:0,left:"calc("+colSplit+"% - 3px)",width:6,cursor:"col-resize",zIndex:30,display:"flex",alignItems:"center",justifyContent:"center"}}
+        onMouseEnter={function(e){e.currentTarget.children[0].style.opacity="1";}}
+        onMouseLeave={function(e){e.currentTarget.children[0].style.opacity="0";}}>
+        <div style={{width:3,height:"100%",background:t.ac,opacity:0,transition:"opacity 0.15s",borderRadius:2}}/>
+      </div>
+      {/* Horizontal drag handle */}
+      <div onMouseDown={startRowDrag} style={{position:"absolute",left:0,right:0,top:"calc("+rowSplit+"% - 3px)",height:6,cursor:"row-resize",zIndex:30,display:"flex",alignItems:"center",justifyContent:"center"}}
+        onMouseEnter={function(e){e.currentTarget.children[0].style.opacity="1";}}
+        onMouseLeave={function(e){e.currentTarget.children[0].style.opacity="0";}}>
+        <div style={{height:3,width:"100%",background:t.ac,opacity:0,transition:"opacity 0.15s",borderRadius:2}}/>
+      </div>
 
       {/* Card 1 — top-left: Drone viewer */}
       <div style={{borderRight:"1px solid "+t.bd,borderBottom:"1px solid "+t.bd,background:t.bg,overflow:"hidden"}}>
