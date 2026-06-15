@@ -1190,101 +1190,120 @@ function BuilderApp({goHome,goModeSelect,onSaveBuild}){
         </div>
       </div>
     ):(
-      <div style={{display:"grid",gridTemplateColumns:colSplit+"% "+(100-colSplit)+"%",gridTemplateRows:rowSplit+"% "+(100-rowSplit)+"%",height:"calc(100vh - 54px)",overflow:"hidden",position:"relative",userSelect:dragRef.current?"none":"auto"}}>
+      <div style={{display:"grid",gridTemplateColumns:"42% 58%",height:"calc(100vh - 54px)",overflow:"hidden"}}>
 
-      {/* Vertical drag handle */}
-      <div onMouseDown={startColDrag} style={{position:"absolute",top:0,bottom:0,left:"calc("+colSplit+"% - 3px)",width:6,cursor:"col-resize",zIndex:30,display:"flex",alignItems:"center",justifyContent:"center"}}
-        onMouseEnter={function(e){e.currentTarget.children[0].style.opacity="1";}}
-        onMouseLeave={function(e){e.currentTarget.children[0].style.opacity="0";}}>
-        <div style={{width:3,height:"100%",background:t.ac,opacity:0,transition:"opacity 0.15s",borderRadius:2}}/>
-      </div>
-      {/* Horizontal drag handle */}
-      <div onMouseDown={startRowDrag} style={{position:"absolute",left:0,right:0,top:"calc("+rowSplit+"% - 3px)",height:6,cursor:"row-resize",zIndex:30,display:"flex",alignItems:"center",justifyContent:"center"}}
-        onMouseEnter={function(e){e.currentTarget.children[0].style.opacity="1";}}
-        onMouseLeave={function(e){e.currentTarget.children[0].style.opacity="0";}}>
-        <div style={{height:3,width:"100%",background:t.ac,opacity:0,transition:"opacity 0.15s",borderRadius:2}}/>
-      </div>
-
-      {/* Card 1 — top-left: Drone viewer */}
-      <div style={{borderRight:"1px solid "+t.bd,borderBottom:"1px solid "+t.bd,background:t.bg,overflow:"hidden"}}>
-        <DroneViewer frameType={frame} droneSize={size} selections={sel} batteryPos={battPos} fcPos={fcPos} escPos={escPos} frameMat={frameMat}/>
-      </div>
-
-      {/* Card 2 — top-right: Component picker */}
-      <div style={{borderBottom:"1px solid "+t.bd,display:"flex",flexDirection:"column",background:t.bg2,overflow:"hidden"}}>
-        <div style={{display:"flex",borderBottom:"1px solid "+t.bd,alignItems:"center",padding:"0 6px",background:t.bg,flexShrink:0}}>
-          <div style={{display:"flex",flex:1,overflowX:"auto"}}>
-            {tabs.map(function(tb2){var active=tab===tb2.k;var st2=getStatus(tb2.k);
-              return <button key={tb2.k} onClick={function(){setTab(tb2.k);}} style={{padding:"13px 12px",background:active?t.bg2:"transparent",border:"none",borderBottom:"2.5px solid "+(active?t.ac:"transparent"),
-                color:active?t.ac:st2==="error"?t.rd:st2==="warning"?t.am:st2==="ok"?t.ac:t.td,
-                fontSize:12,fontWeight:active?700:500,cursor:"pointer",fontFamily:SN,whiteSpace:"nowrap",minWidth:64}}>{tb2.l}</button>;})}
-          </div>
-          <div style={{display:"flex",gap:5,paddingRight:6,flexShrink:0}}>
-            <button onClick={function(){setShowUpload(true);}} style={{background:"none",border:"1px solid "+t.bd,color:t.td,padding:"6px 10px",borderRadius:7,cursor:"pointer",fontSize:11,fontFamily:SN,fontWeight:500,whiteSpace:"nowrap"}}>+ Upload</button>
-            <button onClick={resetAll} style={{background:"none",border:"1px solid "+t.bd,color:t.rd,padding:"6px 10px",borderRadius:7,cursor:"pointer",fontSize:11,fontFamily:SN,fontWeight:600,whiteSpace:"nowrap"}}>Reset</button>
-          </div>
-        </div>
-        <div style={{flex:1,overflowY:"auto",padding:"14px 16px"}}>
-          {sizeFiltered.length>0&&<>
-            <div style={{fontSize:12,color:t.td,marginBottom:10,letterSpacing:0.8,fontFamily:SN,fontWeight:600}}>RECOMMENDED FOR {size?size.l.toUpperCase():""}</div>
-            {recommended.greens.slice(0,3).map(function(r){return <CompCard key={r.item.id} item={r.item} type={tab} selected={sel[tab]&&sel[tab].id===r.item.id} onSelect={function(it){handleSelect(tab,it);}} rating="green"/>;})}
-            {recommended.ambers.slice(0,3).map(function(r){return <CompCard key={r.item.id} item={r.item} type={tab} selected={sel[tab]&&sel[tab].id===r.item.id} onSelect={function(it){handleSelect(tab,it);}} rating="amber"/>;})}
-            {recommended.reds.slice(0,3).map(function(r){return <CompCard key={r.item.id} item={r.item} type={tab} selected={sel[tab]&&sel[tab].id===r.item.id} onSelect={function(it){handleSelect(tab,it);}} rating="red"/>;})}
-          </>}
-          {otherItems.length>0&&<>
-            <div style={{fontSize:12,color:t.td,marginTop:18,marginBottom:10,letterSpacing:0.8,fontFamily:SN,fontWeight:600}}>OTHER OPTIONS</div>
-            {otherSorted.greens.map(function(r){return <CompCard key={r.item.id} item={r.item} type={tab} selected={sel[tab]&&sel[tab].id===r.item.id} onSelect={function(it){handleSelect(tab,it);}} rating="green"/>;})}
-            {otherSorted.ambers.map(function(r){return <CompCard key={r.item.id} item={r.item} type={tab} selected={sel[tab]&&sel[tab].id===r.item.id} onSelect={function(it){handleSelect(tab,it);}} rating="amber"/>;})}
-            {otherSorted.reds.map(function(r){return <CompCard key={r.item.id} item={r.item} type={tab} selected={sel[tab]&&sel[tab].id===r.item.id} onSelect={function(it){handleSelect(tab,it);}} rating="red"/>;})}
-          </>}
-        </div>
-      </div>
-
-      {/* Card 3 — bottom-left: Chips + Save + Placement controls + Issues */}
+      {/* LEFT col — Drone (top, fixed) + scrollable: chips → save → placement → issues → flight estimates */}
       <div style={{borderRight:"1px solid "+t.bd,background:t.bg,display:"flex",flexDirection:"column",overflow:"hidden"}}>
-        {/* Component chips */}
-        <div style={{padding:"5px 10px",display:"flex",flexWrap:"wrap",gap:4,flexShrink:0,borderBottom:"1px solid "+t.bdL,background:t.bg2}}>
-          {tabs.map(function(tb2){var s=sel[tb2.k],st2=getStatus(tb2.k);
-            var pBg=s?(st2==="error"?t.rdL:st2==="warning"?t.amL:t.acL):t.bg3;
-            var pC=s?(st2==="error"?t.rd:st2==="warning"?t.am:t.ac):t.td;
-            return <div key={tb2.k} onClick={function(){setTab(tb2.k);}} title={tb2.l} style={{padding:"3px 9px",borderRadius:20,fontSize:10,fontWeight:600,cursor:"pointer",fontFamily:SN,background:pBg,color:pC,border:"1px solid "+pC+"55",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis",maxWidth:140}}>{s?s.b+" "+s.m:tb2.l}</div>;})}
+
+        {/* Drone viewer — fixed top portion */}
+        <div style={{height:"50%",flexShrink:0,borderBottom:"1px solid "+t.bd,overflow:"hidden"}}>
+          <DroneViewer frameType={frame} droneSize={size} selections={sel} batteryPos={battPos} fcPos={fcPos} escPos={escPos} frameMat={frameMat}/>
         </div>
-        {/* Save / Compare */}
-        <div style={{padding:"6px 10px",display:"flex",gap:6,flexShrink:0,borderBottom:"1px solid "+t.bdL}}>
-          <button onClick={saveBuild} style={{flex:1,padding:"7px 0",borderRadius:8,fontSize:11,cursor:"pointer",fontFamily:SN,fontWeight:700,background:t.acL,border:"1px solid "+t.ac,color:t.ac}}>💾 Save Build</button>
-          {savedBuilds.length>0&&<button onClick={function(){setShowCompare(true);}} style={{flex:1,padding:"7px 0",borderRadius:8,fontSize:11,cursor:"pointer",fontFamily:SN,fontWeight:700,background:t.bg2,border:"1px solid "+t.bd,color:t.tb}}>⇄ Compare ({savedBuilds.length})</button>}
-        </div>
-        {/* Placement controls */}
-        <div style={{flex:1,overflowY:"auto",padding:"8px 10px"}}>
-          <div style={{background:t.sf,borderRadius:10,padding:"10px 12px",boxShadow:t.sh,marginBottom:6}}>
+
+        {/* Scrollable area below drone */}
+        <div style={{flex:1,overflowY:"auto",display:"flex",flexDirection:"column"}}>
+          {/* Component chips */}
+          <div style={{padding:"5px 10px",display:"flex",flexWrap:"wrap",gap:4,flexShrink:0,borderBottom:"1px solid "+t.bdL,background:t.bg2}}>
+            {tabs.map(function(tb2){var s=sel[tb2.k],st2=getStatus(tb2.k);
+              var pBg=s?(st2==="error"?t.rdL:st2==="warning"?t.amL:t.acL):t.bg3;
+              var pC=s?(st2==="error"?t.rd:st2==="warning"?t.am:t.ac):t.td;
+              return <div key={tb2.k} onClick={function(){setTab(tb2.k);}} title={tb2.l} style={{padding:"3px 9px",borderRadius:20,fontSize:10,fontWeight:600,cursor:"pointer",fontFamily:SN,background:pBg,color:pC,border:"1px solid "+pC+"55",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis",maxWidth:140}}>{s?s.b+" "+s.m:tb2.l}</div>;})}
+          </div>
+          {/* Save / Compare */}
+          <div style={{padding:"6px 10px",display:"flex",gap:6,flexShrink:0,borderBottom:"1px solid "+t.bdL,background:t.bg}}>
+            <button onClick={saveBuild} style={{flex:1,padding:"8px 0",borderRadius:8,fontSize:12,cursor:"pointer",fontFamily:SN,fontWeight:700,background:t.acL,border:"1px solid "+t.ac,color:t.ac}}>💾 Save Build</button>
+            {savedBuilds.length>0&&<button onClick={function(){setShowCompare(true);}} style={{flex:1,padding:"8px 0",borderRadius:8,fontSize:12,cursor:"pointer",fontFamily:SN,fontWeight:700,background:t.bg2,border:"1px solid "+t.bd,color:t.tb}}>⇄ Compare ({savedBuilds.length})</button>}
+          </div>
+          {/* Component Placement */}
+          <div style={{padding:"10px 12px",borderBottom:"1px solid "+t.bdL,background:t.bg,flexShrink:0}}>
             <div style={{fontSize:10,fontWeight:700,color:t.ac,letterSpacing:1.2,marginBottom:8,fontFamily:MN}}>COMPONENT PLACEMENT</div>
-            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6}}>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:6}}>
               <div>
-                <div style={{fontSize:10,color:t.td,fontFamily:SN,fontWeight:600,marginBottom:3}}>Flight Controller</div>
-                <div style={{display:"flex",gap:3}}>{["above","between","below"].map(function(p){return <button key={"fc"+p} onClick={function(){setFcPos(p);}} style={{flex:1,padding:"3px 0",borderRadius:5,fontSize:9,cursor:"pointer",fontFamily:SN,fontWeight:500,background:fcPos===p?t.acL:t.bg2,border:"1px solid "+(fcPos===p?t.ac:t.bd),color:fcPos===p?t.ac:t.td}}>{p}</button>;})}</div>
+                <div style={{fontSize:10,color:t.td,fontFamily:SN,fontWeight:600,marginBottom:4}}>Flight Controller</div>
+                <div style={{display:"flex",gap:4}}>{["above","between","below"].map(function(p){return <button key={"fc"+p} onClick={function(){setFcPos(p);}} style={{flex:1,padding:"4px 0",borderRadius:6,fontSize:10,cursor:"pointer",fontFamily:SN,fontWeight:500,background:fcPos===p?t.acL:t.bg2,border:"1px solid "+(fcPos===p?t.ac:t.bd),color:fcPos===p?t.ac:t.td}}>{p}</button>;})}</div>
               </div>
               <div>
-                <div style={{fontSize:10,color:t.td,fontFamily:SN,fontWeight:600,marginBottom:3}}>Speed Controller</div>
-                <div style={{display:"flex",gap:3}}>{["above","between","below"].map(function(p){return <button key={"esc"+p} onClick={function(){setEscPos(p);}} style={{flex:1,padding:"3px 0",borderRadius:5,fontSize:9,cursor:"pointer",fontFamily:SN,fontWeight:500,background:escPos===p?t.acL:t.bg2,border:"1px solid "+(escPos===p?t.ac:t.bd),color:escPos===p?t.ac:t.td}}>{p}</button>;})}</div>
-              </div>
-              {sel.battery&&<div>
-                <div style={{fontSize:10,color:t.td,fontFamily:SN,fontWeight:600,marginBottom:3}}>Battery</div>
-                <div style={{display:"flex",gap:3}}>{["top","between","bottom"].map(function(p){return <button key={p} onClick={function(){setBattPos(p);}} style={{flex:1,padding:"3px 0",borderRadius:5,fontSize:9,cursor:"pointer",fontFamily:SN,fontWeight:500,background:battPos===p?t.acL:t.bg2,border:"1px solid "+(battPos===p?t.ac:t.bd),color:battPos===p?t.ac:t.td}}>{p}</button>;})}</div>
-              </div>}
-              <div style={{display:"flex",alignItems:"center",gap:6,gridColumn:"1/-1"}}>
-                <span style={{fontSize:10,color:t.td,fontFamily:SN,fontWeight:600,whiteSpace:"nowrap"}}>Altitude: {altitude}m</span>
-                <input type="range" min={0} max={5000} step={100} value={altitude} onChange={function(e){setAltitude(+e.target.value);}} style={{flex:1,accentColor:t.ac}}/>
+                <div style={{fontSize:10,color:t.td,fontFamily:SN,fontWeight:600,marginBottom:4}}>Speed Controller</div>
+                <div style={{display:"flex",gap:4}}>{["above","between","below"].map(function(p){return <button key={"esc"+p} onClick={function(){setEscPos(p);}} style={{flex:1,padding:"4px 0",borderRadius:6,fontSize:10,cursor:"pointer",fontFamily:SN,fontWeight:500,background:escPos===p?t.acL:t.bg2,border:"1px solid "+(escPos===p?t.ac:t.bd),color:escPos===p?t.ac:t.td}}>{p}</button>;})}</div>
               </div>
             </div>
+            {sel.battery&&<div style={{marginBottom:6}}>
+              <div style={{fontSize:10,color:t.td,fontFamily:SN,fontWeight:600,marginBottom:4}}>Battery</div>
+              <div style={{display:"flex",gap:4}}>{["top","between","bottom"].map(function(p){return <button key={p} onClick={function(){setBattPos(p);}} style={{padding:"4px 14px",borderRadius:6,fontSize:10,cursor:"pointer",fontFamily:SN,fontWeight:500,background:battPos===p?t.acL:t.bg2,border:"1px solid "+(battPos===p?t.ac:t.bd),color:battPos===p?t.ac:t.td}}>{p}</button>;})}</div>
+            </div>}
+            <div style={{display:"flex",alignItems:"center",gap:8}}>
+              <span style={{fontSize:10,color:t.td,fontFamily:SN,fontWeight:600,whiteSpace:"nowrap"}}>Altitude: {altitude}m</span>
+              <input type="range" min={0} max={5000} step={100} value={altitude} onChange={function(e){setAltitude(+e.target.value);}} style={{flex:1,accentColor:t.ac}}/>
+            </div>
           </div>
-          <IssuesPanel compat={compat}/>
+          {/* Issues panel */}
+          <div style={{padding:"8px 10px",flexShrink:0,background:t.bg}}>
+            <IssuesPanel compat={compat}/>
+          </div>
+          {/* Flight Estimates — below "all components compatible" */}
+          {flight&&<div style={{padding:"10px 12px",background:t.bg2,borderTop:"1px solid "+t.bdL}}>
+            <div style={{fontSize:10,fontWeight:700,color:t.bl,letterSpacing:1.5,marginBottom:10,fontFamily:MN}}>FLIGHT ESTIMATES</div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:8}}>
+              <div style={{textAlign:"center",background:t.acL,borderRadius:10,padding:"10px 8px"}}><div style={{fontSize:22,fontWeight:800,color:t.ac,fontFamily:SN}}>{flight.hoverTime}<span style={{fontSize:11}}> min</span></div><div style={{fontSize:10,color:t.td,marginTop:2,fontFamily:SN,fontWeight:600}}>HOVER</div></div>
+              <div style={{textAlign:"center",background:t.blL,borderRadius:10,padding:"10px 8px"}}><div style={{fontSize:22,fontWeight:800,color:t.bl,fontFamily:SN}}>{flight.cruiseTime}<span style={{fontSize:11}}> min</span></div><div style={{fontSize:10,color:t.td,marginTop:2,fontFamily:SN,fontWeight:600}}>CRUISE</div></div>
+            </div>
+            <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:5,marginBottom:8}}>
+              {[[flight.auw+"g","AUW",t.tb],[flight.twr+":1","T/W",flight.twr>=4?t.ac:flight.twr>=2?t.am:t.rd],[flight.hoverThrottle+"%","Throttle",t.tb],[flight.hoverPower+"W","Power",t.tb]].map(function(r,i){
+                return <div key={i} style={{background:t.bg3,borderRadius:8,padding:"7px 4px",textAlign:"center"}}><div style={{fontWeight:700,fontSize:13,color:r[2],fontFamily:SN}}>{r[0]}</div><div style={{fontSize:9,color:t.td,marginTop:2,fontFamily:SN}}>{r[1]}</div></div>;})}
+            </div>
+            <div style={{fontSize:11,color:t.td,lineHeight:1.7,fontFamily:MN}}>
+              {Object.entries(flight.breakdown).map(function(en){return <div key={en[0]} style={{display:"flex",justifyContent:"space-between"}}><span style={{textTransform:"capitalize"}}>{en[0]}</span><span>{en[1]}g</span></div>;})}
+              <div style={{borderTop:"1px solid "+t.bd,marginTop:4,paddingTop:4,fontWeight:700,color:t.tb,display:"flex",justifyContent:"space-between"}}><span>Total AUW</span><span>{flight.auw}g</span></div>
+              <div style={{marginTop:4,fontSize:10,color:t.td}}>{flight.rho} kg/m³ · FM={flight.FM} · {flight.altitude}m ASL</div>
+            </div>
+          </div>}
         </div>
       </div>
 
-      {/* Card 4 — bottom-right: Physics (5) + Flight Estimates (6) */}
-      <div style={{background:t.bg2,overflowY:"auto",padding:"12px 14px"}}>
-        <MathPanel insights={insights} flight={flight}/>
-        {!insights.length&&!flight&&<div style={{color:t.td,fontSize:13,textAlign:"center",padding:"30px 16px",fontFamily:SN}}>Select a motor and battery to see physics breakdown and flight estimates.</div>}
+      {/* RIGHT col — Component picker (top 52%) + Physics Breakdown (bottom 48%) */}
+      <div style={{display:"grid",gridTemplateRows:"52% 48%",overflow:"hidden"}}>
+
+        {/* Component picker */}
+        <div style={{display:"flex",flexDirection:"column",background:t.bg2,overflow:"hidden",borderBottom:"1px solid "+t.bd}}>
+          <div style={{display:"flex",borderBottom:"1px solid "+t.bd,alignItems:"center",padding:"0 6px",background:t.bg,flexShrink:0}}>
+            <div style={{display:"flex",flex:1,overflowX:"auto"}}>
+              {tabs.map(function(tb2){var active=tab===tb2.k;var st2=getStatus(tb2.k);
+                return <button key={tb2.k} onClick={function(){setTab(tb2.k);}} style={{padding:"13px 12px",background:active?t.bg2:"transparent",border:"none",borderBottom:"2.5px solid "+(active?t.ac:"transparent"),
+                  color:active?t.ac:st2==="error"?t.rd:st2==="warning"?t.am:st2==="ok"?t.ac:t.td,
+                  fontSize:12,fontWeight:active?700:500,cursor:"pointer",fontFamily:SN,whiteSpace:"nowrap",minWidth:64}}>{tb2.l}</button>;})}
+            </div>
+            <div style={{display:"flex",gap:5,paddingRight:6,flexShrink:0}}>
+              <button onClick={function(){setShowUpload(true);}} style={{background:"none",border:"1px solid "+t.bd,color:t.td,padding:"6px 10px",borderRadius:7,cursor:"pointer",fontSize:11,fontFamily:SN,fontWeight:500,whiteSpace:"nowrap"}}>+ Upload</button>
+              <button onClick={resetAll} style={{background:"none",border:"1px solid "+t.bd,color:t.rd,padding:"6px 10px",borderRadius:7,cursor:"pointer",fontSize:11,fontFamily:SN,fontWeight:600,whiteSpace:"nowrap"}}>Reset</button>
+            </div>
+          </div>
+          <div style={{flex:1,overflowY:"auto",padding:"14px 16px"}}>
+            {sizeFiltered.length>0&&<>
+              <div style={{fontSize:12,color:t.td,marginBottom:10,letterSpacing:0.8,fontFamily:SN,fontWeight:600}}>RECOMMENDED FOR {size?size.l.toUpperCase():""}</div>
+              {recommended.greens.slice(0,3).map(function(r){return <CompCard key={r.item.id} item={r.item} type={tab} selected={sel[tab]&&sel[tab].id===r.item.id} onSelect={function(it){handleSelect(tab,it);}} rating="green"/>;})}
+              {recommended.ambers.slice(0,3).map(function(r){return <CompCard key={r.item.id} item={r.item} type={tab} selected={sel[tab]&&sel[tab].id===r.item.id} onSelect={function(it){handleSelect(tab,it);}} rating="amber"/>;})}
+              {recommended.reds.slice(0,3).map(function(r){return <CompCard key={r.item.id} item={r.item} type={tab} selected={sel[tab]&&sel[tab].id===r.item.id} onSelect={function(it){handleSelect(tab,it);}} rating="red"/>;})}
+            </>}
+            {otherItems.length>0&&<>
+              <div style={{fontSize:12,color:t.td,marginTop:18,marginBottom:10,letterSpacing:0.8,fontFamily:SN,fontWeight:600}}>OTHER OPTIONS</div>
+              {otherSorted.greens.map(function(r){return <CompCard key={r.item.id} item={r.item} type={tab} selected={sel[tab]&&sel[tab].id===r.item.id} onSelect={function(it){handleSelect(tab,it);}} rating="green"/>;})}
+              {otherSorted.ambers.map(function(r){return <CompCard key={r.item.id} item={r.item} type={tab} selected={sel[tab]&&sel[tab].id===r.item.id} onSelect={function(it){handleSelect(tab,it);}} rating="amber"/>;})}
+              {otherSorted.reds.map(function(r){return <CompCard key={r.item.id} item={r.item} type={tab} selected={sel[tab]&&sel[tab].id===r.item.id} onSelect={function(it){handleSelect(tab,it);}} rating="red"/>;})}
+            </>}
+          </div>
+        </div>
+
+        {/* Physics Breakdown */}
+        <div style={{background:t.bg2,overflowY:"auto",padding:"12px 16px"}}>
+          {insights.length>0&&<>
+            <div style={{fontSize:10,fontWeight:700,color:t.ac,letterSpacing:1.5,marginBottom:10,fontFamily:MN}}>PHYSICS BREAKDOWN</div>
+            {insights.map(function(ins,i){var vc=ins.type==="good"?t.ac:ins.type==="bad"?t.rd:ins.type==="warn"?t.am:t.tb;
+              return <div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",padding:"7px 0",borderBottom:"1px solid "+t.bdL,gap:8}}>
+                <div><div style={{fontSize:12,color:t.tb,fontWeight:600,fontFamily:SN}}>{ins.label}<InfoTip label={ins.label}/></div><div style={{fontSize:11,color:t.td,marginTop:2,fontFamily:MN}}>{ins.formula}</div></div>
+                <div style={{fontSize:14,fontWeight:700,color:vc,flexShrink:0}}>{ins.value}</div></div>;})}
+          </>}
+          {!insights.length&&<div style={{color:t.td,fontSize:13,textAlign:"center",padding:"30px 16px",fontFamily:SN}}>Select a motor and battery to see physics breakdown.</div>}
+        </div>
       </div>
 
     </div>))}
