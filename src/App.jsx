@@ -32,7 +32,7 @@ const DARK = {
   canvas:"#12141a",
 };
 const MN = "'DM Mono', 'IBM Plex Mono', monospace";
-const SN = "'DM Sans', -apple-system, sans-serif";
+const SN = "'Inter', 'DM Sans', -apple-system, sans-serif";
 
 // ════════════════════════════════════════════════════
 // DATABASE (condensed)
@@ -494,41 +494,123 @@ var PHYSICS_DEFS={
   "Electronics Current":"Combined idle current draw from all selected electronic components (FC, VTX, receiver, GPS, camera) at typical operating voltage.",
   "CG Shift Penalty":"Moving FC or ESC away from the frame center shifts the center of gravity, requiring trim corrections that increase hover power consumption."
 };
+
+// ════════════════════════════════════════════════════
+// DOCUMENTATION
+// ════════════════════════════════════════════════════
+const DOCS = [
+  {section:"Components",items:[
+    {title:"Frame",body:`The structural skeleton of the multirotor. It determines the motor count, arm geometry, and maximum component size that can be mounted.\n\n• True-X / Stretched-X: Most common freestyle and racing layouts. Arms at equal (True-X) or elongated (Stretched-X) angles for better front-camera clearance.\n• Deadcat: Front arms swept forward so props stay out of the camera field of view.\n• H-Frame: Two parallel beams — maximises space between plates for electronics.\n• Hex / Octo: 6 or 8 motors give mechanical redundancy — one motor failure is survivable.\n• Y6 Coax: 3 arms each carrying two coaxial counter-rotating motors; compact but slightly less efficient than flat hexes.\n\nMaterial matters:\n• Carbon Fibre (CF): Highest stiffness-to-weight ratio. Baseline density factor 1.0×.\n• Aluminium 6061: Durable and easy to repair but ~1.75× heavier.\n• Fiberglass/FR4: Budget option; absorbs vibration but heavier and less stiff.\n• TPU / 3D Print: Crash-resistant flex; heaviest, lowest stiffness — loses propeller efficiency.\n• Titanium: Stronger than aluminium at a lower weight penalty (~1.2× over CF) but extremely expensive.`},
+    {title:"Motor",body:`Brushless DC motors are rated by:\n\n• Stator size (e.g. 2207): first two digits = stator diameter in mm, last two = stator height. Larger stator = more torque at lower KV.\n• KV rating: RPM the motor spins per volt of input with no load. Lower KV = more torque, suitable for larger props. Higher KV = higher RPM, used with smaller props.\n  Formula: RPM = KV × Voltage\n• Max continuous current (A): The sustained amperage the motor can handle without overheating.\n• Peak thrust (g): Maximum thrust at full throttle with a compatible propeller.\n• Efficiency (g/W): Grams of thrust produced per watt consumed — higher is better for endurance.\n\nCommon pairings:\n• 2306/2207 @ ~1900 KV + 6S → freestyle 5"\n• 1507 @ 3800 KV + 4S → micro 3–4"\n• 3508 @ 380 KV + 6S → long-range 9–10"\n• 4910 @ 280 KV + 12S → heavy-lift 12"+`},
+    {title:"Electronic Speed Controller (ESC)",body:`The ESC converts the flight controller's digital commands into variable voltage/current to spin each motor at the commanded speed.\n\n• 4-in-1 ESC: Four ESCs on a single PCB, saves weight and wiring — standard for racing/freestyle.\n• Single ESC: One board per motor; heavier overall but easier to replace individually. Common on large platforms.\n• AIO (All-in-One): ESC + FC combined on one board; used on micro whoops for minimum weight.\n\nKey specs:\n• Continuous current (A): The rating the ESC can sustain indefinitely.\n• Burst current (A): Short-peak rating (typically 2–5 seconds).\n• Firmware: BLHeli_32, AM32, or BLHeli_S determine available protocols and features.\n\nProtocols:\n• PWM: Analogue signal; legacy — 50 Hz update rate.\n• DShot300/600/1200: Digital protocol; number = bit-rate in kbps. Higher = faster response.\n  DShot300 safe to ~8 kHz loop; DShot600 for 16 kHz+ loops.\n• CAN bus: Used on professional/enterprise platforms for reliability and telemetry.\n• OneShot / Multishot: Transitional digital-ish protocols, largely superseded by DShot.`},
+    {title:"Flight Controller (FC)",body:`The brain of the drone. Reads IMU sensors, runs the PID control algorithm, and outputs motor commands many thousands of times per second.\n\n• MCU (Micro-Controller Unit): Determines processing power.\n  STM32F411 → entry level, up to ~4 kHz PID loop.\n  STM32F722/F745 → mid-range, 8–32 kHz loops.\n  STM32H743/H753 → high-end, full 32 kHz with DSP capability.\n• IMU (Inertial Measurement Unit): The gyroscope + accelerometer chip.\n  MPU6000: Reliable; limited to 8 kHz.\n  BMI270 / ICM42688P: Modern; up to 3.2 MHz SPI, very low noise — preferred for 32 kHz loops.\n• UARTs: Serial ports for connecting peripherals (GPS, VTX, RX, telemetry).\n• Firmware:\n  Betaflight: Best for racing/freestyle; fastest PID tuning tools, RPM filtering.\n  INAV: Navigation-focused; waypoints, return-to-home, fixed-wing support.\n  ArduPilot / PX4: Professional/research autopilot; full mission planning, sensor fusion, EKF.`},
+    {title:"Battery",body:`Lithium-based cells store the energy that powers everything on the aircraft.\n\n• Cell count (S): Number of cells in series. Each LiPo cell = 3.7 V nominal (4.2 V fully charged, 3.5 V cutoff).\n  4S = 14.8 V nominal; 6S = 22.2 V; 12S = 44.4 V.\n• Capacity (mAh): Total charge stored. 1000 mAh = 1 Ah.\n• C-rating: Maximum safe discharge rate as a multiple of capacity.\n  Max amps = Capacity(Ah) × C-rating\n  Example: 1500 mAh × 100C = 150 A peak.\n• Chemistry:\n  LiPo (Lithium Polymer): Standard; high discharge, moderate energy density.\n  LiHV (High Voltage LiPo): Charges to 4.35 V/cell; ~9% more energy than LiPo.\n  Li-Ion (Lithium Ion): ~2.5× the energy density of LiPo but lower peak discharge (10–30C); ideal for long-range.\n• Connector types: BT2.0 (whoops), XT30 (micros), XT60 (standard), XT90/AS150 (large platforms).`},
+    {title:"Propeller",body:`Props convert motor torque into thrust. Size is given as diameter × pitch.\n\n• Diameter (inches): Bigger diameter = more air moved = more thrust and efficiency at the cost of more inertia.\n• Pitch (inches): The theoretical distance a prop travels forward in one full revolution. Higher pitch = faster at high speed but draws more current.\n• Blade count:\n  2-blade: Lower drag, higher efficiency — preferred for long-range.\n  3-blade: Better thrust density, quicker response — standard for freestyle.\n  4/5-blade: Maximum thrust in a small diameter; used in cinewhoop designs.\n• Material: Carbon fibre props are stiffest and most efficient; plastic props absorb crashes better.\n• Matching: Match prop diameter to frame size. Too large = tip strikes on arms; too small = under-loaded motor runs hot.`},
+    {title:"Video Transmitter (VTX)",body:`Sends live analogue or digital video from the drone to the pilot's goggles or monitor.\n\n• Analogue: 5.8 GHz FM signal. Very low latency (~1 ms). Lower image quality. Universal receiver compatibility.\n• DJI Digital: Compressed HD video (720p/1080p) at 14–28 ms latency. Requires DJI goggles.\n• HDZero: "Digital-analogue" hybrid; fixed bitrate HD at 4 ms latency. Requires HDZero goggles.\n• Walksnail Avatar: Another HD system from Caddx; comparable to DJI O3 in quality.\n\nPower levels (mW): Higher power = longer range but more heat, more battery draw, and often legally restricted.\nLatency matters for FPV racing — analogue and HDZero are preferred; DJI O3 is popular for cinematic freestyle.\n\nEcosystem lock: VTX and camera must be from the same system (e.g. DJI VTX requires DJI camera, Walksnail VTX requires Walksnail camera).`},
+    {title:"Camera",body:`Captures the image the pilot sees. Must match the VTX system.\n\n• Analogue cameras output a composite video signal (NTSC/PAL) to an analogue VTX.\n• DJI cameras (O3/O4) connect directly to DJI Air Units via a proprietary cable.\n• HDZero cameras connect to HDZero VTX boards.\n• Walksnail cameras pair with Walksnail Avatar transmitters.\n\nFor FPV the camera is optimised for low-light performance and wide dynamic range, not resolution — the VTX link is the resolution bottleneck.`},
+    {title:"Receiver (RX)",body:`Receives pilot control signals from the transmitter/controller on the ground.\n\n• ExpressLRS (ELRS): Open-source; 2.4 GHz or 900 MHz. Exceptional range and packet rate (up to 1000 Hz). Fastest growing protocol.\n• Crossfire (TBS CRSF): 915 MHz / 868 MHz. Pioneered long-range FPV; still widely used.\n• SBUS (FrSky): 100 Hz update rate; older technology but large installed base.\n• Protocols compared:\n  ELRS 2.4 GHz: Up to 5–10 km with directional antenna; 250 Hz nominal.\n  ELRS 900 MHz: 40+ km demonstrated range; better penetration.\n  CRSF: 1–3 km typical; excellent reliability.\n\nThe receiver connects to a UART on the flight controller and sends commands via CRSF serial (most modern systems) or SBUS.`},
+    {title:"GPS Module",body:`Provides absolute position (latitude/longitude/altitude) and velocity for autonomous flight features.\n\n• Required for: Return-to-home, position hold, waypoint missions, geofencing.\n• Not required for: Manual FPV racing or freestyle (adds weight).\n• Chip tiers:\n  u-blox M8N: Entry level; 10 Hz update, 72-channel. ~18 g.\n  u-blox M10: Modern low-power version; 25 Hz update, 92-channel.\n  u-blox F9P: Survey-grade RTK; centimetre-level accuracy when paired with a base station. Used for precision agriculture and mapping.\n• Always pair GPS with a compass (magnetometer) for heading reference. Many GPS modules include one (e.g. BN-880, M10Q-5883).`},
+  ]},
+  {section:"Physics & Calculations",items:[
+    {title:"All-Up Weight (AUW)",body:`The total flying mass of the vehicle including all components, payload, and battery.\n\nAUW = Σ(motor weights) + ESC weight + FC weight + prop weights + battery weight + frame weight + misc (wiring, standoffs ~30 g)\n\nWhy it matters: AUW directly determines how much thrust you need, your hover power consumption, and your flight time. Every gram saved has a compounding benefit — lighter aircraft hover at lower throttle, consuming less power, which further extends flight time.`},
+    {title:"Thrust-to-Weight Ratio (T/W)",body:`The ratio of maximum available thrust to the aircraft's all-up weight.\n\nT/W = Total Max Thrust (g) ÷ AUW (g)\n\nInterpretation:\n• T/W < 2:1 — Cannot fly safely (insufficient excess thrust for control authority)\n• T/W 2–3:1 — Barely flyable; sluggish response; not recommended\n• T/W 3–4:1 — Good for long-range / cinematic; stable but not agile\n• T/W 4–6:1 — Freestyle sweet spot; responsive and efficient\n• T/W 6–10:1 — Racing; extremely snappy but harsh on batteries\n• T/W > 10:1 — Overpowered; mainly drag racers\n\nHover throttle ≈ 1/T/W × 100%\nA T/W of 4:1 means the drone hovers at ~25% throttle.`},
+    {title:"Momentum Theory & Hover Power",body:`The foundational aerodynamic model used to estimate hover power consumption.\n\nThe induced power required to hover is:\n  Pᵢ = T^1.5 / √(2 · ρ · A · N)\n\nWhere:\n• T = total thrust required (= weight in newtons at hover)\n• ρ = air density (kg/m³)\n• A = disc area per motor (m²) = π × (prop radius)²\n• N = number of effective rotors\n\nActual shaft power accounts for propeller efficiency (Figure of Merit):\n  P_shaft = Pᵢ / FM\n\nElectrical power (accounting for ESC + motor efficiency ~83% × 95%):\n  P_elec = P_shaft / 0.83 / 0.95\n\nHover current: I = P_elec / (battery voltage × 0.9)`},
+    {title:"Figure of Merit (FM)",body:`A dimensionless efficiency factor comparing a real propeller to an ideal actuator disc.\n\n  FM = P_ideal / P_actual\n\nRange: 0 (no efficiency) to 1 (perfect efficiency). Real props: 0.55–0.75.\n\n• 2-blade props: FM ≈ 0.68 (less blade interference, more efficient hover)\n• 3-blade props: FM ≈ 0.58 (more thrust density, slightly less efficient)\n• Frame material stiffness reduces FM: flexible frames vibrate, causing prop blade angle to fluctuate, wasting energy.\n  FM_effective = FM_base × material_stiffness_factor\n\nA 1% drop in FM increases hover power by ~1%, directly reducing flight time.`},
+    {title:"ISA Atmosphere & Air Density",body:`Air density (ρ) decreases with altitude following the International Standard Atmosphere (ISA) model:\n\n  ρ = 1.225 × (1 − 0.0065 × h / 288.15)^4.2561  [kg/m³]\n\nWhere h = altitude in metres.\n\nAt sea level: ρ = 1.225 kg/m³\nAt 1000 m: ρ ≈ 1.112 kg/m³ (9% less dense)\nAt 3000 m: ρ ≈ 0.909 kg/m³ (26% less dense)\n\nLower air density means the propeller must spin faster to generate the same thrust, drawing more current. Flight time drops noticeably at high-altitude locations (mountains, plateaus). Always test your hover throttle estimate at the actual flying altitude.`},
+    {title:"Peukert Effect & Usable Capacity",body:`Lithium batteries deliver less of their rated capacity when discharged at high currents. This is modelled by Peukert's law:\n\n  C_actual = C_rated × (I_rated / I_actual)^(k−1)\n\nWhere:\n• k = Peukert exponent (LiPo: ~1.05; Li-Ion: ~1.02)\n• I_rated = C_rated × capacity in Ah (1-hour discharge rate)\n• I_actual = actual discharge current\n\nFor a 1500 mAh / 150C LiPo discharging at 50 A:\n  C_actual = 1.5 × (1.5/50)^0.05 ≈ 1.35 Ah (10% reduction)\n\nThe calculator also applies an 80% Depth of Discharge (DoD) limit:\n  Usable energy = V × C × 0.8\nDischarging LiPo below 3.5 V/cell causes permanent capacity loss and swelling.`},
+    {title:"C-Rating & Max Discharge",body:`The C-rating of a battery defines how quickly it can be safely discharged as a multiple of its capacity.\n\n  Max discharge (A) = Capacity (Ah) × C-rating\n\nExamples:\n• 1500 mAh × 100C = 150 A\n• 5000 mAh × 25C = 125 A\n• 30000 mAh × 15C = 450 A\n\nThe Peak vs Max Discharge metric shows what fraction of the battery's maximum current capability is used at full throttle. Staying below 75% leaves headroom for voltage sag. Above 90% the internal resistance causes significant voltage sag, reducing power and potentially triggering the low-voltage cutoff mid-flight.\n\nAdvertised C-ratings are often optimistic. Use reputable brands and verify with actual discharge tests.`},
+    {title:"KV Rating",body:`KV is not "kilo-volts" — it means RPM per Volt (revolutions per minute per volt).\n\n  RPM = KV × V_battery\n\nExample: 1950 KV motor on 6S (22.2 V nominal):\n  RPM = 1950 × 22.2 = 43,290 RPM at no load (unloaded, full throttle)\n\nLoaded RPM (with prop) is typically 15–25% lower due to slip.\n\nLower KV + larger prop = more torque, better efficiency, suited to heavy-lift or long-range.\nHigher KV + smaller prop = higher RPM, faster response, suited to racing and freestyle.\n\nKV must be matched to battery voltage: running a 2400 KV motor on 6S without the right prop will over-current the motor and burn it.`},
+    {title:"Disc Loading",body:`Disc loading is the thrust produced per unit of total swept disc area.\n\n  Disc Loading = Total Thrust (g) / (A × N)  [g/cm²]\n\nWhere A = disc area per motor = π × r²\n\nLower disc loading = more efficient hover (larger props moving air slowly).\nHigher disc loading = less efficient hover but more compact design.\n\nMomentum theory shows hover power scales as:\n  P ∝ T^1.5 / √(ρ · A · N)\n\nDoubling disc area reduces hover power by √2 ≈ 30% — why large agricultural drones with 30"+ props can carry heavy payloads for hours.`},
+    {title:"ESC Headroom",body:`ESC headroom is the ratio of ESC continuous current rating to motor peak current draw.\n\n  Headroom (%) = (ESC_rating / Motor_peak) × 100\n\nExample: 60 A ESC, 36 A motor → 60/36 × 100 = 167%\n\nRecommended: ≥ 110% headroom (some margin for burst)\nWarning zone: 80–110% — ESC runs hot, lifespan reduced\nDanger: < 80% — thermal shutdown or failure risk\n\nNote: Continuous current ratings assume good airflow. In tightly packed stacks with no airflow, de-rate by 15–20%. Single ESCs on large craft often have active cooling fans.`},
+    {title:"Centre of Gravity (CG) & Shift Penalty",body:`The CG is the point around which the aircraft balances. The flight controller continuously corrects for any CG offset using differential motor thrust, but this correction consumes extra energy.\n\nCG shift penalties in this calculator:\n• Battery on top: +1% hover power (minor shift up)\n• Battery on bottom: +2% (shifts CG low, requires more pitch correction)\n• FC above plate: +0.5%\n• FC below plate: +1%\n• ESC above plate: +0.5%\n• ESC below plate: +1.2%\n\nThese are approximations. In practice, significant CG offsets also reduce the aircraft's ability to recover quickly from disturbances, hurting both efficiency and flight performance.`},
+  ]},
+];
+
+function DocsModal({onClose}){
+  var T=useTheme();var t=T.t;
+  var as=useState(null),active=as[0],setActive=as[1];
+  return(<div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.7)",zIndex:200,display:"flex",alignItems:"stretch",justifyContent:"center"}}>
+    <div style={{background:t.bg,width:"100%",maxWidth:1100,display:"flex",height:"100vh",flexDirection:"column"}}>
+      {/* Header */}
+      <div style={{padding:"18px 28px",borderBottom:"1px solid "+t.bd,display:"flex",justifyContent:"space-between",alignItems:"center",background:t.bg2,flexShrink:0}}>
+        <div>
+          <div style={{fontSize:20,fontWeight:800,color:t.tb,fontFamily:SN}}>Technical Documentation</div>
+          <div style={{fontSize:13,color:t.td,marginTop:2,fontFamily:SN}}>Component guides, physics theory, and the mathematics powering this simulator</div>
+        </div>
+        <button onClick={onClose} style={{background:"none",border:"1px solid "+t.bd,color:t.td,fontSize:22,cursor:"pointer",borderRadius:8,width:36,height:36,display:"flex",alignItems:"center",justifyContent:"center",lineHeight:1}}>×</button>
+      </div>
+      {/* Body */}
+      <div style={{display:"grid",gridTemplateColumns:"220px 1fr",flex:1,overflow:"hidden"}}>
+        {/* Sidebar */}
+        <div style={{borderRight:"1px solid "+t.bd,overflowY:"auto",padding:"12px 0",background:t.bg2}}>
+          {DOCS.map(function(sec){return <div key={sec.section}>
+            <div style={{padding:"8px 20px 4px",fontSize:10,fontWeight:700,color:t.ac,letterSpacing:1.5,fontFamily:MN}}>{sec.section.toUpperCase()}</div>
+            {sec.items.map(function(item){var isA=active&&active.title===item.title;
+              return <div key={item.title} onClick={function(){setActive(item);}} style={{padding:"9px 20px",fontSize:13,fontWeight:isA?700:400,color:isA?t.ac:t.tx,cursor:"pointer",background:isA?t.acL:"transparent",borderLeft:"3px solid "+(isA?t.ac:"transparent"),fontFamily:SN,transition:"all 0.1s"}}>{item.title}</div>;})}
+          </div>;})}
+        </div>
+        {/* Content */}
+        <div style={{overflowY:"auto",padding:"32px 40px"}}>
+          {!active&&<div style={{color:t.td,fontSize:15,marginTop:40,textAlign:"center",fontFamily:SN}}>← Select a topic from the left to read its documentation.</div>}
+          {active&&<>
+            <div style={{fontSize:24,fontWeight:800,color:t.tb,marginBottom:8,fontFamily:SN}}>{active.title}</div>
+            <div style={{width:48,height:3,background:t.ac,borderRadius:2,marginBottom:24}}/>
+            {active.body.split("\n\n").map(function(para,i){
+              var isFormula=para.startsWith("  ")||para.includes("= ")||para.includes("÷")||para.includes("×");
+              if(isFormula){return <pre key={i} style={{background:t.bg2,border:"1px solid "+t.bd,borderRadius:10,padding:"14px 18px",fontFamily:MN,fontSize:13,color:t.ac,lineHeight:1.8,overflowX:"auto",marginBottom:16,whiteSpace:"pre-wrap"}}>{para.trim()}</pre>;}
+              var isBulletBlock=para.startsWith("•")||para.includes("\n•");
+              if(isBulletBlock){return <div key={i} style={{marginBottom:16}}>{para.split("\n").map(function(line,j){
+                if(line.startsWith("•")){return <div key={j} style={{display:"flex",gap:10,marginBottom:6}}><span style={{color:t.ac,flexShrink:0,fontSize:15}}>•</span><span style={{fontSize:15,color:t.tx,lineHeight:1.7,fontFamily:SN}}>{line.slice(1).trim()}</span></div>;}
+                return <div key={j} style={{fontSize:15,color:t.tx,lineHeight:1.7,fontFamily:SN,marginBottom:4}}>{line}</div>;
+              })}</div>;}
+              return <p key={i} style={{fontSize:15,color:t.tx,lineHeight:1.8,marginBottom:16,fontFamily:SN}}>{para}</p>;
+            })}
+          </>}
+        </div>
+      </div>
+    </div>
+  </div>);
+}
 function InfoTip({label}){
   var T=useTheme();var t=T.t;var def=PHYSICS_DEFS[label];if(!def)return null;
   var hs=useState(false),hovered=hs[0],setHovered=hs[1];
-  return(<span onMouseEnter={function(){setHovered(true);}} onMouseLeave={function(){setHovered(false);}} style={{position:"relative",display:"inline-flex",alignItems:"center",marginLeft:4,cursor:"help"}}>
-    <span style={{width:12,height:12,borderRadius:"50%",border:"1px solid "+t.td,display:"inline-flex",alignItems:"center",justifyContent:"center",fontSize:7,color:t.td,fontFamily:SN,fontWeight:700,lineHeight:1,flexShrink:0}}>i</span>
-    {hovered&&<div style={{position:"absolute",bottom:"100%",left:"50%",transform:"translateX(-50%)",marginBottom:6,width:220,padding:"8px 10px",background:t.bg3,border:"1px solid "+t.bd,borderRadius:8,boxShadow:t.shH,fontSize:9,color:t.tx,lineHeight:1.5,fontFamily:SN,fontWeight:400,zIndex:20,pointerEvents:"none"}}>{def}</div>}
+  return(<span onMouseEnter={function(){setHovered(true);}} onMouseLeave={function(){setHovered(false);}} style={{position:"relative",display:"inline-flex",alignItems:"center",marginLeft:5,cursor:"help"}}>
+    <span style={{width:15,height:15,borderRadius:"50%",border:"1.5px solid "+t.td,display:"inline-flex",alignItems:"center",justifyContent:"center",fontSize:9,color:t.td,fontFamily:SN,fontWeight:700,lineHeight:1,flexShrink:0}}>i</span>
+    {hovered&&<div style={{position:"absolute",bottom:"100%",left:"50%",transform:"translateX(-50%)",marginBottom:8,width:260,padding:"10px 14px",background:t.bg3,border:"1px solid "+t.bd,borderRadius:10,boxShadow:t.shH,fontSize:12,color:t.tx,lineHeight:1.6,fontFamily:SN,fontWeight:400,zIndex:20,pointerEvents:"none"}}>{def}</div>}
   </span>);
 }
 function MathPanel({insights,flight}){
   var T=useTheme();var t=T.t;if(!insights.length&&!flight)return null;
-  return(<div style={{background:t.sf,borderRadius:14,boxShadow:t.sh,padding:16,fontFamily:MN}}>
-    {insights.length>0&&<><div style={{fontSize:10,fontWeight:700,color:t.ac,letterSpacing:1.5,marginBottom:10}}>PHYSICS BREAKDOWN</div>
+  return(<div style={{display:"grid",gridTemplateColumns:insights.length&&flight?"1fr 1fr":"1fr",gap:12,alignItems:"start"}}>
+    {insights.length>0&&<div style={{background:t.sf,borderRadius:14,boxShadow:t.sh,padding:16,fontFamily:MN}}>
+      <div style={{fontSize:11,fontWeight:700,color:t.ac,letterSpacing:1.5,marginBottom:12}}>PHYSICS BREAKDOWN</div>
       {insights.map(function(ins,i){var vc=ins.type==="good"?t.ac:ins.type==="bad"?t.rd:ins.type==="warn"?t.am:t.tb;
-        return <div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"5px 0",borderBottom:"1px solid "+t.bdL}}>
-          <div style={{display:"flex",alignItems:"center"}}><div><div style={{fontSize:10,color:t.tb,fontWeight:500}}>{ins.label}<InfoTip label={ins.label}/></div><div style={{fontSize:8,color:t.td,marginTop:1}}>{ins.formula}</div></div></div>
-          <div style={{fontSize:13,fontWeight:700,color:vc}}>{ins.value}</div></div>;})}</>}
-    {flight&&<><div style={{fontSize:10,fontWeight:700,color:t.bl,letterSpacing:1.5,marginTop:insights.length?14:0,marginBottom:10}}>FLIGHT ESTIMATES</div>
-      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:10}}>
-        <div style={{textAlign:"center",background:t.acL,borderRadius:10,padding:10}}><div style={{fontSize:24,fontWeight:800,color:t.ac}}>{flight.hoverTime}<span style={{fontSize:10,fontWeight:400}}>min</span></div><div style={{fontSize:8,color:t.td,marginTop:2}}>HOVER</div></div>
-        <div style={{textAlign:"center",background:t.blL,borderRadius:10,padding:10}}><div style={{fontSize:24,fontWeight:800,color:t.bl}}>{flight.cruiseTime}<span style={{fontSize:10,fontWeight:400}}>min</span></div><div style={{fontSize:8,color:t.td,marginTop:2}}>CRUISE</div></div>
+        return <div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",padding:"7px 0",borderBottom:"1px solid "+t.bdL,gap:8}}>
+          <div><div style={{fontSize:12,color:t.tb,fontWeight:600,fontFamily:SN}}>{ins.label}<InfoTip label={ins.label}/></div><div style={{fontSize:11,color:t.td,marginTop:2,fontFamily:MN}}>{ins.formula}</div></div>
+          <div style={{fontSize:14,fontWeight:700,color:vc,flexShrink:0}}>{ins.value}</div></div>;})}
+    </div>}
+    {flight&&<div style={{background:t.sf,borderRadius:14,boxShadow:t.sh,padding:16,fontFamily:MN}}>
+      <div style={{fontSize:11,fontWeight:700,color:t.bl,letterSpacing:1.5,marginBottom:12}}>FLIGHT ESTIMATES</div>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:12}}>
+        <div style={{textAlign:"center",background:t.acL,borderRadius:12,padding:14}}><div style={{fontSize:28,fontWeight:800,color:t.ac,fontFamily:SN}}>{flight.hoverTime}<span style={{fontSize:13,fontWeight:500}}> min</span></div><div style={{fontSize:11,color:t.td,marginTop:4,fontFamily:SN,fontWeight:600,letterSpacing:0.5}}>HOVER</div></div>
+        <div style={{textAlign:"center",background:t.blL,borderRadius:12,padding:14}}><div style={{fontSize:28,fontWeight:800,color:t.bl,fontFamily:SN}}>{flight.cruiseTime}<span style={{fontSize:13,fontWeight:500}}> min</span></div><div style={{fontSize:11,color:t.td,marginTop:4,fontFamily:SN,fontWeight:600,letterSpacing:0.5}}>CRUISE</div></div>
       </div>
-      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr 1fr",gap:4}}>
-        {[[flight.auw+"g","AUW",t.tb],[flight.twr+":1","T/W",flight.twr>=4?t.ac:flight.twr>=2?t.am:t.rd],[flight.hoverThrottle+"%","THR",t.tb],[flight.hoverPower+"W","PWR",t.tb]].map(function(r,i){
-          return <div key={i} style={{background:t.bg2,borderRadius:8,padding:"6px 4px",textAlign:"center"}}><div style={{fontWeight:700,fontSize:13,color:r[2]}}>{r[0]}</div><div style={{fontSize:7,color:t.td,marginTop:1}}>{r[1]}</div></div>;})}</div>
-      <div style={{marginTop:8,fontSize:8,color:t.td,lineHeight:1.6}}>
-        {Object.entries(flight.breakdown).map(function(en){return <div key={en[0]} style={{display:"flex",justifyContent:"space-between"}}><span>{en[0].charAt(0).toUpperCase()+en[0].slice(1)}</span><span>{en[1]}g</span></div>;})}
-        <div style={{borderTop:"1px solid "+t.bd,marginTop:3,paddingTop:3,fontWeight:700,color:t.tb,display:"flex",justifyContent:"space-between"}}><span>AUW</span><span>{flight.auw}g</span></div>
-        <div style={{marginTop:4,fontSize:7,color:t.td}}>ρ={flight.rho} · FM={flight.FM} · {flight.altitude}m ASL</div></div></>}
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6,marginBottom:12}}>
+        {[[flight.auw+"g","All-Up Weight",t.tb],[flight.twr+":1","Thrust/Weight",flight.twr>=4?t.ac:flight.twr>=2?t.am:t.rd],[flight.hoverThrottle+"%","Hover Throttle",t.tb],[flight.hoverPower+"W","Hover Power",t.tb]].map(function(r,i){
+          return <div key={i} style={{background:t.bg2,borderRadius:10,padding:"10px 8px",textAlign:"center"}}><div style={{fontWeight:700,fontSize:16,color:r[2],fontFamily:SN}}>{r[0]}</div><div style={{fontSize:10,color:t.td,marginTop:3,fontFamily:SN,fontWeight:500}}>{r[1]}</div></div>;})}</div>
+      <div style={{fontSize:12,color:t.td,lineHeight:1.7,fontFamily:MN}}>
+        {Object.entries(flight.breakdown).map(function(en){return <div key={en[0]} style={{display:"flex",justifyContent:"space-between"}}><span style={{textTransform:"capitalize"}}>{en[0]}</span><span>{en[1]}g</span></div>;})}
+        <div style={{borderTop:"1px solid "+t.bd,marginTop:4,paddingTop:4,fontWeight:700,color:t.tb,display:"flex",justifyContent:"space-between"}}><span>Total AUW</span><span>{flight.auw}g</span></div>
+        <div style={{marginTop:6,fontSize:11,color:t.td,fontFamily:MN}}>ρ={flight.rho} kg/m³ · FM={flight.FM} · {flight.altitude}m ASL</div>
+      </div>
+    </div>}
   </div>);
 }
 function IssuesPanel({compat}){var T=useTheme();var t=T.t;if(!compat)return null;var e=compat.errors,w=compat.warnings;
-  if(!e.length&&!w.length)return <div style={{padding:10,background:t.acL,borderRadius:10,fontSize:10,color:t.ac,textAlign:"center",fontFamily:MN}}>✓ Compatible</div>;
-  return(<div style={{display:"flex",flexDirection:"column",gap:4}}>
-    {e.map(function(x,i){return <div key={"e"+i} style={{padding:"7px 12px",background:t.rdL,borderRadius:8,fontSize:9,color:t.rd,fontFamily:MN,lineHeight:1.4}}>✕ {x.msg}</div>;})}
-    {w.map(function(x,i){return <div key={"w"+i} style={{padding:"7px 12px",background:t.amL,borderRadius:8,fontSize:9,color:t.am,fontFamily:MN,lineHeight:1.4}}>⚠ {x.msg}</div>;})}
+  if(!e.length&&!w.length)return <div style={{padding:"10px 14px",background:t.acL,borderRadius:10,fontSize:13,color:t.ac,textAlign:"center",fontFamily:SN,fontWeight:600}}>✓ All components compatible</div>;
+  return(<div style={{display:"flex",flexDirection:"column",gap:5}}>
+    {e.map(function(x,i){return <div key={"e"+i} style={{padding:"9px 14px",background:t.rdL,borderRadius:9,fontSize:12,color:t.rd,fontFamily:SN,lineHeight:1.5,fontWeight:500}}>✕ {x.msg}</div>;})}
+    {w.map(function(x,i){return <div key={"w"+i} style={{padding:"9px 14px",background:t.amL,borderRadius:9,fontSize:12,color:t.am,fontFamily:SN,lineHeight:1.5,fontWeight:500}}>⚠ {x.msg}</div>;})}
   </div>);
 }
 
@@ -538,8 +620,9 @@ function IssuesPanel({compat}){var T=useTheme();var t=T.t;if(!compat)return null
 function LandingPage({onLaunch}){
   var T=useTheme();var t=T.t;var isDark=T.mode==="dark";
   var ns=useState(false),navOpen=ns[0],setNavOpen=ns[1];
+  var ds=useState(false),showDocs=ds[0],setShowDocs=ds[1];
   return(<div style={{background:t.bg,color:t.tx,fontFamily:SN,minHeight:"100vh"}}>
-    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+    {showDocs&&<DocsModal onClose={function(){setShowDocs(false);}}/>}
     <nav style={{position:"fixed",top:0,left:0,right:0,zIndex:50,padding:"14px 32px",display:"flex",justifyContent:"space-between",alignItems:"center",background:t.bg+"e6",backdropFilter:"blur(16px)",borderBottom:"1px solid "+t.bd}}>
       <div style={{fontFamily:MN,fontWeight:700,fontSize:15,letterSpacing:1.2}}><span style={{color:t.tb}}>Multirotor</span><span style={{color:t.ac}}>.</span><span style={{color:t.tb}}>build</span></div>
       <div style={{display:"flex",gap:12,alignItems:"center"}}>
@@ -551,7 +634,7 @@ function LandingPage({onLaunch}){
         </button></div>
     </nav>
     {navOpen&&<div style={{position:"fixed",top:52,right:16,zIndex:49,background:t.sf,borderRadius:14,boxShadow:t.shH,padding:"8px 0",minWidth:200,border:"1px solid "+t.bd}}>
-      {["About","Documentation","Compatibility Guide","GitHub"].map(function(item){return <div key={item} onClick={function(){setNavOpen(false);}} style={{padding:"10px 20px",fontSize:13,color:t.tb,cursor:"pointer",fontWeight:500}}>{item}</div>;})}
+      {[{l:"About",fn:function(){setNavOpen(false);}},{l:"Documentation",fn:function(){setShowDocs(true);setNavOpen(false);}},{l:"Compatibility Guide",fn:function(){setNavOpen(false);}},{l:"GitHub",fn:function(){setNavOpen(false);}}].map(function(item){return <div key={item.l} onClick={item.fn} style={{padding:"12px 20px",fontSize:14,color:t.tb,cursor:"pointer",fontWeight:500,fontFamily:SN}}>{item.l}</div>;})}
     </div>}
     <div style={{minHeight:"100vh",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",textAlign:"center",padding:"0 24px"}}>
       <svg viewBox="0 0 200 200" style={{width:150,height:150,marginBottom:36}}>
@@ -581,8 +664,9 @@ function LandingPage({onLaunch}){
 // ════════════════════════════════════════════════════
 // BUILDER
 // ════════════════════════════════════════════════════
-function BuilderApp({goHome}){
+function BuilderApp({goHome,goModeSelect}){
   var T=useTheme();var t=T.t;var isDark=T.mode==="dark";
+  var ds=useState(false),showDocs=ds[0],setShowDocs=ds[1];
   var fs=useState(null),frame=fs[0],setFrame=fs[1];
   var sz=useState(null),size=sz[0],setSize=sz[1];
   var emptySel={motor:null,esc:null,fc:null,battery:null,prop:null,vtx:null,camera:null,rx:null,gps:null};
@@ -620,52 +704,87 @@ function BuilderApp({goHome}){
   var recommended=sortByRating(sizeFiltered);var otherSorted=sortByRating(otherItems);
 
   return(<div style={{minHeight:"100vh",background:t.bg,color:t.tx,fontFamily:SN}}>
-    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
-    {showUpload&&<div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.5)",zIndex:100,display:"flex",alignItems:"center",justifyContent:"center"}}>
+    {showDocs&&<DocsModal onClose={function(){setShowDocs(false);}}/>}
+    {showUpload&&<div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.55)",zIndex:150,display:"flex",alignItems:"center",justifyContent:"center"}}>
       <div style={{background:t.bg3,borderRadius:20,padding:28,maxWidth:500,width:"90%",maxHeight:"80vh",overflowY:"auto",boxShadow:t.shH}}>
-        <div style={{display:"flex",justifyContent:"space-between",marginBottom:16}}><div style={{fontSize:16,fontWeight:700,color:t.ac}}>Upload Component</div>
-          <button onClick={function(){setShowUpload(false);}} style={{background:"none",border:"none",color:t.td,fontSize:20,cursor:"pointer"}}>×</button></div>
-        <div style={{fontSize:11,color:t.td,lineHeight:1.6,marginBottom:14}}>Fork github.com/lazyonbed/multirotor-build, add JSON to componentDatabase.js, open a PR.</div>
-        {Object.entries(UPSCH).map(function(en){return <div key={en[0]} style={{background:t.bg2,borderRadius:10,padding:12,marginBottom:8}}>
-          <div style={{fontSize:11,fontWeight:700,color:t.ac,marginBottom:4,textTransform:"uppercase"}}>{en[0]}</div>
-          <div style={{fontSize:9,color:t.td,fontFamily:MN}}>{en[1].req.join(", ")}</div><div style={{fontSize:9,color:t.td,marginTop:4}}>{en[1].doc}</div></div>;})}
+        <div style={{display:"flex",justifyContent:"space-between",marginBottom:16}}><div style={{fontSize:18,fontWeight:700,color:t.ac,fontFamily:SN}}>Upload Component</div>
+          <button onClick={function(){setShowUpload(false);}} style={{background:"none",border:"none",color:t.td,fontSize:22,cursor:"pointer"}}>×</button></div>
+        <div style={{fontSize:13,color:t.td,lineHeight:1.7,marginBottom:14,fontFamily:SN}}>Fork github.com/lazyonbed/multirotor-build, add JSON to componentDatabase.js, open a PR.</div>
+        {Object.entries(UPSCH).map(function(en){return <div key={en[0]} style={{background:t.bg2,borderRadius:10,padding:14,marginBottom:8}}>
+          <div style={{fontSize:13,fontWeight:700,color:t.ac,marginBottom:5,textTransform:"uppercase",fontFamily:SN}}>{en[0]}</div>
+          <div style={{fontSize:12,color:t.td,fontFamily:MN,lineHeight:1.5}}>{en[1].req.join(", ")}</div><div style={{fontSize:12,color:t.td,marginTop:5,fontFamily:SN}}>{en[1].doc}</div></div>;})}
       </div></div>}
+
     {/* Header */}
-    <div style={{padding:"10px 24px",borderBottom:"1px solid "+t.bd,display:"flex",justifyContent:"space-between",alignItems:"center",background:t.bg+"e6",backdropFilter:"blur(12px)",position:"sticky",top:0,zIndex:40}}>
-      <div onClick={goHome} style={{fontFamily:MN,fontWeight:700,fontSize:14,letterSpacing:1.2,cursor:"pointer"}}><span style={{color:t.tb}}>Multirotor</span><span style={{color:t.ac}}>.</span><span style={{color:t.tb}}>build</span></div>
+    <div style={{padding:"12px 24px",borderBottom:"1px solid "+t.bd,display:"flex",justifyContent:"space-between",alignItems:"center",background:t.bg+"e6",backdropFilter:"blur(12px)",position:"sticky",top:0,zIndex:40}}>
+      <div onClick={goHome} style={{fontFamily:MN,fontWeight:700,fontSize:15,letterSpacing:1.2,cursor:"pointer"}}><span style={{color:t.tb}}>Multirotor</span><span style={{color:t.ac}}>.</span><span style={{color:t.tb}}>build</span></div>
       <div style={{display:"flex",gap:8,alignItems:"center"}}>
-        {step===1&&<button onClick={function(){setStep(0);}} style={{background:t.sf,border:"1px solid "+t.bd,color:t.td,padding:"5px 14px",borderRadius:8,cursor:"pointer",fontSize:10,fontFamily:SN,fontWeight:500}}>← Frame</button>}
-        <button onClick={function(){T.toggle();}} style={{background:isDark?"#3a4055":t.sf,border:"2px solid "+(isDark?"#6aaeff":t.bd),borderRadius:8,padding:"5px 12px",cursor:"pointer",fontSize:13,color:isDark?"#eceef6":t.td,fontWeight:600,transition:"all 0.2s"}}>{isDark?"☀ Light":"☾ Dark"}</button>
-        <button onClick={function(){setNavOpen(!navOpen);}} style={{background:"none",border:"none",cursor:"pointer",padding:4,display:"flex",flexDirection:"column",gap:3}}>
-          <span style={{display:"block",width:18,height:2,background:t.tb,borderRadius:1,transition:"all 0.3s",transform:navOpen?"rotate(45deg) translateY(5px)":"none"}}/>
-          <span style={{display:"block",width:18,height:2,background:t.tb,borderRadius:1,transition:"all 0.3s",opacity:navOpen?0:1}}/>
-          <span style={{display:"block",width:18,height:2,background:t.tb,borderRadius:1,transition:"all 0.3s",transform:navOpen?"rotate(-45deg) translateY(-5px)":"none"}}/>
+        {step===0&&goModeSelect&&<button onClick={goModeSelect} style={{background:t.sf,border:"1px solid "+t.bd,color:t.td,padding:"7px 16px",borderRadius:8,cursor:"pointer",fontSize:13,fontFamily:SN,fontWeight:500}}>← Change Mode</button>}
+        {step===1&&<button onClick={function(){setStep(0);}} style={{background:t.sf,border:"1px solid "+t.bd,color:t.td,padding:"7px 16px",borderRadius:8,cursor:"pointer",fontSize:13,fontFamily:SN,fontWeight:500}}>← Frame Setup</button>}
+        <button onClick={function(){T.toggle();}} style={{background:isDark?"#3a4055":t.sf,border:"2px solid "+(isDark?"#6aaeff":t.bd),borderRadius:8,padding:"7px 14px",cursor:"pointer",fontSize:13,color:isDark?"#eceef6":t.td,fontWeight:600,transition:"all 0.2s"}}>{isDark?"☀ Light":"☾ Dark"}</button>
+        <button onClick={function(){setNavOpen(!navOpen);}} style={{background:"none",border:"none",cursor:"pointer",padding:6,display:"flex",flexDirection:"column",gap:4}}>
+          <span style={{display:"block",width:20,height:2,background:t.tb,borderRadius:1,transition:"all 0.3s",transform:navOpen?"rotate(45deg) translateY(6px)":"none"}}/>
+          <span style={{display:"block",width:20,height:2,background:t.tb,borderRadius:1,transition:"all 0.3s",opacity:navOpen?0:1}}/>
+          <span style={{display:"block",width:20,height:2,background:t.tb,borderRadius:1,transition:"all 0.3s",transform:navOpen?"rotate(-45deg) translateY(-6px)":"none"}}/>
         </button></div>
     </div>
-    {navOpen&&<div style={{position:"fixed",top:48,right:16,zIndex:39,background:t.sf,borderRadius:14,boxShadow:t.shH,padding:"8px 0",minWidth:190,border:"1px solid "+t.bd}}>
-      {[{l:"Home",fn:function(){goHome();setNavOpen(false);}},{l:"About",fn:function(){setNavOpen(false);}},{l:"Documentation",fn:function(){setNavOpen(false);}},{l:"Compatibility Guide",fn:function(){setNavOpen(false);}}].map(function(item){
-        return <div key={item.l} onClick={item.fn} style={{padding:"10px 20px",fontSize:12,color:t.tb,cursor:"pointer",fontWeight:500}}>{item.l}</div>;
-      })}
+    {navOpen&&<div style={{position:"fixed",top:52,right:16,zIndex:39,background:t.sf,borderRadius:14,boxShadow:t.shH,padding:"8px 0",minWidth:210,border:"1px solid "+t.bd}}>
+      {[{l:"Home",fn:function(){goHome();setNavOpen(false);}},
+        {l:"Documentation",fn:function(){setShowDocs(true);setNavOpen(false);}},
+        {l:"About",fn:function(){setNavOpen(false);}},
+        {l:"Compatibility Guide",fn:function(){setNavOpen(false);}},
+      ].map(function(item){return <div key={item.l} onClick={item.fn} style={{padding:"12px 22px",fontSize:14,color:t.tb,cursor:"pointer",fontWeight:500,fontFamily:SN}}>{item.l}</div>;})}
     </div>}
 
-    {step===0&&(<div style={{padding:"28px 24px",maxWidth:900,margin:"0 auto"}}>
-      <div style={{marginBottom:28}}><div style={{fontSize:11,fontWeight:700,color:t.ac,marginBottom:12,letterSpacing:1.5,fontFamily:MN}}>① Frame Type</div>
-        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill, minmax(130px, 1fr))",gap:8}}>
-          {FRAME_TYPES.map(function(ft){var a=frame&&frame.id===ft.id;return <div key={ft.id} onClick={function(){setFrame(ft);}} style={{padding:"12px 8px",background:a?t.acL:t.sf,border:"1.5px solid "+(a?t.ac:t.bd),borderRadius:12,cursor:"pointer",textAlign:"center",boxShadow:a?t.sh:"none"}}>
-            <div style={{fontSize:12,fontWeight:700,color:a?t.ac:t.tb}}>{ft.name}</div><div style={{fontSize:8,color:t.td,marginTop:3}}>{ft.mc}m · {ft.desc}</div></div>;})}</div></div>
-      <div style={{marginBottom:28}}><div style={{fontSize:11,fontWeight:700,color:t.bl,marginBottom:12,letterSpacing:1.5,fontFamily:MN}}>② Size</div>
-        <div style={{display:"flex",flexWrap:"wrap",gap:8}}>
-          {SIZES.map(function(s){var a=size&&size.id===s.id;return <div key={s.id} onClick={function(){setSize(s);}} style={{padding:"8px 14px",background:a?t.blL:t.sf,border:"1.5px solid "+(a?t.bl:t.bd),borderRadius:10,cursor:"pointer",boxShadow:a?t.sh:"none"}}>
-            <div style={{fontSize:14,fontWeight:800,color:a?t.bl:t.tb,fontFamily:MN}}>{s.l}</div><div style={{fontSize:9,color:t.td}}>{s.mm}mm · {s.cat}</div></div>;})}</div></div>
-      <div style={{marginBottom:28}}><div style={{fontSize:11,fontWeight:700,color:t.ac,marginBottom:12,letterSpacing:1.5,fontFamily:MN}}>③ Frame Material</div>
-        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill, minmax(150px, 1fr))",gap:8}}>
-          {FRAME_MATERIALS.map(function(mat){var a=frameMat&&frameMat.id===mat.id;return <div key={mat.id} onClick={function(){setFrameMat(mat);}} style={{padding:"12px 10px",background:a?t.acL:t.sf,border:"1.5px solid "+(a?t.ac:t.bd),borderRadius:12,cursor:"pointer",boxShadow:a?t.sh:"none"}}>
-            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><div style={{fontSize:12,fontWeight:700,color:a?t.ac:t.tb}}>{mat.name}</div><span style={{fontSize:9,color:t.td}}>{mat.cost}</span></div>
-            <div style={{fontSize:8,color:t.td,marginTop:3}}>{mat.desc}</div>
-            <div style={{fontSize:8,color:t.td,marginTop:2,fontFamily:MN}}>Density: {mat.df}× · Stiffness: {Math.round(mat.stiffness*100)}%</div>
-          </div>;})}</div></div>
-      {!frameMat&&<div style={{fontSize:12,color:t.td,fontFamily:MN,marginBottom:8}}>← Select a frame material to continue</div>}
-      {frame&&size&&frameMat&&<button onClick={function(){setSel(emptySel);setStep(1);}} style={{background:t.ac,color:"#fff",border:"none",padding:"13px 36px",borderRadius:10,fontSize:14,fontWeight:700,cursor:"pointer",fontFamily:SN,boxShadow:"0 4px 16px "+t.ac+"33"}}>Start Building →</button>}
+    {step===0&&(<div style={{padding:"36px 32px",maxWidth:960,margin:"0 auto"}}>
+      {/* ① Frame Type */}
+      <div style={{marginBottom:36}}>
+        <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:16}}>
+          <div style={{fontSize:13,fontWeight:700,color:t.ac,letterSpacing:1.5,fontFamily:MN}}>① FRAME TYPE</div>
+          {frame&&<button onClick={function(){setFrame(null);}} style={{fontSize:12,color:t.td,background:"none",border:"1px solid "+t.bd,borderRadius:6,padding:"2px 10px",cursor:"pointer",fontFamily:SN}}>× Clear</button>}
+        </div>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill, minmax(145px, 1fr))",gap:10}}>
+          {FRAME_TYPES.map(function(ft){var a=frame&&frame.id===ft.id;
+            return <div key={ft.id} onClick={function(){setFrame(a?null:ft);}} style={{padding:"14px 10px",background:a?t.acL:t.sf,border:"2px solid "+(a?t.ac:t.bd),borderRadius:14,cursor:"pointer",textAlign:"center",boxShadow:a?t.sh:"none",transition:"all 0.15s"}}>
+              <div style={{fontSize:15,fontWeight:700,color:a?t.ac:t.tb,fontFamily:SN}}>{ft.name}</div>
+              <div style={{fontSize:12,color:t.td,marginTop:5,fontFamily:SN}}>{ft.mc} motors</div>
+              <div style={{fontSize:11,color:t.td,marginTop:2,fontFamily:SN}}>{ft.desc}</div>
+            </div>;})}</div></div>
+
+      {/* ② Size */}
+      <div style={{marginBottom:36}}>
+        <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:16}}>
+          <div style={{fontSize:13,fontWeight:700,color:t.bl,letterSpacing:1.5,fontFamily:MN}}>② SIZE</div>
+          {size&&<button onClick={function(){setSize(null);}} style={{fontSize:12,color:t.td,background:"none",border:"1px solid "+t.bd,borderRadius:6,padding:"2px 10px",cursor:"pointer",fontFamily:SN}}>× Clear</button>}
+        </div>
+        <div style={{display:"flex",flexWrap:"wrap",gap:10}}>
+          {SIZES.map(function(s){var a=size&&size.id===s.id;
+            return <div key={s.id} onClick={function(){setSize(a?null:s);}} style={{padding:"10px 18px",background:a?t.blL:t.sf,border:"2px solid "+(a?t.bl:t.bd),borderRadius:12,cursor:"pointer",boxShadow:a?t.sh:"none",transition:"all 0.15s",minWidth:80,textAlign:"center"}}>
+              <div style={{fontSize:16,fontWeight:800,color:a?t.bl:t.tb,fontFamily:MN}}>{s.l}</div>
+              <div style={{fontSize:12,color:t.td,marginTop:3,fontFamily:SN}}>{s.mm}mm</div>
+              <div style={{fontSize:11,color:t.td,fontFamily:SN}}>{s.cat}</div>
+            </div>;})}</div></div>
+
+      {/* ③ Frame Material */}
+      <div style={{marginBottom:36}}>
+        <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:16}}>
+          <div style={{fontSize:13,fontWeight:700,color:t.ac,letterSpacing:1.5,fontFamily:MN}}>③ FRAME MATERIAL</div>
+          {frameMat&&<button onClick={function(){setFrameMat(null);}} style={{fontSize:12,color:t.td,background:"none",border:"1px solid "+t.bd,borderRadius:6,padding:"2px 10px",cursor:"pointer",fontFamily:SN}}>× Clear</button>}
+        </div>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill, minmax(170px, 1fr))",gap:10}}>
+          {FRAME_MATERIALS.map(function(mat){var a=frameMat&&frameMat.id===mat.id;
+            return <div key={mat.id} onClick={function(){setFrameMat(a?null:mat);}} style={{padding:"14px 12px",background:a?t.acL:t.sf,border:"2px solid "+(a?t.ac:t.bd),borderRadius:14,cursor:"pointer",boxShadow:a?t.sh:"none",transition:"all 0.15s"}}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
+                <div style={{fontSize:15,fontWeight:700,color:a?t.ac:t.tb,fontFamily:SN}}>{mat.name}</div>
+                <span style={{fontSize:12,color:t.td,fontFamily:MN,fontWeight:600}}>{mat.cost}</span>
+              </div>
+              <div style={{fontSize:12,color:t.td,marginBottom:4,fontFamily:SN,lineHeight:1.4}}>{mat.desc}</div>
+              <div style={{fontSize:11,color:t.td,fontFamily:MN}}>Density {mat.df}× · Stiffness {Math.round(mat.stiffness*100)}%</div>
+            </div>;})}
+        </div></div>
+
+      {!frameMat&&<div style={{fontSize:14,color:t.td,fontFamily:SN,marginBottom:12}}>Select a frame material above to continue.</div>}
+      {frame&&size&&frameMat&&<button onClick={function(){setSel(emptySel);setStep(1);}} style={{background:t.ac,color:"#fff",border:"none",padding:"15px 44px",borderRadius:12,fontSize:16,fontWeight:700,cursor:"pointer",fontFamily:SN,boxShadow:"0 4px 20px "+t.ac+"44"}}>Start Building →</button>}
     </div>)}
 
     {/* Compare modal */}
@@ -710,77 +829,80 @@ function BuilderApp({goHome}){
       </div>
     </div>}
 
-    {step===1&&(<div style={{display:"grid",gridTemplateColumns:"1fr 1fr",height:"calc(100vh - 50px)"}}>
-      {/* Left panel: 3D viewer top, below it 2-column (controls+status | physics+flight) */}
-      <div style={{padding:"12px 16px",borderRight:"1px solid "+t.bd,overflowY:"auto",background:t.bg,display:"flex",flexDirection:"column",gap:10}}>
-        <DroneViewer frameType={frame} droneSize={size} selections={sel} batteryPos={battPos} fcPos={fcPos} escPos={escPos} frameMat={frameMat}/>
+    {step===1&&(<div style={{display:"grid",gridTemplateColumns:"300px 1fr 1.4fr",height:"calc(100vh - 54px)",overflow:"hidden"}}>
 
-        {/* Component placement + altitude */}
-        <div style={{background:t.sf,borderRadius:12,padding:"10px 12px",boxShadow:t.sh}}>
-          <div style={{fontSize:10,fontWeight:700,color:t.ac,letterSpacing:1.2,marginBottom:8,fontFamily:MN}}>PLACEMENT</div>
-          <div style={{display:"flex",flexWrap:"wrap",gap:6,alignItems:"center",marginBottom:6}}>
-            <span style={{fontSize:10,color:t.td,fontFamily:MN,minWidth:110}}>Flight Controller:</span>
-            {["above","between","below"].map(function(p){return <button key={"fc"+p} onClick={function(){setFcPos(p);}} style={{padding:"3px 9px",borderRadius:6,fontSize:10,cursor:"pointer",fontFamily:SN,fontWeight:500,background:fcPos===p?t.acL:t.bg2,border:"1px solid "+(fcPos===p?t.ac:t.bd),color:fcPos===p?t.ac:t.td}}>{p}</button>;})}
-          </div>
-          <div style={{display:"flex",flexWrap:"wrap",gap:6,alignItems:"center",marginBottom:6}}>
-            <span style={{fontSize:10,color:t.td,fontFamily:MN,minWidth:110}}>Speed Controller:</span>
-            {["above","between","below"].map(function(p){return <button key={"esc"+p} onClick={function(){setEscPos(p);}} style={{padding:"3px 9px",borderRadius:6,fontSize:10,cursor:"pointer",fontFamily:SN,fontWeight:500,background:escPos===p?t.acL:t.bg2,border:"1px solid "+(escPos===p?t.ac:t.bd),color:escPos===p?t.ac:t.td}}>{p}</button>;})}
-          </div>
-          {sel.battery&&<div style={{display:"flex",flexWrap:"wrap",gap:6,alignItems:"center",marginBottom:6}}>
-            <span style={{fontSize:10,color:t.td,fontFamily:MN,minWidth:110}}>Battery:</span>
-            {["top","between","bottom"].map(function(p){return <button key={p} onClick={function(){setBattPos(p);}} style={{padding:"3px 9px",borderRadius:6,fontSize:10,cursor:"pointer",fontFamily:SN,fontWeight:500,background:battPos===p?t.acL:t.bg2,border:"1px solid "+(battPos===p?t.ac:t.bd),color:battPos===p?t.ac:t.td}}>{p}</button>;})}
-          </div>}
-          <div style={{display:"flex",gap:8,alignItems:"center"}}>
-            <span style={{fontSize:10,color:t.td,fontFamily:MN,minWidth:110}}>Altitude:</span>
-            <input type="range" min={0} max={5000} step={100} value={altitude} onChange={function(e){setAltitude(+e.target.value);}} style={{flex:1,accentColor:t.ac}}/>
-            <span style={{fontSize:11,color:t.ac,fontFamily:MN,minWidth:44,textAlign:"right"}}>{altitude}m</span>
-          </div>
+      {/* Col 1 — 3D Drone viewer, always visible, fixed height, no scroll */}
+      <div style={{borderRight:"1px solid "+t.bd,background:t.bg,display:"flex",flexDirection:"column",overflow:"hidden"}}>
+        <div style={{flexShrink:0,padding:"10px 12px 6px"}}>
+          <DroneViewer frameType={frame} droneSize={size} selections={sel} batteryPos={battPos} fcPos={fcPos} escPos={escPos} frameMat={frameMat}/>
         </div>
-
-        {/* Quick-select component chips */}
-        <div style={{display:"flex",flexWrap:"wrap",gap:4}}>
+        {/* Component chips */}
+        <div style={{padding:"6px 12px",display:"flex",flexWrap:"wrap",gap:4,flexShrink:0}}>
           {tabs.map(function(tb2){var s=sel[tb2.k],st2=getStatus(tb2.k);
-            var pBg=s?(st2==="error"?t.rdL:st2==="warning"?t.amL:t.acL):t.sf;
+            var pBg=s?(st2==="error"?t.rdL:st2==="warning"?t.amL:t.acL):t.bg2;
             var pC=s?(st2==="error"?t.rd:st2==="warning"?t.am:t.ac):t.td;
-            return <div key={tb2.k} onClick={function(){setTab(tb2.k);}} style={{padding:"4px 10px",borderRadius:20,fontSize:9,fontWeight:600,cursor:"pointer",fontFamily:SN,background:pBg,color:pC,border:"1px solid "+pC+"44"}}>{s?s.b+" "+s.m:tb2.l}</div>;})}
+            return <div key={tb2.k} onClick={function(){setTab(tb2.k);}} title={tb2.l} style={{padding:"4px 10px",borderRadius:20,fontSize:10,fontWeight:600,cursor:"pointer",fontFamily:SN,background:pBg,color:pC,border:"1px solid "+pC+"55",whiteSpace:"nowrap",maxWidth:140,overflow:"hidden",textOverflow:"ellipsis"}}>{s?s.b+" "+s.m:tb2.l}</div>;})}
         </div>
-
-        {/* Bottom row: issues + physics+flight side by side */}
-        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,alignItems:"start"}}>
-          <div><IssuesPanel compat={compat}/></div>
-          <div><MathPanel insights={insights} flight={flight}/></div>
-        </div>
-
-        {/* Save build button */}
-        <div style={{display:"flex",gap:8}}>
+        {/* Save/Compare buttons */}
+        <div style={{padding:"6px 12px",display:"flex",gap:6,flexShrink:0}}>
           <button onClick={saveBuild} style={{flex:1,padding:"9px 0",borderRadius:9,fontSize:12,cursor:"pointer",fontFamily:SN,fontWeight:700,background:t.acL,border:"1px solid "+t.ac,color:t.ac}}>💾 Save Build</button>
-          {savedBuilds.length>0&&<button onClick={function(){setShowCompare(true);}} style={{flex:1,padding:"9px 0",borderRadius:9,fontSize:12,cursor:"pointer",fontFamily:SN,fontWeight:700,background:t.bg2,border:"1px solid "+t.bd,color:t.tb}}>⇄ Compare ({savedBuilds.length})</button>}
+          {savedBuilds.length>0&&<button onClick={function(){setShowCompare(true);}} style={{flex:1,padding:"9px 0",borderRadius:9,fontSize:12,cursor:"pointer",fontFamily:SN,fontWeight:700,background:t.bg2,border:"1px solid "+t.bd,color:t.tb}}>⇄ {savedBuilds.length}</button>}
+        </div>
+        {/* Placement controls — scrollable if needed */}
+        <div style={{flex:1,overflowY:"auto",padding:"6px 12px 12px"}}>
+          <div style={{background:t.sf,borderRadius:12,padding:"12px 14px",boxShadow:t.sh,marginBottom:8}}>
+            <div style={{fontSize:11,fontWeight:700,color:t.ac,letterSpacing:1.2,marginBottom:10,fontFamily:MN}}>COMPONENT PLACEMENT</div>
+            <div style={{display:"flex",flexWrap:"wrap",gap:6,alignItems:"center",marginBottom:8}}>
+              <span style={{fontSize:12,color:t.tb,fontFamily:SN,fontWeight:600,minWidth:130}}>Flight Controller</span>
+              {["above","between","below"].map(function(p){return <button key={"fc"+p} onClick={function(){setFcPos(p);}} style={{padding:"4px 10px",borderRadius:7,fontSize:11,cursor:"pointer",fontFamily:SN,fontWeight:500,background:fcPos===p?t.acL:t.bg2,border:"1px solid "+(fcPos===p?t.ac:t.bd),color:fcPos===p?t.ac:t.td}}>{p}</button>;})}
+            </div>
+            <div style={{display:"flex",flexWrap:"wrap",gap:6,alignItems:"center",marginBottom:8}}>
+              <span style={{fontSize:12,color:t.tb,fontFamily:SN,fontWeight:600,minWidth:130}}>Speed Controller</span>
+              {["above","between","below"].map(function(p){return <button key={"esc"+p} onClick={function(){setEscPos(p);}} style={{padding:"4px 10px",borderRadius:7,fontSize:11,cursor:"pointer",fontFamily:SN,fontWeight:500,background:escPos===p?t.acL:t.bg2,border:"1px solid "+(escPos===p?t.ac:t.bd),color:escPos===p?t.ac:t.td}}>{p}</button>;})}
+            </div>
+            {sel.battery&&<div style={{display:"flex",flexWrap:"wrap",gap:6,alignItems:"center",marginBottom:8}}>
+              <span style={{fontSize:12,color:t.tb,fontFamily:SN,fontWeight:600,minWidth:130}}>Battery</span>
+              {["top","between","bottom"].map(function(p){return <button key={p} onClick={function(){setBattPos(p);}} style={{padding:"4px 10px",borderRadius:7,fontSize:11,cursor:"pointer",fontFamily:SN,fontWeight:500,background:battPos===p?t.acL:t.bg2,border:"1px solid "+(battPos===p?t.ac:t.bd),color:battPos===p?t.ac:t.td}}>{p}</button>;})}
+            </div>}
+            <div style={{display:"flex",gap:8,alignItems:"center"}}>
+              <span style={{fontSize:12,color:t.tb,fontFamily:SN,fontWeight:600,minWidth:130}}>Altitude</span>
+              <input type="range" min={0} max={5000} step={100} value={altitude} onChange={function(e){setAltitude(+e.target.value);}} style={{flex:1,accentColor:t.ac}}/>
+              <span style={{fontSize:12,color:t.ac,fontFamily:MN,minWidth:46,textAlign:"right",fontWeight:700}}>{altitude}m</span>
+            </div>
+          </div>
+          <IssuesPanel compat={compat}/>
         </div>
       </div>
 
-      {/* Right panel: component picker */}
-      <div style={{display:"flex",flexDirection:"column",background:t.bg2}}>
-        <div style={{display:"flex",borderBottom:"1px solid "+t.bd,alignItems:"center",padding:"0 4px",background:t.bg2}}>
+      {/* Col 2 — Physics Breakdown + Flight Estimates, scrollable */}
+      <div style={{borderRight:"1px solid "+t.bd,overflowY:"auto",background:t.bg2,padding:"14px 16px"}}>
+        <MathPanel insights={insights} flight={flight}/>
+        {!insights.length&&!flight&&<div style={{color:t.td,fontSize:14,textAlign:"center",padding:"40px 20px",fontFamily:SN}}>Select a motor and battery to see physics calculations and flight time estimates.</div>}
+      </div>
+
+      {/* Col 3 — Component picker */}
+      <div style={{display:"flex",flexDirection:"column",background:t.bg2,borderLeft:"1px solid "+t.bd}}>
+        <div style={{display:"flex",borderBottom:"1px solid "+t.bd,alignItems:"center",padding:"0 6px",background:t.bg,flexShrink:0}}>
           <div style={{display:"flex",flex:1,overflowX:"auto"}}>
             {tabs.map(function(tb2){var active=tab===tb2.k;var st2=getStatus(tb2.k);
-              return <button key={tb2.k} onClick={function(){setTab(tb2.k);}} style={{padding:"11px 8px",background:active?t.sf:"transparent",border:"none",borderBottom:"2px solid "+(active?t.ac:"transparent"),
+              return <button key={tb2.k} onClick={function(){setTab(tb2.k);}} style={{padding:"13px 10px",background:active?t.bg2:"transparent",border:"none",borderBottom:"2.5px solid "+(active?t.ac:"transparent"),
                 color:active?t.ac:st2==="error"?t.rd:st2==="warning"?t.am:st2==="ok"?t.ac:t.td,
-                fontSize:11,fontWeight:active?700:400,cursor:"pointer",fontFamily:SN,whiteSpace:"nowrap",minWidth:54}}>{tb2.l}</button>;})}
+                fontSize:12,fontWeight:active?700:500,cursor:"pointer",fontFamily:SN,whiteSpace:"nowrap",minWidth:60}}>{tb2.l}</button>;})}
           </div>
-          <div style={{display:"flex",gap:4,paddingRight:4}}>
-            <button onClick={function(){setShowUpload(true);}} style={{background:"none",border:"1px solid "+t.bd,color:t.td,padding:"5px 9px",borderRadius:6,cursor:"pointer",fontSize:10,fontFamily:SN,whiteSpace:"nowrap"}}>+ Upload</button>
-            <button onClick={resetAll} style={{background:"none",border:"1px solid "+t.bd,color:t.rd,padding:"5px 9px",borderRadius:6,cursor:"pointer",fontSize:10,fontFamily:SN,whiteSpace:"nowrap"}}>Reset</button>
+          <div style={{display:"flex",gap:5,paddingRight:6,flexShrink:0}}>
+            <button onClick={function(){setShowUpload(true);}} style={{background:"none",border:"1px solid "+t.bd,color:t.td,padding:"6px 10px",borderRadius:7,cursor:"pointer",fontSize:11,fontFamily:SN,fontWeight:500,whiteSpace:"nowrap"}}>+ Upload</button>
+            <button onClick={resetAll} style={{background:"none",border:"1px solid "+t.bd,color:t.rd,padding:"6px 10px",borderRadius:7,cursor:"pointer",fontSize:11,fontFamily:SN,fontWeight:600,whiteSpace:"nowrap"}}>Reset</button>
           </div>
         </div>
-        <div style={{flex:1,overflowY:"auto",padding:"12px 14px"}}>
+        <div style={{flex:1,overflowY:"auto",padding:"14px 16px"}}>
           {sizeFiltered.length>0&&<>
-            <div style={{fontSize:11,color:t.td,marginBottom:8,letterSpacing:1,fontFamily:MN,fontWeight:600}}>RECOMMENDED FOR {size?size.l.toUpperCase():""}</div>
+            <div style={{fontSize:12,color:t.td,marginBottom:10,letterSpacing:0.8,fontFamily:SN,fontWeight:600}}>RECOMMENDED FOR {size?size.l.toUpperCase():""}</div>
             {recommended.greens.slice(0,3).map(function(r){return <CompCard key={r.item.id} item={r.item} type={tab} selected={sel[tab]&&sel[tab].id===r.item.id} onSelect={function(it){handleSelect(tab,it);}} rating="green"/>;})}
             {recommended.ambers.slice(0,3).map(function(r){return <CompCard key={r.item.id} item={r.item} type={tab} selected={sel[tab]&&sel[tab].id===r.item.id} onSelect={function(it){handleSelect(tab,it);}} rating="amber"/>;})}
             {recommended.reds.slice(0,3).map(function(r){return <CompCard key={r.item.id} item={r.item} type={tab} selected={sel[tab]&&sel[tab].id===r.item.id} onSelect={function(it){handleSelect(tab,it);}} rating="red"/>;})}
           </>}
           {otherItems.length>0&&<>
-            <div style={{fontSize:11,color:t.td,marginTop:16,marginBottom:8,letterSpacing:1,fontFamily:MN,fontWeight:600}}>OTHER OPTIONS</div>
+            <div style={{fontSize:12,color:t.td,marginTop:18,marginBottom:10,letterSpacing:0.8,fontFamily:SN,fontWeight:600}}>OTHER OPTIONS</div>
             {otherSorted.greens.map(function(r){return <CompCard key={r.item.id} item={r.item} type={tab} selected={sel[tab]&&sel[tab].id===r.item.id} onSelect={function(it){handleSelect(tab,it);}} rating="green"/>;})}
             {otherSorted.ambers.map(function(r){return <CompCard key={r.item.id} item={r.item} type={tab} selected={sel[tab]&&sel[tab].id===r.item.id} onSelect={function(it){handleSelect(tab,it);}} rating="amber"/>;})}
             {otherSorted.reds.map(function(r){return <CompCard key={r.item.id} item={r.item} type={tab} selected={sel[tab]&&sel[tab].id===r.item.id} onSelect={function(it){handleSelect(tab,it);}} rating="red"/>;})}
@@ -802,7 +924,6 @@ function ModeSelectPage({onSelect,onBack}){
     {id:"researcher",icon:"🟣",title:"Researcher",sub:"Advanced mode",desc:"All Enthusiast features plus full physics breakdown, figure-of-merit tuning, material science data, and export tools."},
   ];
   return(<div style={{background:t.bg,minHeight:"100vh",fontFamily:SN,color:t.tx}}>
-    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
     <nav style={{padding:"14px 32px",display:"flex",justifyContent:"space-between",alignItems:"center",borderBottom:"1px solid "+t.bd,background:t.bg+"e6",backdropFilter:"blur(16px)"}}>
       <div style={{fontFamily:MN,fontWeight:700,fontSize:15,letterSpacing:1.2,cursor:"pointer"}} onClick={onBack}><span style={{color:t.tb}}>Multirotor</span><span style={{color:t.ac}}>.</span><span style={{color:t.tb}}>build</span></div>
       <button onClick={function(){T.toggle();}} style={{background:isDark?"#3a4055":t.sf,border:"2px solid "+(isDark?"#6aaeff":t.bd),borderRadius:8,padding:"6px 12px",cursor:"pointer",fontSize:14,color:isDark?"#eceef6":t.td,fontWeight:600}}>{isDark?"☀ Light":"☾ Dark"}</button>
@@ -841,6 +962,6 @@ export default function App(){
   return(<ThemeCtx.Provider value={ctx}>
     {page==="landing"&&<LandingPage onLaunch={function(){setPage("mode-select");}}/>}
     {page==="mode-select"&&<ModeSelectPage onSelect={function(){setPage("builder");}} onBack={goHome}/>}
-    {page==="builder"&&<BuilderApp goHome={goHome}/>}
+    {page==="builder"&&<BuilderApp goHome={goHome} goModeSelect={function(){setPage("mode-select");}}/>}
   </ThemeCtx.Provider>);
 }
