@@ -214,6 +214,28 @@ const GPSS=[
 // ════════════════════════════════════════════════════
 // COMPAT + FLIGHT
 // ════════════════════════════════════════════════════
+// ok = [first,last] index into SIZES that is typical; sizes at or below err are impractical; anything else outside ok is uncommon
+var FRAME_SIZE_RULES={
+  "true-x":{ok:[0,14]},
+  "stretched-x":{ok:[3,11],lo:"whoops and micros are ducted and symmetric, so stretching adds nothing",hi:"large rigs usually use True-X or H for payload space"},
+  "deadcat":{ok:[3,8],lo:"ducted whoops and micros have no props-in-view problem to solve",hi:"cinelifters and heavy-lift rigs use H, X or multi-motor layouts"},
+  "h-frame":{ok:[6,14],err:2,lo:"H rails add weight an X frame avoids at this size",errMsg:"there's no room for H rails on a frame this small"},
+  "plus":{ok:[3,14],lo:"whoops and micros are almost always X layouts"},
+  "v-shape":{ok:[6,11],lo:"forward-swept arms gain little aero benefit at this size",hi:"large frames favour stiffer X or H layouts"},
+  "hex":{ok:[8,14],err:4,lo:"six motors crowd a frame this small",errMsg:"six motors with usable props won't fit on a frame this small"},
+  "octo":{ok:[11,14],err:6,lo:"eight motors crowd a frame this small",errMsg:"eight motors with usable props won't fit on a frame this small"},
+  "y6":{ok:[8,14],err:4,lo:"coaxial pairs lose efficiency with small props",errMsg:"coaxial pairs need more prop clearance than this size allows"},
+  "tri":{ok:[6,12],err:2,lo:"the yaw tilt servo is hard to fit at this size",hi:"one tilting rear motor struggles to control a frame this large",errMsg:"the yaw tilt servo won't fit on a frame this small"},
+  "bi":{ok:[8,12],err:4,lo:"two tilting motors are hard to tune at this size",hi:"two motors can't lift a frame this large efficiently",errMsg:"two tilting motors with servos won't fit on a frame this small"},
+};
+function checkFrameSize(frame,size){
+  if(!frame||!size)return null;var r=FRAME_SIZE_RULES[frame.id];if(!r)return null;
+  var i=SIZES.findIndex(function(s){return s.id===size.id;});if(i<0)return null;
+  if(i>=r.ok[0]&&i<=r.ok[1])return null;
+  if(r.err!=null&&i<=r.err)return{level:"error",msg:frame.name+" isn't practical at "+size.l+": "+r.errMsg};
+  var range=r.ok[0]===r.ok[1]?SIZES[r.ok[0]].l:SIZES[r.ok[0]].l+" to "+SIZES[r.ok[1]].l;
+  return{level:"warning",msg:frame.name+" is uncommon at "+size.l+" (typical "+range+"): "+(i<r.ok[0]?r.lo:r.hi)};
+}
 function checkCompat(sel,size,frame,frameMat){
   var e=[],w=[];var mc=frame?frame.mc:4;
   var motor=sel.motor,esc=sel.esc,fc=sel.fc,battery=sel.battery,prop=sel.prop,vtx=sel.vtx,camera=sel.camera;
@@ -1013,7 +1035,11 @@ function BuilderApp({goHome,goModeSelect,onSaveBuild}){
     if(onSaveBuild)onSaveBuild(b);
   };
 
-  var compat=useMemo(function(){var filled=Object.values(sel).filter(Boolean);if(filled.length<2)return null;return checkCompat(sel,size,frame,frameMat);},[sel,size,frame,frameMat]);
+  var frameIssue=useMemo(function(){return checkFrameSize(frame,size);},[frame,size]);
+  var compat=useMemo(function(){var filled=Object.values(sel).filter(Boolean);var c=filled.length>=2?checkCompat(sel,size,frame,frameMat):null;
+    if(!frameIssue)return c;var base=c||{errors:[],warnings:[]};var item={c:["frame"],msg:frameIssue.msg};
+    return frameIssue.level==="error"?{errors:[item].concat(base.errors),warnings:base.warnings}:{errors:base.errors,warnings:[item].concat(base.warnings)};
+  },[sel,size,frame,frameMat,frameIssue]);
   var flight=useMemo(function(){return calcFlight(sel,size,frame,battPos,altitude,fcPos,escPos,frameMat);},[sel,size,frame,battPos,altitude,fcPos,escPos,frameMat]);
   var insights=useMemo(function(){return getMathInsights(sel,size,frame,fcPos,escPos,frameMat);},[sel,size,frame,fcPos,escPos,frameMat]);
   var getStatus=function(type){if(!compat)return null;if(compat.errors.some(function(e){return e.c.indexOf(type)>=0;}))return"error";if(compat.warnings.some(function(w){return w.c.indexOf(type)>=0;}))return"warning";return sel[type]?"ok":null;};
@@ -1067,11 +1093,12 @@ function BuilderApp({goHome,goModeSelect,onSaveBuild}){
           {frame&&<button onClick={function(){setFrame(null);}} style={{fontSize:12,color:t.td,background:"none",border:"1px solid "+t.bd,borderRadius:6,padding:"2px 10px",cursor:"pointer",fontFamily:SN}}>× Clear</button>}
         </div>
         <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill, minmax(145px, 1fr))",gap:10}}>
-          {FRAME_TYPES.map(function(ft){var a=frame&&frame.id===ft.id;
-            return <div key={ft.id} onClick={function(){setFrame(a?null:ft);}} style={{padding:"14px 10px",background:a?t.acL:t.sf,border:"2px solid "+(a?t.ac:t.bd),borderRadius:14,cursor:"pointer",textAlign:"center",boxShadow:a?t.sh:"none",transition:"all 0.15s"}}>
+          {FRAME_TYPES.map(function(ft){var a=frame&&frame.id===ft.id;var fi=checkFrameSize(ft,size);var fc2=fi?(fi.level==="error"?t.rd:t.am):null;
+            return <div key={ft.id} onClick={function(){setFrame(a?null:ft);}} style={{padding:"14px 10px",background:a?t.acL:t.sf,border:"2px solid "+(a?t.ac:fc2||t.bd),borderRadius:14,cursor:"pointer",textAlign:"center",boxShadow:a?t.sh:"none",transition:"all 0.15s"}}>
               <div style={{fontSize:15,fontWeight:700,color:a?t.ac:t.tb,fontFamily:SN}}>{ft.name}</div>
               <div style={{fontSize:12,color:t.td,marginTop:5,fontFamily:SN}}>{ft.mc} motors</div>
               <div style={{fontSize:11,color:t.td,marginTop:2,fontFamily:SN}}>{ft.desc}</div>
+              {fi&&<div style={{fontSize:11,color:fc2,marginTop:6,fontWeight:600,fontFamily:SN}}>{fi.level==="error"?"Impractical":"Uncommon"} at {size.l}</div>}
             </div>;})}</div></div>
 
       {/* ② Size */}
@@ -1081,12 +1108,16 @@ function BuilderApp({goHome,goModeSelect,onSaveBuild}){
           {size&&<button onClick={function(){setSize(null);}} style={{fontSize:12,color:t.td,background:"none",border:"1px solid "+t.bd,borderRadius:6,padding:"2px 10px",cursor:"pointer",fontFamily:SN}}>× Clear</button>}
         </div>
         <div style={{display:"flex",flexWrap:"wrap",gap:10}}>
-          {SIZES.map(function(s){var a=size&&size.id===s.id;
-            return <div key={s.id} onClick={function(){setSize(a?null:s);}} style={{padding:"10px 18px",background:a?t.blL:t.sf,border:"2px solid "+(a?t.bl:t.bd),borderRadius:12,cursor:"pointer",boxShadow:a?t.sh:"none",transition:"all 0.15s",minWidth:80,textAlign:"center"}}>
+          {SIZES.map(function(s){var a=size&&size.id===s.id;var fi=checkFrameSize(frame,s);var fc2=fi?(fi.level==="error"?t.rd:t.am):null;
+            return <div key={s.id} onClick={function(){setSize(a?null:s);}} style={{padding:"10px 18px",background:a?t.blL:t.sf,border:"2px solid "+(a?t.bl:fc2||t.bd),borderRadius:12,cursor:"pointer",boxShadow:a?t.sh:"none",transition:"all 0.15s",minWidth:80,textAlign:"center"}}>
               <div style={{fontSize:16,fontWeight:800,color:a?t.bl:t.tb,fontFamily:MN}}>{s.l}</div>
               <div style={{fontSize:12,color:t.td,marginTop:3,fontFamily:SN}}>{s.mm}mm</div>
               <div style={{fontSize:11,color:t.td,fontFamily:SN}}>{s.cat}</div>
-            </div>;})}</div></div>
+              {fi&&<div style={{fontSize:11,color:fc2,marginTop:4,fontWeight:600,fontFamily:SN}}>{fi.level==="error"?"Impractical":"Uncommon"}</div>}
+            </div>;})}</div>
+        {(function(){var fi=checkFrameSize(frame,size);if(!fi)return null;var er=fi.level==="error";
+          return <div style={{marginTop:14,padding:"12px 16px",borderRadius:12,background:er?t.rdL:t.amL,color:er?t.rd:t.am,fontSize:14,fontWeight:500,fontFamily:SN,lineHeight:1.5}}>{er?"✕ ":"⚠ "}{fi.msg}</div>;})()}
+      </div>
 
       {/* ③ Frame Material */}
       <div style={{marginBottom:36}}>
