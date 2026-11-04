@@ -38,7 +38,7 @@ export function Home() {
         <div>
           <h1>{t(persona ? persona.heroTitle : 'Build a drone you can trust')}</h1>
           <p>{t(persona ? persona.heroSub : 'From first idea to first flight. Pick who you are, and we check every part, every number and your local rules along the way.')}</p>
-          <div className="btn-row" style={{ marginTop: 20, maxWidth: 440 }}>
+          <div className="btn-row" style={{ marginTop: 28, maxWidth: 440 }}>
             {current
               ? <A to={`/p/${current.id}`} className="btn">{t('Continue {name}', { name: current.name })}</A>
               : <A to="/start" className="btn">{t('Find my build')}</A>}
@@ -150,7 +150,7 @@ export function Start({ step }) {
       <div className="flow-bar" aria-hidden="true">{order.map((o, n) => <i key={o} className={n <= i ? 'on' : ''} />)}</div>
       {step === 'where' ? (
         <>
-          <h1 style={{ fontSize: 28 }}>{t('Where will you fly?')}</h1>
+          <h1 style={{ fontSize: 34 }}>{t('Where will you fly?')}</h1>
           <p className="muted" style={{ margin: '8px 0 18px' }}>{t('This sets your currency, shops, radio limits and drone laws. It stays on your device.')}</p>
           <div className="list">
             {[...REGIONS].sort((a, b) => (b.id === suggested) - (a.id === suggested)).map((r) => (
@@ -164,7 +164,7 @@ export function Start({ step }) {
         </>
       ) : step === 'level' ? (
         <>
-          <h1 style={{ fontSize: 28 }}>{t('How much have you built?')}</h1>
+          <h1 style={{ fontSize: 34 }}>{t('How much have you built?')}</h1>
           <p className="muted" style={{ margin: '8px 0 18px' }}>{t('This changes how much we explain. You can change it at any time.')}</p>
           <div className="stack">
             {LEVELS.map((l) => (
@@ -176,7 +176,7 @@ export function Start({ step }) {
         </>
       ) : step === 'firmware' ? (
         <>
-          <h1 style={{ fontSize: 28 }}>{t('Do you have a firmware in mind?')}</h1>
+          <h1 style={{ fontSize: 34 }}>{t('Do you have a firmware in mind?')}</h1>
           <p className="muted" style={{ margin: '8px 0 18px' }}>{t('Firmware is the software on the flight controller. If you do not know yet, that is normal.')}</p>
           <div className="list">
             <button className="li" onClick={() => { setProfile({ firmware: null }); nextOf('firmware'); }}>
@@ -191,7 +191,7 @@ export function Start({ step }) {
         </>
       ) : (
         <>
-          <h1 style={{ fontSize: 28 }}>{t('What brings you here?')}</h1>
+          <h1 style={{ fontSize: 34 }}>{t('What brings you here?')}</h1>
           <p className="muted" style={{ margin: '8px 0 18px' }}>{t('Four quick questions. There is no account, and nothing leaves your device.')}</p>
           <div className="stack">
             {PERSONAS.map((p) => (
@@ -217,7 +217,7 @@ function StartDone() {
   return (
     <div className="wrap narrow">
       <div className="page-head">
-        <h1 style={{ fontSize: 30 }}>{t('Here is your starting point')}</h1>
+        <h1 style={{ fontSize: 34 }}>{t('Here is your starting point')}</h1>
       </div>
       <div className="stack">
         <div className="card">

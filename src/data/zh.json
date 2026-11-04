@@ -1346,5 +1346,7 @@
  "Failsafe tested with props off": "已在拆桨状态下测试失控保护",
  "Antennas are secure and clear of props": "天线已固定，并远离桨叶",
  "People, pets and cars are clear of the area": "周围没有行人、宠物和车辆",
- "Weather and airspace are checked for today": "已确认今天的天气和空域"
+ "Weather and airspace are checked for today": "已确认今天的天气和空域",
+ "Switch to light mode": "切换到浅色模式",
+ "Switch to dark mode": "切换到深色模式"
 }

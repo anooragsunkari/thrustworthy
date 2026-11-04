@@ -25,7 +25,7 @@ function build(canvas, sel, dark) {
   const mat = (color, rough = 0.45, metal = 0.2) => new THREE.MeshStandardMaterial({ color, roughness: rough, metalness: metal });
   const carbon = mat(dark ? 0x4a4c55 : 0x2b2c31);
   const metal = mat(dark ? 0x888a95 : 0x6a6b73, 0.25, 0.85);
-  const accent = mat(0xe2601f, 0.4, 0.1);
+  const accent = mat(0x0a84ff, 0.4, 0.1);
   const pcb = mat(0x1f5a39, 0.6, 0.1);
   const drone = new THREE.Group();
   const pW = 0.036 * sc;
@@ -63,7 +63,7 @@ function build(canvas, sel, dark) {
         const spin = new THREE.Group();
         spin.position.y = 0.011;
         spin.userData.dir = i % 2 ? 1 : -1;
-        const disc = new THREE.Mesh(new THREE.CylinderGeometry(propDisc, propDisc, 0.0006, 36), new THREE.MeshStandardMaterial({ color: 0xe2601f, transparent: true, opacity: 0.12 }));
+        const disc = new THREE.Mesh(new THREE.CylinderGeometry(propDisc, propDisc, 0.0006, 36), new THREE.MeshStandardMaterial({ color: 0x0a84ff, transparent: true, opacity: 0.12 }));
         spin.add(disc);
         const blades = sel.prop.bl;
         for (let b = 0; b < blades; b += 1) {

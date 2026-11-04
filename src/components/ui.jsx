@@ -24,6 +24,8 @@ const PATHS = {
   ext: 'M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 01-1 1H5a1 1 0 01-1-1V7a1 1 0 011-1h5',
   plus: 'M12 5v14M5 12h14',
   cog: 'M4 7h9M17 7h3M4 17h3M11 17h9M15 5v4M9 15v4',
+  sun: 'M12 16a4 4 0 100-8 4 4 0 000 8zM12 3v2m0 14v2M3 12h2m14 0h2M5.600 5.600L7 7m10 10l1.400 1.400M5.600 18.400L7 17m10-10l1.400-1.400',
+  moon: 'M20 14.500A8.500 8.500 0 019.500 4a8.500 8.500 0 1010.500 10.500z',
   cpu: 'M8 8h8v8H8zM9 3v3m6-3v3M9 18v3m6-3v3M3 9h3m-3 6h3m12-6h3m-3 6h3',
 };
 
@@ -43,15 +45,15 @@ export const HeroDrone = () => {
   return (
     <svg className="hero-art" viewBox="0 0 200 200" role="img" aria-label={t('A quadcopter seen from above')}>
       <g stroke="currentColor" strokeWidth="6" strokeLinecap="round"><path d="M64 64l72 72M136 64l-72 72" /></g>
-      <rect x="76" y="70" width="48" height="60" rx="12" fill="var(--surface)" stroke="currentColor" strokeWidth="4" />
-      <rect x="88" y="82" width="24" height="22" rx="5" fill="var(--accent)" />
+      <rect x="76" y="70" width="48" height="60" rx="12" fill="var(--bg)" stroke="currentColor" strokeWidth="4" />
+      <rect x="88" y="82" width="24" height="22" rx="5" fill="var(--accent-fill)" />
       {props.map(([x, y, rev], i) => (
         <g key={i}>
           <circle cx={x} cy={y} r="36" fill="none" stroke="var(--line)" strokeWidth="2" />
           <g className={`prop ${rev ? 'rev' : ''}`}>
-            <ellipse cx={x} cy={y} rx="32" ry="5" fill="var(--accent)" opacity=".85" />
+            <ellipse cx={x} cy={y} rx="32" ry="5" fill="var(--accent-fill)" opacity=".85" />
           </g>
-          <circle cx={x} cy={y} r="9" fill="var(--surface)" stroke="currentColor" strokeWidth="4" />
+          <circle cx={x} cy={y} r="9" fill="var(--bg)" stroke="currentColor" strokeWidth="4" />
         </g>
       ))}
     </svg>
@@ -64,7 +66,7 @@ export const Ext = ({ href, children, className = 'link', ...rest }) => <a class
 export const PageHead = ({ title, sub, back, children }) => (
   <header className="page-head">
     {back && <div><A to={back} className="link back-link"><Icon name="back" />{t('Back')}</A></div>}
-    <h1 style={{ fontSize: 'clamp(26px,6vw,38px)' }}>{title}</h1>
+    <h1 style={{ fontSize: 'clamp(32px,7.5vw,48px)' }}>{title}</h1>
     {sub && <p>{sub}</p>}
     {children}
   </header>

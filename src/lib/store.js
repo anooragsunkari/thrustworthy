@@ -4,7 +4,7 @@ import { useSyncExternalStore } from 'react';
 
 const KEY = 'thrustworthy:v1';
 const BLANK = {
-  profile: { persona: null, region: null, level: null, firmware: null, lang: null, theme: 'system' },
+  profile: { persona: null, region: null, level: null, firmware: null, lang: null, theme: 'dark' },
   projects: {},
   logs: [],
   lastVisit: null,
@@ -16,6 +16,7 @@ function read() {
     const raw = localStorage.getItem(KEY);
     if (!raw) return structuredClone(BLANK);
     const s = JSON.parse(raw);
+    if (s.profile?.theme === 'system') s.profile.theme = 'dark'; // the old default, before dark became it
     return { ...BLANK, ...s, profile: { ...BLANK.profile, ...s.profile } };
   } catch {
     return structuredClone(BLANK);

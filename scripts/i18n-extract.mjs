@@ -8,7 +8,7 @@ const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const strings = new Set();
 const walkDir = (d) => readdirSync(d).flatMap((f) => { const p = join(d, f); return statSync(p).isDirectory() ? walkDir(p) : [p]; });
 
-const looksLikeText = (s) => /^[A-Z]/.test(s) && !/^(https?:|[A-Z_]+$)/.test(s) && !/[{}]{2}|=>|\.jsx?$/.test(s);
+const looksLikeText = (s) => /^[A-Z]/.test(s) && !/^(https?:|[A-Z_]+$|M\d)/.test(s) && !/[{}]{2}|=>|\.jsx?$/.test(s);
 const literal = /(['"`])((?:\\.|(?!\1)[^\\\n])*)\1/g;
 const unescape = (s) => s.replace(/\\(['"`\\])/g, '$1');
 

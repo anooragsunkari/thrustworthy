@@ -114,12 +114,12 @@ export function Configure({ id }) {
       <div className="grid two" style={{ marginTop: 12 }}>
         <label className="field"><span>{t('Build name')}</span><input className="input" value={p.name} maxLength={60} onChange={(e) => updateProject(p.id, { name: e.target.value })} /></label>
         <div className="row" style={{ alignItems: 'flex-end', flexWrap: 'nowrap' }}>
-          <label className="field grow"><span>{t('Used for')}</span>
+          <label className="field" style={{ flex: '1 1 0', minWidth: 0 }}><span>{t('Used for')}</span>
             <select className="input" value={p.goal} onChange={(e) => updateProject(p.id, { goal: e.target.value })}>
               {GOALS.map((g) => <option key={g.id} value={g.id}>{t(g.label)}</option>)}
             </select>
           </label>
-          <label className="field grow"><span>{t('Firmware')}</span>
+          <label className="field" style={{ flex: '1 1 0', minWidth: 0 }}><span>{t('Firmware')}</span>
             <select className="input" value={p.firmware} onChange={(e) => updateProject(p.id, { firmware: e.target.value })}>
               {FIRMWARES.map((x) => <option key={x}>{x}</option>)}
             </select>

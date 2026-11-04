@@ -136,10 +136,10 @@ export function Me() {
             </select>
           </label>
           <label className="field"><span>{t('Appearance')}</span>
-            <select className="input" value={profile.theme || 'system'} onChange={(e) => setProfile({ theme: e.target.value })}>
-              <option value="system">{t('Match my device')}</option>
-              <option value="light">{t('Light')}</option>
+            <select className="input" value={profile.theme || 'dark'} onChange={(e) => setProfile({ theme: e.target.value })}>
               <option value="dark">{t('Dark')}</option>
+              <option value="light">{t('Light')}</option>
+              <option value="auto">{t('Match my device')}</option>
             </select>
           </label>
         </div>

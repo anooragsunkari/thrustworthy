@@ -6,8 +6,16 @@
     <title>Thrustworthy: build a drone you can trust</title>
     <meta name="description" content="From first idea to first flight. Compatibility-checked drone builds for beginners, FPV pilots, filmmakers and researchers, on Betaflight, INAV, ArduPilot or PX4, with the rules and shops for your country." />
     <meta name="author" content="Anoorag Sunkari" />
-    <meta name="theme-color" content="#fafaf7" media="(prefers-color-scheme: light)" />
-    <meta name="theme-color" content="#121316" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#000000" />
+    <script>
+      try {
+        var s = JSON.parse(localStorage.getItem('thrustworthy:v1') || '{}');
+        var th = s.profile && s.profile.theme;
+        document.documentElement.dataset.theme = th === 'light' || th === 'auto' ? th : 'dark';
+      } catch (e) {
+        document.documentElement.dataset.theme = 'dark';
+      }
+    </script>
     <meta property="og:title" content="Thrustworthy" />
     <meta property="og:description" content="Build a drone you can trust, from first idea to first flight." />
     <link rel="manifest" href="./manifest.webmanifest" />

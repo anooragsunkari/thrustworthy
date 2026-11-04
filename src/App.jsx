@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { A, Icon, Logo } from './components/ui.jsx';
-import { useStore } from './lib/store.js';
+import { setProfile, useStore } from './lib/store.js';
 import { t, useRoute } from './lib/util.js';
 import { Home, Start } from './pages/Home.jsx';
 import { BuildDetail, Builds } from './pages/Builds.jsx';
@@ -61,10 +61,9 @@ const NAV = [
 export default function App() {
   const path = useRoute();
   const { profile } = useStore();
+  const isLight = profile.theme === 'light' || (profile.theme === 'auto' && window.matchMedia('(prefers-color-scheme: light)').matches);
   useEffect(() => {
-    const el = document.documentElement;
-    if (profile.theme === 'light' || profile.theme === 'dark') el.dataset.theme = profile.theme;
-    else delete el.dataset.theme;
+    document.documentElement.dataset.theme = profile.theme || 'dark';
   }, [profile.theme]);
 
   return (
@@ -75,6 +74,14 @@ export default function App() {
           <nav className="top-nav" aria-label={t('Main')}>
             {NAV.map((n) => <A key={n.to} to={n.to} className={n.on(path) ? 'on' : ''}>{t(n.label)}</A>)}
           </nav>
+          <button
+            className="theme-toggle"
+            aria-label={t(isLight ? 'Switch to dark mode' : 'Switch to light mode')}
+            title={t(isLight ? 'Switch to dark mode' : 'Switch to light mode')}
+            onClick={() => setProfile({ theme: isLight ? 'dark' : 'light' })}
+          >
+            <Icon name={isLight ? 'moon' : 'sun'} />
+          </button>
         </div>
       </header>
       <main>
