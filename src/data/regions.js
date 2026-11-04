@@ -24,7 +24,7 @@ export const REGIONS = [
     sub900: 'band',
     sub900Note: 'Use the 915 MHz setting. The device must be FCC certified.',
     vtxNote: 'Most FPV video gear needs an amateur radio licence in the US, according to the Academy of Model Aeronautics.',
-    djiNote: 'New DJI models cannot get FCC authorization. Models already authorized can still be sold and used, so check current stock.',
+    djiNote: 'New DJI models cannot get FCC authorization. Models already authorized can still be sold and used, but DJI\'s US store was out of stock on O4 units in October 2026. Check other sellers.',
     sections: [
       { title: 'Registering and testing', points: ['Register drones of 250 g or more with the FAA.', 'Recreational flyers must pass the TRUST test.', 'If registration applies, so does Remote ID. A home-built drone needs a broadcast module and must stay in line of sight, or must fly at a FRIA.'] },
       { title: 'Flying limits', points: ['Up to 400 ft in uncontrolled airspace.', 'Keep it in visual line of sight. With goggles, an observer next to you, in direct communication, needs to keep watch.'] },

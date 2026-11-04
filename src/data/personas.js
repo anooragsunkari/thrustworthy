@@ -110,12 +110,12 @@ export const LEVELS = [
 // Things people forget to budget for. `when` reads the traits of the build (see engine.traits).
 export const GEAR = [
   { id: 'radio', title: 'Radio controller', detail: 'Choose one that matches your receiver link. It lasts for years across many drones.', p: 90, query: 'RadioMaster Pocket ELRS' },
-  { id: 'goggles-analog', title: 'Analog goggles', detail: 'Works with your analog video system.', p: 100, query: 'analog FPV goggles', when: (t) => t.has('analog') },
-  { id: 'goggles-digital', title: 'Digital goggles', detail: 'Must be the same brand as your video system. Digital systems do not mix.', p: 400, query: 'FPV digital goggles', when: (t) => t.has('digital') },
+  { id: 'goggles-analog', title: 'Analog goggles', detail: 'Works with your analog video system.', p: 150, query: 'analog FPV goggles', when: (t) => t.has('analog') },
+  { id: 'goggles-digital', title: 'Digital goggles', detail: 'Must be the same brand as your video system. Digital systems do not mix. Prices vary a lot by system.', p: 300, query: 'FPV digital goggles', when: (t) => t.has('digital') },
   { id: 'charger', title: 'Balance charger', detail: 'Never charge a LiPo without balancing the cells.', p: 60, query: 'LiPo balance charger' },
   { id: 'lipo-bag', title: 'LiPo safety bag', detail: 'Charge and store batteries inside one.', p: 12, query: 'LiPo safety bag' },
   { id: 'iron', title: 'Soldering iron and solder', detail: 'A temperature-controlled iron with fresh tip and 60/40 or lead-free solder.', p: 45, query: 'Pinecil soldering iron', when: (t) => t.has('solder') },
-  { id: 'smoke', title: 'Smoke stopper', detail: 'Cuts power before a wiring mistake becomes a fire. Costs far less than the parts it saves.', p: 12, query: 'smoke stopper XT60', when: (t) => t.has('solder') },
+  { id: 'smoke', title: 'Smoke stopper', detail: 'Cuts power before a wiring mistake becomes a fire. Costs far less than the parts it saves.', p: 8, query: 'smoke stopper XT60', when: (t) => t.has('solder') },
   { id: 'tools', title: 'Hex drivers and small tools', detail: '1.5 and 2 mm hex drivers, wire strippers, cable ties, heat shrink and electrical tape.', p: 25, query: 'drone tool kit hex' },
   { id: 'spares', title: 'Spare props', detail: 'Plan on several sets. Props are what you go through most.', p: 15, query: 'FPV props' },
   { id: 'sim', title: 'FPV simulator', detail: 'Practice before you risk parts. Use it with your real radio controller.', p: 20, query: null, when: (t) => !t.has('pixhawk') },

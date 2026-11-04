@@ -81,7 +81,7 @@ export function About() {
       {profile.lang === 'zh' && <div className="note info section">{t('The Chinese translation was drafted by AI and has not yet had a native speaker review. Corrections are welcome.')}</div>}
       <section className="section">
         <h2>{t('What we are not')}</h2>
-        <p className="muted">{t('We do not sell parts, and we cannot watch live prices or stock. Part specs and prices are typical values, so check the maker\'s page before you buy. Building and flying drones has real risks: you are responsible for your safety and for following your local law.')}</p>
+        <p className="muted">{t('We do not sell parts, and we cannot watch live prices or stock. We checked part specs against maker and retailer pages in November 2026, but they are typical values, and some thrust figures have no published test behind them. Check the maker\'s page before you buy. Building and flying drones has real risks: you are responsible for your safety and for following your local law.')}</p>
       </section>
       <section className="section btn-row">
         <A to="/about/numbers" className="btn secondary">{t('How we calculate')}</A>

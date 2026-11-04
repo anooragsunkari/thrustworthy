@@ -210,9 +210,28 @@ test('autofill never leaves an error on any frame, and picks what a builder woul
     const s = autofill(resolve({ frame: fr.id }), ctx);
     assert.deepEqual(missing(s), [], fr.m);
     assert.deepEqual(check(s, ctx).filter((i) => i.level === 'error').map((i) => `${fr.m}: ${i.detail}`), []);
-    assert.ok(s.battery.w <= fr.w * 3, `${fr.m} battery ${s.battery.m}`);
+    assert.ok(s.battery.w <= s.motor.w * fr.mc * 3, `${fr.m} battery ${s.battery.m}`);
     if (fr.wheel < 400 && s.esc) assert.equal(s.esc.t, '4in1', fr.m);
     if (fr.cat === 'cinewhoop') assert.match(s.prop.m, /ducted/);
     else assert.doesNotMatch(s.prop.m, /ducted/);
+  }
+});
+
+test('real ratings that were wrong in the first version stay caught', () => {
+  const on = (over, sel) => ids({ ...resolve(sel), ...over }, {});
+  const s4 = { frame: 'f-source5', battery: 'b-4s1550' };
+  assert.ok(on({ video: partById('v-o4') }, s4).includes('v-hi-video'), 'O4 Air Unit is 1-3S');
+  assert.ok(on({ video: partById('v-hdz') }, s4).includes('v-hi-video'), 'HDZero Race V3 needs a BEC above 2S');
+  assert.ok(!on({ video: partById('v-o4p') }, s4).includes('v-hi-video'), 'O4 Pro takes 4S');
+  assert.ok(on({ fc: partById('fc-f4-2s') }, { frame: 'f-m65', battery: 'b-1s300' }).includes('v-lo-fc'), 'CrazyF411 ELRS is 2-4S');
+  assert.ok(on({ esc: partById('e-hb20') }, { frame: 'f-x500', battery: 'b-6s42' }).includes('v-hi-esc'), 'Holybro 20A is 2-4S');
+  assert.ok(on({ motor: partById('m-xing2806') }, { frame: 'f-source7' }).every((x) => x !== 'fit-motor'), 'XING 2806.5 uses 19 mm');
+  assert.ok(on({ motor: partById('m-xing2806') }, { frame: 'f-apex' }).includes('fit-motor'), 'and that does not fit a 16 mm arm');
+});
+
+test('autofill avoids parts we know are hard to find', () => {
+  for (const frame of ['f-m65', 'f-source5', 'f-source7', 'f-x500', 'f-t650']) {
+    const s = autofill(resolve({ frame }), { goal: 'freestyle', firmware: 'Betaflight' });
+    for (const [k, p] of Object.entries(s)) if (k !== 'frame') assert.notEqual(p.stock, 'low', `${frame} ${k} ${p.m}`);
   }
 });

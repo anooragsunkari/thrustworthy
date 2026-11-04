@@ -9,7 +9,7 @@ const CHEM = {
   LiHV: { nom: 3.8, full: 4.35, usable: 0.8, k: 1.05 },
   'Li-Ion': { nom: 3.6, full: 4.2, usable: 0.85, k: 1.02 },
 };
-const CONNECTOR_AMPS = { 'BT2.0': 12, XT30: 30, XT60: 60, XT90: 90, AS150: 150 };
+const CONNECTOR_AMPS = { 'BT2.0': 12, 'PH2.0': 8, XT30: 30, XT60: 60, XT90: 90, EC5: 120, AS150: 150 };
 
 export const packVolts = (b) => b.c * CHEM[b.ch].nom;
 export const packFull = (b) => b.c * CHEM[b.ch].full;
@@ -48,7 +48,7 @@ export function allUpWeight(sel) {
     fc: sel.fc?.w || 0,
     props: (sel.prop?.w || 0) * mc,
     battery: sel.battery?.w || 0,
-    video: sel.video?.w || 0,
+    video: included(sel, 'video') ? 0 : sel.video?.w || 0,
     rx: included(sel, 'rx') ? 0 : sel.rx?.w || 0,
     gps: sel.gps?.w || 0,
     companion: sel.companion?.w || 0,
@@ -123,6 +123,7 @@ export function cost(sel) {
     if (s.key === 'esc' && p.t === 'single') qty = mc;
     if (s.key === 'esc' && included(sel, 'esc')) continue;
     if (s.key === 'rx' && included(sel, 'rx')) continue;
+    if (s.key === 'video' && included(sel, 'video')) continue;
     if (p.p === 0) continue;
     lines.push({ slot: s.key, part: p, qty, unit: p.p, total: p.p * qty });
     total += p.p * qty;
@@ -265,7 +266,9 @@ export function rate(slot, part, sel, ctx) {
 /** Fill empty slots with parts that suit the frame and goal and create no new errors. */
 export function autofill(sel, ctx = {}, opts = {}) {
   const next = { ...sel };
-  const order = ['frame', 'motor', 'prop', 'battery', 'fc', 'esc', 'rx', 'video'];
+  // ESC first, so the flight controller can match its mount. Tiny frames use all-in-one boards.
+  const tiny = (next.frame?.wheel || 200) < 100;
+  const order = ['frame', 'motor', 'prop', 'battery', ...(tiny ? ['fc', 'esc'] : ['esc', 'fc']), 'rx', 'video'];
   if (ctx.firmware === 'INAV' || ctx.firmware === 'ArduPilot' || ctx.firmware === 'PX4') order.push('gps');
   if (opts.withCompanion) order.push('companion');
   // Compatible is not the same as good. Cheapest wins only among parts that suit the job:
@@ -282,12 +285,16 @@ export function autofill(sel, ctx = {}, opts = {}) {
   // partner has not been chosen yet, or that an experienced builder would never pair.
   const sensible = (key, p) => {
     const fr = next.frame;
-    if (key === 'motor' && fr) return p.ref.d >= fr.minProp * 0.85 && p.ref.d <= fr.maxProp * 1.25;
+    if (key === 'motor' && fr) {
+      if (p.ref.d < fr.minProp * 0.85 || p.ref.d > fr.maxProp * 1.25) return false;
+      // A large frame carries a battery and payload, so check it can lift roughly 800 g on top.
+      return fr.wheel < 400 || p.ref.t * fr.mc >= (fr.w + 800) * 2;
+    }
     if (key === 'prop' && fr) return p.d <= fr.maxProp && /ducted/.test(p.m) === (fr.cat === 'cinewhoop');
     if (key === 'esc' && fr) return (p.t === 'single') === (fr.wheel >= 400);
     if (key === 'battery' && next.motor) {
       if (p.c !== next.motor.ref.c) return false;
-      if (fr) return p.w <= fr.w * (['longrange', 'lab', 'heavy', 'cine'].includes(ctx.goal) ? 3 : 2);
+      return p.w <= next.motor.w * (fr?.mc || 4) * (endurance ? 3 : 2.5);
     }
     return true;
   };
@@ -299,7 +306,7 @@ export function autofill(sel, ctx = {}, opts = {}) {
     let bestScore = Infinity;
     for (const p of slot.list) {
       if (key === 'video' && p.id === 'v-none' && ctx.goal !== 'lab' && ctx.goal !== 'heavy') continue;
-      if (p.legacy || !sensible(key, p)) continue;
+      if (p.legacy || p.stock === 'low' || !sensible(key, p)) continue;
       const s = score(rate(key, p, next, ctx), key, p);
       if (s < bestScore) { bestScore = s; best = p; }
     }

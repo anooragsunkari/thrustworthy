@@ -15,7 +15,7 @@ export const BUILDS = [
     can: ['Fly indoors from day one', 'Learn FPV without breaking things', 'Stays under most registration limits'],
     cant: ['Fly well in wind', 'Carry an HD camera'],
     skills: ['No soldering on the frame', 'A little soldering for the motors, or use plug-in motors'],
-    sel: { frame: 'f-m65', motor: 'm-ex0802', fc: 'fc-f4-2s', prop: 'p-31', battery: 'b-1s300', video: 'v-whoop' },
+    sel: { frame: 'f-m65', motor: 'm-ex0802', fc: 'fc-crossf4', prop: 'p-31', battery: 'b-1s300', video: 'v-whoop' },
   },
   {
     id: 'budget-five',
@@ -60,7 +60,7 @@ export const BUILDS = [
     can: ['Race with very low video latency', 'Take a crash on a stiff frame'],
     cant: ['Fly for long', 'Shoot pretty footage'],
     skills: ['Tuning filters and PIDs', 'Fast field repair'],
-    sel: { frame: 'f-apex', motor: 'm-velox', esc: 'e-zeus80', fc: 'fc-matek', prop: 'p-gf5', battery: 'b-6s1300', video: 'v-hdz', rx: 'r-rp1' },
+    sel: { frame: 'f-apex', motor: 'm-velox', esc: 'e-zeus80', fc: 'fc-matek', prop: 'p-gf5', battery: 'b-6s1300', video: 'v-hdzfs', rx: 'r-rp1' },
   },
   {
     id: 'sub250',
@@ -75,7 +75,7 @@ export const BUILDS = [
     can: ['Travel in a small case', 'Avoid some registration rules (check yours)', 'Fly long, smooth lines'],
     cant: ['Hold steady in strong wind', 'Carry a large action camera'],
     skills: ['Tidy soldering in small spaces', 'Weighing and trimming parts'],
-    sel: { frame: 'f-smart35', motor: 'm-xing1404', esc: 'e-bls35', fc: 'fc-sb405mini', prop: 'p-hq35', battery: 'b-4s660', video: 'v-o4', rx: 'r-ep2' },
+    sel: { frame: 'f-smart35', motor: 'm-xing1404', esc: 'e-bls35', fc: 'fc-sb405mini', prop: 'p-hq35', battery: 'b-4s660', video: 'v-o4p', rx: 'r-ep2' },
   },
   {
     id: 'cinewhoop',
@@ -90,7 +90,7 @@ export const BUILDS = [
     can: ['Fly through buildings and between objects', 'Shoot stabilized HD footage', 'Bump walls without crashing'],
     cant: ['Fly fast or far', 'Hover quietly'],
     skills: ['Basic soldering', 'Tuning for smooth footage'],
-    sel: { frame: 'f-protek35', motor: 'm-f1507', esc: 'e-bls35', fc: 'fc-kh7mini', prop: 'p-d90', battery: 'b-4s1050', video: 'v-o4', rx: 'r-ep2' },
+    sel: { frame: 'f-protek35', motor: 'm-f1507', esc: 'e-bls35', fc: 'fc-sb405mini', prop: 'p-d90', battery: 'b-4s1550', video: 'v-o4p', rx: 'r-ep2' },
   },
   {
     id: 'long-range',
@@ -105,7 +105,7 @@ export const BUILDS = [
     can: ['Fly 20 minutes or more when cruising', 'Return home on signal loss', 'Hold a long control link'],
     cant: ['Do hard freestyle', 'Pull full throttle for long on Li-ion'],
     skills: ['GPS and failsafe setup', 'Knowing your local range rules'],
-    sel: { frame: 'f-source7', motor: 'm-xing2806', esc: 'e-blitz80', fc: 'fc-matek', prop: 'p-hq7', battery: 'b-6s42', video: 'v-ws', rx: 'r-bf900', gps: 'g-m10q' },
+    sel: { frame: 'f-source7', motor: 'm-xing2806', esc: 'e-zeus80', fc: 'fc-matek', prop: 'p-hq7', battery: 'b-6s42', video: 'v-ws', rx: 'r-bf900', gps: 'g-micro' },
   },
   {
     id: 'research-x500',
@@ -165,7 +165,7 @@ export const BUILDS = [
     can: ['Fly repeatable survey grids', 'Tag photos to centimeter accuracy', 'Carry a mapping camera'],
     cant: ['Be flown without the correct certificates in many countries', 'Be cheap'],
     skills: ['Mission planning', 'Commercial flying rules', 'RTK base station setup'],
-    sel: { frame: 'f-t650', motor: 'm-mn3508', esc: 'e-apd', fc: 'fc-cube', prop: 'p-tm15', battery: 'b-6s10k', video: 'v-none', rx: 'r-cf', gps: 'g-rtk' },
+    sel: { frame: 'f-t650', motor: 'm-mn3508', esc: 'e-alpha', fc: 'fc-cube', prop: 'p-tm13', battery: 'b-6s84', video: 'v-none', rx: 'r-cf', gps: 'g-rtk' },
   },
 ];
 

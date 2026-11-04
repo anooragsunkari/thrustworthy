@@ -686,7 +686,6 @@
  "Move your builds to another phone or computer with a backup file. Photos stay on this device.": "用备份文件把你的机型转移到另一台手机或电脑。照片保留在这台设备上。",
  "Moving code from simulation to hardware": "把代码从仿真迁移到硬件",
  "Much less than the estimate here.": "比这里的估算值少很多。",
- "Must be the same brand as your video system. Digital systems do not mix.": "必须与图传系统同一品牌。不同数字系统不能混用。",
  "My build": "我的机型",
  "My builds": "我的机型",
  "My country is not listed": "我的国家不在列表中",
@@ -698,7 +697,6 @@
  "Never charge a LiPo without balancing the cells.": "绝不要在不平衡电芯的情况下给 LiPo 充电。",
  "Never use a puffed, punctured or crashed-and-hot pack.": "绝不要使用鼓包、被刺穿，或炸机后发烫的电池。",
  "New DJI models are blocked. Existing DJI gear can still be used.": "新的 DJI 机型被禁止。现有 DJI 设备仍可使用。",
- "New DJI models cannot get FCC authorization. Models already authorized can still be sold and used, so check current stock.": "新的 DJI 机型无法获得 FCC 授权。已获授权的机型仍可销售和使用，请查看当前库存。",
  "New build": "新建机型",
  "New for you": "为你准备的新内容",
  "New national standards for registration, activation and identification took effect in May 2026. The revised Civil Aviation Law took effect in July 2026.": "关于登记、激活和识别的新国家标准已于 2026 年 5 月生效。修订后的《民用航空法》已于 2026 年 7 月生效。",
@@ -1220,7 +1218,6 @@
  "We could not confirm which bands the Indian radio regulator (WPC) allows. Check before using sub-GHz radio.": "我们无法确认印度无线电监管机构（WPC）允许哪些频段。使用 sub-GHz 无线电前请先核实。",
  "We could not settle how these treat sub-250 g and home-built drones, because sources conflict. Check with CAAC.": "由于来源相互矛盾，我们无法确定这些规定如何对待 250 g 以下和自制无人机。请向 CAAC 核实。",
  "We did not find a clear FPV specialist to recommend. Tell us if you know one.": "我们没有找到可明确推荐的 FPV 专门店。如果你知道，请告诉我们。",
- "We do not sell parts, and we cannot watch live prices or stock. Part specs and prices are typical values, so check the maker's page before you buy. Building and flying drones has real risks: you are responsible for your safety and for following your local law.": "我们不销售零件，也无法监控实时价格或库存。零件规格和价格都是典型值，购买前请查看厂商页面。组装和飞行无人机存在真实风险：你要为自己的安全和遵守当地法律负责。",
  "We found no EU-wide limit on parts. China's export rules can affect orders from Chinese sellers.": "我们没有找到欧盟范围内对零件的限制。中国的出口规定可能影响来自中国卖家的订单。",
  "We found no UK-specific import action.": "我们没有找到英国专门的进口措施。",
  "We found no drone-specific import restriction.": "我们没有找到针对无人机的进口限制。",
@@ -1348,5 +1345,9 @@
  "People, pets and cars are clear of the area": "周围没有行人、宠物和车辆",
  "Weather and airspace are checked for today": "已确认今天的天气和空域",
  "Switch to light mode": "切换到浅色模式",
- "Switch to dark mode": "切换到深色模式"
+ "Switch to dark mode": "切换到深色模式",
+ "New DJI models cannot get FCC authorization. Models already authorized can still be sold and used, but DJI's US store was out of stock on O4 units in October 2026. Check other sellers.": "DJI 新机型无法获得 FCC 授权。已获授权的机型仍可销售和使用，但 2026 年 10 月 DJI 美国商店的 O4 系列已缺货，请查看其他卖家。",
+ "Must be the same brand as your video system. Digital systems do not mix. Prices vary a lot by system.": "必须与你的图传系统同品牌，不同数字系统之间不能混用。不同系统的价格差异很大。",
+ "We do not sell parts, and we cannot watch live prices or stock. We checked part specs against maker and retailer pages in November 2026, but they are typical values, and some thrust figures have no published test behind them. Check the maker's page before you buy. Building and flying drones has real risks: you are responsible for your safety and for following your local law.": "我们不卖零件，也无法实时跟踪价格和库存。我们在 2026 年 11 月对照厂商和零售商页面核对过零件参数，但它们只是典型值，部分推力数据没有公开测试支撑。购买前请查看厂商页面。制作和飞行无人机存在真实风险：你需要对自己的安全和遵守当地法律负责。",
+ "PH2.0": "PH2.0"
 }
