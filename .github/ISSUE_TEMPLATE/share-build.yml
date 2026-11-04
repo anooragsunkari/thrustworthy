@@ -1,0 +1,29 @@
+name: Share my build
+description: Post a finished build for the community gallery.
+title: "Build: "
+labels: [gallery]
+body:
+  - type: input
+    id: link
+    attributes:
+      label: Build link
+      description: From the Share page in Thrustworthy.
+    validations:
+      required: true
+  - type: dropdown
+    id: firmware
+    attributes:
+      label: Firmware
+      options: [Betaflight, INAV, ArduPilot, PX4, Other]
+    validations:
+      required: true
+  - type: textarea
+    id: story
+    attributes:
+      label: How did it go?
+      description: What worked, what you would change, and how it flies. Real flight time and real weight help other people most.
+  - type: textarea
+    id: photos
+    attributes:
+      label: Photos
+      description: Drag images here.

@@ -1,0 +1,26 @@
+{
+  "name": "thrustworthy",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Build a drone you can trust. A phone-first guide from first idea to first flight, for any pilot, any firmware, any country.",
+  "author": "Anoorag Sunkari",
+  "contributors": ["Chahat Deep Singh"],
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "node --test test/engine.test.js",
+    "i18n": "node scripts/i18n-extract.mjs"
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "three": "^0.160.1"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.4",
+    "vite": "^5.4.11"
+  }
+}
