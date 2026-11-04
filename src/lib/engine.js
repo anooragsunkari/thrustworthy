@@ -171,13 +171,13 @@ export function check(sel, ctx = {}) {
   const o = motorOutput(sel);
   if (motor && (esc || noEsc)) {
     const rating = noEsc ? fc.aio : esc.a;
-    if (o.amps > rating * 1.1) add('error', 'esc-amps', 'Motors can pull more current than the ESC can handle', `About ${o.amps.toFixed(0)} A per motor at full throttle against a ${rating} A ESC. That risks burning the ESC.`, 'Pick a bigger ESC, or use smaller props or a lower voltage.', ['motor', 'esc']);
-    else if (o.amps > rating * 0.85) add('warn', 'esc-amps-near', 'ESC has little headroom', `About ${o.amps.toFixed(0)} A per motor against a ${rating} A rating. It works, but hard flying will run hot.`, 'A slightly bigger ESC gives a safety margin.', ['motor', 'esc']);
+    if (o.amps > rating * 1.1) add('error', 'esc-amps', 'Motors can pull more current than the ESC can handle', `About ${o.amps.toFixed(0)} A per motor at full throttle against a ${rating} A ESC. That risks burning the ESC.`, 'Pick a bigger ESC, or use smaller props or a lower voltage.', ['motor', noEsc ? 'fc' : 'esc']);
+    else if (o.amps > rating * 0.85) add('warn', 'esc-amps-near', 'ESC has little headroom', `About ${o.amps.toFixed(0)} A per motor against a ${rating} A rating. It works, but hard flying will run hot.`, 'A slightly bigger ESC gives a safety margin.', ['motor', noEsc ? 'fc' : 'esc']);
   }
   if (motor && battery) {
     const peak = o.amps * mc;
     const avail = (battery.cap / 1000) * battery.dr;
-    if (battery.ch === 'Li-Ion' && peak > avail) add('warn', 'liion-peak', 'Li-ion packs cannot give full throttle for long', `Full throttle could ask for ${peak.toFixed(0)} A and this pack gives about ${avail.toFixed(0)} A. That suits gentle cruising only.`, 'Fly smoothly, or use a LiPo if you want punch.', ['battery', 'motor']);
+    if (battery.ch === 'Li-Ion' && peak > avail) add(['longrange', 'lab', 'heavy'].includes(goal) ? 'info' : 'warn', 'liion-peak', 'Li-ion packs cannot give full throttle for long', `Full throttle could ask for ${peak.toFixed(0)} A and this pack gives about ${avail.toFixed(0)} A. That suits gentle cruising only.`, 'Fly smoothly, or use a LiPo if you want punch.', ['battery', 'motor']);
     else if (peak > avail * 1.15) add('error', 'batt-amps', 'Battery cannot deliver enough current', `Full throttle could ask for ${peak.toFixed(0)} A and this pack is rated for about ${avail.toFixed(0)} A. Expect voltage sag and a damaged pack.`, 'Choose a bigger capacity or higher C rating.', ['battery', 'motor']);
     else if (peak > avail * 0.9) add('warn', 'batt-amps-near', 'Battery is close to its current limit', `About ${peak.toFixed(0)} A peak against about ${avail.toFixed(0)} A rated.`, null, ['battery', 'motor']);
     const cn = CONNECTOR_AMPS[battery.cn];
@@ -262,19 +262,33 @@ export function rate(slot, part, sel, ctx) {
   };
 }
 
-/** Fill empty required slots with the cheapest parts that create no new errors. */
+/** Fill empty slots with parts that suit the frame and goal and create no new errors. */
 export function autofill(sel, ctx = {}, opts = {}) {
   const next = { ...sel };
   const order = ['frame', 'motor', 'prop', 'battery', 'fc', 'esc', 'rx', 'video'];
   if (ctx.firmware === 'INAV' || ctx.firmware === 'ArduPilot' || ctx.firmware === 'PX4') order.push('gps');
   if (opts.withCompanion) order.push('companion');
-  const score = (r, p) => (r.status === 'error' ? 1e6 : r.status === 'warn' ? 1e3 : 0) + p.p;
+  // Compatible is not the same as good. Cheapest wins only among parts that suit the job:
+  // use the prop size the frame was designed for, and buy endurance when the goal needs it.
+  const endurance = ['longrange', 'lab', 'heavy', 'cine'].includes(ctx.goal);
+  const prefer = (key, p) => {
+    if (key === 'motor' && next.frame) return Math.abs(p.ref.d - next.frame.maxProp) * 100 + p.p;
+    if (key === 'prop' && next.frame) return Math.abs(Math.min(next.frame.maxProp, next.motor?.ref.d ?? Infinity) - p.d) * 100 + p.p;
+    if (key === 'battery' && endurance) return -flight({ ...next, battery: p }, { goal: ctx.goal }).hover * 20 + p.p / 10;
+    return p.p;
+  };
+  const score = (r, key, p) => (r.status === 'error' ? 1e6 : r.status === 'warn' ? 1e3 : 0) + prefer(key, p);
   // Picks are made one slot at a time, so rule out parts that only look cheap because their
-  // partner has not been chosen yet: a 10" motor for a 5" frame, or a 1S pack for a 6S motor.
+  // partner has not been chosen yet, or that an experienced builder would never pair.
   const sensible = (key, p) => {
     const fr = next.frame;
     if (key === 'motor' && fr) return p.ref.d >= fr.minProp * 0.85 && p.ref.d <= fr.maxProp * 1.25;
-    if (key === 'battery' && next.motor) return p.c === next.motor.ref.c;
+    if (key === 'prop' && fr) return p.d <= fr.maxProp && /ducted/.test(p.m) === (fr.cat === 'cinewhoop');
+    if (key === 'esc' && fr) return (p.t === 'single') === (fr.wheel >= 400);
+    if (key === 'battery' && next.motor) {
+      if (p.c !== next.motor.ref.c) return false;
+      if (fr) return p.w <= fr.w * (['longrange', 'lab', 'heavy', 'cine'].includes(ctx.goal) ? 3 : 2);
+    }
     return true;
   };
   for (const key of order) {
@@ -286,7 +300,7 @@ export function autofill(sel, ctx = {}, opts = {}) {
     for (const p of slot.list) {
       if (key === 'video' && p.id === 'v-none' && ctx.goal !== 'lab' && ctx.goal !== 'heavy') continue;
       if (p.legacy || !sensible(key, p)) continue;
-      const s = score(rate(key, p, next, ctx), p);
+      const s = score(rate(key, p, next, ctx), key, p);
       if (s < bestScore) { bestScore = s; best = p; }
     }
     if (best && bestScore < 1e6) next[key] = best;

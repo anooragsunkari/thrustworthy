@@ -104,7 +104,7 @@ export function Configure({ id }) {
   const fill = () => {
     const out = autofill(sel, ctx, { withCompanion: false });
     updateProject(p.id, { sel: toIds(out) });
-    setToast(t('Filled in the rest with the cheapest working parts'));
+    setToast(t('Filled in the rest with parts that suit this frame'));
   };
   const status = n.errors ? { cls: 'err', label: t('{n} to fix', { n: n.errors }) } : miss.length ? { cls: '', label: t('{n} parts to pick', { n: miss.length }) } : n.warnings ? { cls: 'warn', label: t('Works, with notes') } : { cls: 'ok', label: t('Compatible') };
 

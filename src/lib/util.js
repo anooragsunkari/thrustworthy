@@ -12,7 +12,7 @@ export function t(s, vars) {
   if (!out && dict) {
     for (const [re, tpl] of patterns) {
       const m = s.match(re);
-      if (m) { out = tpl.replace(/\{(\d)\}/g, (_, i) => t(m[+i + 1])); break; }
+      if (m) { out = tpl.replace(/\{(\d)\}/g, (_, i) => t(m[+i + 1])).replace(/([一-鿿]) (?=[一-鿿])/g, '$1'); break; }
     }
   }
   out = out || s;

@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { BUILDS } from '../src/data/builds.js';
-import { SLOTS, FCS, partById } from '../src/data/parts.js';
+import { SLOTS, FCS, FRAMES, partById } from '../src/data/parts.js';
 import { REGIONS, money, regionById, storeLinks, videoSearch, weightNote } from '../src/data/regions.js';
 import { FW, FW_CHOICES } from '../src/data/firmware.js';
 import { resolve, check, flight, cost, missing, autofill, summarize, toIds } from '../src/lib/engine.js';
@@ -190,4 +190,29 @@ test('firmware guides are complete, and every build firmware has one', () => {
     for (const s of FW[id].steps) assert.match(s.link, /^https:/);
   }
   for (const b of BUILDS) assert.ok(FW[b.firmware] && !FW[b.firmware].legacy, b.id);
+});
+
+test('autofill suits the job as well as being compatible', () => {
+  const ctx = { goal: 'longrange', firmware: 'INAV' };
+  const lr = autofill(resolve({ frame: 'f-source7' }), ctx);
+  assert.equal(lr.prop.d, 7, 'uses the prop size the frame was designed for');
+  assert.ok(flight(lr, ctx).hover > 18, `long-range hover ${flight(lr, ctx).hover}`);
+  const fr = autofill(resolve({ frame: 'f-source5' }), { goal: 'freestyle', firmware: 'Betaflight' });
+  assert.ok(fr.prop.d >= 5, 'a 5-inch frame gets 5-inch props');
+  assert.ok(flight(fr, { goal: 'freestyle' }).twr >= 4, 'freestyle has enough thrust');
+});
+
+test('autofill never leaves an error on any frame, and picks what a builder would', () => {
+  const byCat = { whoop: ['whoop', 'Betaflight'], ultralight: ['cine', 'Betaflight'], cinewhoop: ['cine', 'Betaflight'], freestyle: ['freestyle', 'Betaflight'], longrange: ['longrange', 'INAV'], lab: ['lab', 'PX4'], heavy: ['heavy', 'ArduPilot'] };
+  for (const fr of FRAMES) {
+    const [goal, firmware] = byCat[fr.cat];
+    const ctx = { goal, firmware };
+    const s = autofill(resolve({ frame: fr.id }), ctx);
+    assert.deepEqual(missing(s), [], fr.m);
+    assert.deepEqual(check(s, ctx).filter((i) => i.level === 'error').map((i) => `${fr.m}: ${i.detail}`), []);
+    assert.ok(s.battery.w <= fr.w * 3, `${fr.m} battery ${s.battery.m}`);
+    if (fr.wheel < 400 && s.esc) assert.equal(s.esc.t, '4in1', fr.m);
+    if (fr.cat === 'cinewhoop') assert.match(s.prop.m, /ducted/);
+    else assert.doesNotMatch(s.prop.m, /ducted/);
+  }
 });

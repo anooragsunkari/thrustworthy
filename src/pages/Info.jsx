@@ -55,6 +55,7 @@ export function RuleDetail({ id }) {
 }
 
 export function About() {
+  const { profile } = useStore();
   return (
     <div className="wrap narrow">
       <PageHead title={t('About Thrustworthy')} sub={t('A free, open-source guide for anyone building a multirotor, whoever and wherever they are.')} />
@@ -77,6 +78,7 @@ export function About() {
           {['No account, no tracking, and no ads. Your builds stay on your device.', 'No affiliate links. Shop links are plain searches.', 'No invented reviews or fake community numbers.', 'Works offline at the field once you have opened it.', 'No Google Fonts or foreign CDNs, so it loads the same way in every country.'].map((x) => <li key={x}>{t(x)}</li>)}
         </ul>
       </section>
+      {profile.lang === 'zh' && <div className="note info section">{t('The Chinese translation was drafted by AI and has not yet had a native speaker review. Corrections are welcome.')}</div>}
       <section className="section">
         <h2>{t('What we are not')}</h2>
         <p className="muted">{t('We do not sell parts, and we cannot watch live prices or stock. Part specs and prices are typical values, so check the maker\'s page before you buy. Building and flying drones has real risks: you are responsible for your safety and for following your local law.')}</p>

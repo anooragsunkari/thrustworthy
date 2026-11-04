@@ -7,7 +7,7 @@ const PX = 'https://docs.px4.io/main/en';
 
 export const CHECKED = 'November 2026';
 
-const commonPreflight = [
+export const COMMON_PREFLIGHT = [
   'Props are tight, undamaged and on the correct motors',
   'Battery is charged, not puffed, and strapped down',
   'Radio is on before the drone gets power',
@@ -152,7 +152,7 @@ export const FW = {
 
 export const FW_CHOICES = ['Betaflight', 'INAV', 'ArduPilot', 'PX4', 'Cleanflight'];
 
-export const preflightFor = (fw) => [...commonPreflight, ...((FW[fw] && FW[fw].preflight) || [])];
+export const preflightFor = (fw) => [...COMMON_PREFLIGHT, ...((FW[fw] && FW[fw].preflight) || [])];
 
 export const ESC_NOTE = {
   title: 'Which ESC firmware?',

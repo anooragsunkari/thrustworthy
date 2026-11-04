@@ -24,7 +24,7 @@ A free, phone-first guide for anyone building a multirotor. It starts by asking 
 
 **Country:** the US, Canada, the UK, the EU, China, India, Australia, Japan and Brazil each get their own currency, shops, drone laws and radio limits. The checker warns about things like a sub-GHz radio that is illegal where you live.
 
-**Language:** English and Simplified Chinese. The site loads no Google Fonts or foreign CDNs, so it works the same from anywhere.
+**Language:** English and Simplified Chinese. The Chinese was drafted by AI and has not yet had a native speaker review, so corrections are welcome. The site loads no Google Fonts or foreign CDNs, so it does not depend on services that are often blocked.
 
 ## The journey
 

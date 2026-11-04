@@ -109,6 +109,7 @@ export const BATTERIES = [
   { id: 'b-2s450', b: 'GNB', m: '450mAh 2S', c: 2, ch: 'LiHV', cap: 450, dr: 90, w: 27, cn: 'XT30', p: 10 },
   { id: 'b-3s850', b: 'GNB', m: '850mAh 3S', c: 3, ch: 'LiPo', cap: 850, dr: 75, w: 65, cn: 'XT30', p: 18 },
   { id: 'b-3s2200', b: 'Gens Ace', m: '2200mAh 3S', c: 3, ch: 'LiPo', cap: 2200, dr: 25, w: 175, cn: 'XT60', p: 25 },
+  { id: 'b-3s5000', b: 'Gens Ace', m: '5000mAh 3S', c: 3, ch: 'LiPo', cap: 5000, dr: 45, w: 330, cn: 'XT60', p: 45 },
   { id: 'b-4s660', b: 'GNB', m: '660mAh 4S HV', c: 4, ch: 'LiHV', cap: 660, dr: 90, w: 78, cn: 'XT30', p: 22 },
   { id: 'b-4s850', b: 'Tattu', m: 'R-Line 850mAh 4S', c: 4, ch: 'LiPo', cap: 850, dr: 95, w: 97, cn: 'XT30', p: 26 },
   { id: 'b-4s1050', b: 'Tattu', m: 'R-Line 1050mAh 4S', c: 4, ch: 'LiPo', cap: 1050, dr: 120, w: 118, cn: 'XT60', p: 32 },
