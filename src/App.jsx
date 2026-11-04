@@ -63,7 +63,7 @@ export default function App() {
   const { profile } = useStore();
   const isLight = profile.theme === 'light' || (profile.theme === 'auto' && window.matchMedia('(prefers-color-scheme: light)').matches);
   useEffect(() => {
-    document.documentElement.dataset.theme = profile.theme || 'dark';
+    document.documentElement.dataset.theme = profile.theme || 'light';
   }, [profile.theme]);
 
   return (

@@ -46,12 +46,12 @@ export const HeroDrone = () => {
     <svg className="hero-art" viewBox="0 0 200 200" role="img" aria-label={t('A quadcopter seen from above')}>
       <g stroke="currentColor" strokeWidth="6" strokeLinecap="round"><path d="M64 64l72 72M136 64l-72 72" /></g>
       <rect x="76" y="70" width="48" height="60" rx="12" fill="var(--bg)" stroke="currentColor" strokeWidth="4" />
-      <rect x="88" y="82" width="24" height="22" rx="5" fill="var(--accent-fill)" />
+      <rect x="88" y="82" width="24" height="22" rx="5" fill="currentColor" />
       {props.map(([x, y, rev], i) => (
         <g key={i}>
           <circle cx={x} cy={y} r="36" fill="none" stroke="var(--line)" strokeWidth="2" />
           <g className={`prop ${rev ? 'rev' : ''}`}>
-            <ellipse cx={x} cy={y} rx="32" ry="5" fill="var(--accent-fill)" opacity=".85" />
+            <ellipse cx={x} cy={y} rx="32" ry="4.500" fill="currentColor" opacity=".55" />
           </g>
           <circle cx={x} cy={y} r="9" fill="var(--bg)" stroke="currentColor" strokeWidth="4" />
         </g>

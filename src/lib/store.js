@@ -4,9 +4,10 @@ import { useSyncExternalStore } from 'react';
 
 const KEY = 'thrustworthy:v1';
 const BLANK = {
-  profile: { persona: null, region: null, level: null, firmware: null, lang: null, theme: 'dark' },
+  profile: { persona: null, region: null, level: null, firmware: null, lang: null, theme: 'light' },
   projects: {},
   logs: [],
+  themeVersion: 2,
   lastVisit: null,
   seenAt: null,
 };
@@ -16,7 +17,8 @@ function read() {
     const raw = localStorage.getItem(KEY);
     if (!raw) return structuredClone(BLANK);
     const s = JSON.parse(raw);
-    if (s.profile?.theme === 'system') s.profile.theme = 'dark'; // the old default, before dark became it
+    // Earlier versions saved a default theme for every visitor, so reset it once to the white default.
+    if (s.themeVersion !== 2) { s.themeVersion = 2; if (s.profile) s.profile.theme = 'light'; }
     return { ...BLANK, ...s, profile: { ...BLANK.profile, ...s.profile } };
   } catch {
     return structuredClone(BLANK);
