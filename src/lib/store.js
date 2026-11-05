@@ -221,6 +221,29 @@ export async function findSamePhoto(pid, file) {
   }
 }
 
+/** Shrink a picked photo to a JPEG, converting HEIC first where the browser cannot open it (Safari can, Chrome and Firefox cannot). */
+export async function readPhoto(file, isHeicFile, onConverting) {
+  try {
+    return await shrinkImage(file);
+  } catch (err) {
+    if (!isHeicFile) throw Object.assign(err, { stage: 'read' });
+  }
+  onConverting?.();
+  let heicTo;
+  try {
+    ({ heicTo } = await import('heic-to'));
+  } catch (err) {
+    throw Object.assign(err, { stage: 'heic-download' });
+  }
+  let jpeg;
+  try {
+    jpeg = await heicTo({ blob: file, type: 'image/jpeg', quality: 0.9 });
+  } catch (err) {
+    throw Object.assign(err instanceof Error ? err : new Error(String(err)), { stage: 'heic-convert' });
+  }
+  return shrinkImage(jpeg);
+}
+
 export function shrinkImage(file, max = 1000) {
   return new Promise((resolve, reject) => {
     const url = URL.createObjectURL(file);
