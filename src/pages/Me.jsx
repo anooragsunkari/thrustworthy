@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { A, BuildCard, Ext, Icon, PageHead, Progress, useToast } from '../components/ui.jsx';
 import { deleteCustomPart, exportData, importData, markSeen, resetAll, setProfile, useStore } from '../lib/store.js';
-import { downloadFile, loadLanguage, t, go } from '../lib/util.js';
+import { downloadFile, t, go } from '../lib/util.js';
 import { BUILDS } from '../data/builds.js';
 import { SLOTS } from '../data/parts.js';
 import { PERSONAS, LEVELS } from '../data/personas.js';
@@ -31,7 +31,6 @@ export function Me() {
     if (!f) return;
     try { importData(await f.text()); setToast(t('Backup restored')); } catch { setToast(t('That file is not a backup')); }
   };
-  const lang = async (v) => { await loadLanguage(v); setProfile({ lang: v }); };
 
   return (
     <div className="wrap narrow">
@@ -47,7 +46,10 @@ export function Me() {
       <section className="section" style={{ marginTop: 22 }}>
         <div className="row between" style={{ marginBottom: 10 }}>
           <h2>{t('My builds')}</h2>
-          <A to="/configure" className="link small">{t('New build')}</A>
+          <span className="row" style={{ gap: 14 }}>
+            <A to="/compare" className="link small">{t('Compare')}</A>
+            <A to="/configure" className="link small">{t('New build')}</A>
+          </span>
         </div>
         {!list.length && (
           <div className="card stack">
@@ -121,11 +123,6 @@ export function Me() {
       <section className="section">
         <h2>{t('Settings')}</h2>
         <div className="card stack">
-          <label className="field"><span>{t('Language')}</span>
-            <select className="input" value={profile.lang || 'en'} onChange={(e) => lang(e.target.value)}>
-              <option value="en">English</option><option value="zh">简体中文</option>
-            </select>
-          </label>
           <label className="field"><span>{t('I am')}</span>
             <select className="input" value={profile.persona || ''} onChange={(e) => setProfile({ persona: e.target.value || null })}>
               <option value="">{t('Not set')}</option>

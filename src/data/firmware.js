@@ -166,17 +166,10 @@ export const RADIO_NOTE = {
   links: [['ExpressLRS', 'https://www.expresslrs.org']],
 };
 
-export const LEARNING = {
-  en: [
-    ['Oscar Liang guides', 'https://oscarliang.com'],
-    ['Joshua Bardwell videos', 'https://www.youtube.com/@JoshuaBardwell'],
-    ['IntoFPV forum', 'https://intofpv.com'],
-    ['ArduPilot forum', 'https://discuss.ardupilot.org'],
-    ['PX4 forum', 'https://discuss.px4.io'],
-  ],
-  zh: [
-    ['PX4 官方中文文档', 'https://docs.px4.io/main/zh/'],
-    ['QGroundControl 中文文档', 'https://docs.qgroundcontrol.com/master/zh/'],
-    ['哔哩哔哩 FPV 教程', 'https://search.bilibili.com/all?keyword=betaflight'],
-  ],
-};
+export const LEARNING = [
+  ['Oscar Liang guides', 'https://oscarliang.com'],
+  ['Joshua Bardwell videos', 'https://www.youtube.com/@JoshuaBardwell'],
+  ['IntoFPV forum', 'https://intofpv.com'],
+  ['ArduPilot forum', 'https://discuss.ardupilot.org'],
+  ['PX4 forum', 'https://discuss.px4.io'],
+];

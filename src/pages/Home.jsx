@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { A, BuildCard, HeroDrone, Icon, Progress } from '../components/ui.jsx';
 import { useStore, setProfile, createProject } from '../lib/store.js';
-import { go, loadLanguage, t } from '../lib/util.js';
+import { go, t } from '../lib/util.js';
 import { PERSONAS, LEVELS, personaById } from '../data/personas.js';
 import { BUILDS } from '../data/builds.js';
 import { REGIONS, regionById, guessRegion } from '../data/regions.js';
@@ -245,9 +245,4 @@ function StartDone() {
       </section>
     </div>
   );
-}
-
-export async function applyLanguage(lang) {
-  await loadLanguage(lang);
-  setProfile({ lang });
 }

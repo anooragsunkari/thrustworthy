@@ -11,6 +11,7 @@ import { Fix, Flight, Software, SoftwareDetail } from './pages/Fly.jsx';
 import { Community, Me } from './pages/Me.jsx';
 import { GuideModel, ProjectModel, SharedModel } from './pages/Model.jsx';
 import { About, Numbers, RuleDetail, Rules } from './pages/Info.jsx';
+import { Compare, Spares, StarterSettings, Wiring } from './pages/Tools.jsx';
 
 function route(path) {
   const [a, b, c, d] = path.split('/').filter(Boolean);
@@ -31,8 +32,12 @@ function route(path) {
         case 'share': return <ShareBuild id={b} />;
         case '3d': return <ProjectModel id={b} key={b} />;
         case 'legal': return <Legal id={b} />;
+        case 'wiring': return <Wiring id={b} />;
+        case 'settings': return <StarterSettings id={b} />;
+        case 'spares': return <Spares id={b} />;
         default: return <ProjectHome id={b} />;
       }
+    case 'compare': return <Compare a={b} b={c} key={`${b}/${c}`} />;
     case 'b': return <ImportBuild token={b} />;
     case 'v': return <SharedModel token={b} key={b} />;
     case 'software': return b ? <SoftwareDetail id={b} key={b} /> : <Software />;
@@ -50,7 +55,7 @@ function route(path) {
 const TABS = [
   { to: '/', label: 'Home', icon: 'home', on: (p) => p === '/' || p.startsWith('/start') },
   { to: '/builds', label: 'Builds', icon: 'list', on: (p) => p.startsWith('/builds') || p.startsWith('/community') },
-  { to: '/configure', label: 'Configure', icon: 'build', on: (p) => p.startsWith('/configure') || p.startsWith('/p/') },
+  { to: '/configure', label: 'Configure', icon: 'build', on: (p) => p.startsWith('/configure') || p.startsWith('/p/') || p.startsWith('/compare') },
   { to: '/fly', label: 'Fly', icon: 'fly', on: (p) => p.startsWith('/fly') || p.startsWith('/software') || p.startsWith('/rules') },
   { to: '/me', label: 'Me', icon: 'user', on: (p) => p.startsWith('/me') },
 ];
@@ -117,7 +122,7 @@ export default function App() {
   }, [profile.theme]);
 
   return (
-    <div key={profile.lang || 'en'}>
+    <div>
       <header className="top">
         <div className="wrap top-in">
           <A to="/" className="brand"><Logo />Thrustworthy</A>

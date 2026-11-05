@@ -6,7 +6,7 @@ import { cleanSharedParts } from './custom.js';
 
 const KEY = 'thrustworthy:v1';
 const BLANK = {
-  profile: { persona: null, region: null, level: null, firmware: null, lang: null, theme: 'light' },
+  profile: { persona: null, region: null, level: null, firmware: null, theme: 'light' },
   projects: {},
   customParts: {},
   logs: [],
@@ -52,6 +52,15 @@ export function createProject({ name, goal, firmware, sel, fromBuild = null, pay
   const project = { id, name: name || 'My build', goal: goal || 'freestyle', firmware: firmware || 'Betaflight', sel: sel || {}, payload, fromBuild, created: Date.now(), updated: Date.now(), have: {}, extras: {}, steps: {}, software: {}, shared: false };
   commit({ ...state, projects: { ...state.projects, [id]: project } });
   return id;
+}
+
+/** A copy to change freely, remembering where it came from so the two can be compared. */
+export function duplicateProject(id) {
+  const cur = state.projects[id];
+  if (!cur) return null;
+  const copy = createProject({ name: `${cur.name} (copy)`, goal: cur.goal, firmware: cur.firmware, sel: { ...cur.sel }, payload: [...(cur.payload || [])], fromBuild: cur.fromBuild });
+  commit({ ...state, projects: { ...state.projects, [copy]: { ...state.projects[copy], copyOf: id, use: cur.use, ports: cur.ports } } });
+  return copy;
 }
 
 export function updateProject(id, patch) {

@@ -1,36 +1,14 @@
 import { useEffect, useState } from 'react';
-import zhLoader from './zh-loader.js';
 import { partById, registerCustom } from '../data/parts.js';
 import { cleanPayload, cleanSharedParts } from './custom.js';
 
-// gettext-style translation: the English sentence is the key, so an untranslated string
-// simply stays in English and nothing can show up blank. Keys holding {0}, {1} also match
-// the engine's generated sentences, and any captured words are translated in turn.
-let dict = null;
-let patterns = [];
+// Fills {name} placeholders in a sentence. Non-strings pass through untouched.
 export function t(s, vars) {
-  if (typeof s !== 'string') return s;
-  let out = dict && dict[s];
-  if (!out && dict) {
-    for (const [re, tpl] of patterns) {
-      const m = s.match(re);
-      if (m) { out = tpl.replace(/\{(\d)\}/g, (_, i) => t(m[+i + 1])).replace(/([一-鿿]) (?=[一-鿿])/g, '$1'); break; }
-    }
-  }
-  out = out || s;
-  if (vars) for (const k of Object.keys(vars)) out = out.split(`{${k}}`).join(vars[k]);
+  if (typeof s !== 'string' || !vars) return s;
+  let out = s;
+  for (const k of Object.keys(vars)) out = out.split(`{${k}}`).join(vars[k]);
   return out;
 }
-const toPattern = (key) => {
-  const esc = key.replace(/[.*+?^$()|[\]\\]/g, '\\$&').replace(/\{(\d)\}/g, '(.+?)');
-  return new RegExp(`^${esc}$`);
-};
-export async function loadLanguage(lang) {
-  dict = lang === 'zh' ? await zhLoader() : null;
-  patterns = dict ? Object.entries(dict).filter(([k]) => /\{\d\}/.test(k)).map(([k, v]) => [toPattern(k), v]) : [];
-  document.documentElement.lang = lang === 'zh' ? 'zh-CN' : 'en';
-}
-export const guessLanguage = () => ((navigator.language || '').toLowerCase().startsWith('zh') ? 'zh' : 'en');
 
 // Hash routing: it works on GitHub Pages and any static mirror without server rewrites.
 export function useRoute() {

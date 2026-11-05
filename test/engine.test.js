@@ -11,6 +11,11 @@ import { buildFacts, legalChecklist } from '../src/data/legal.js';
 import { registerCustom } from '../src/data/parts.js';
 import { encodeBuild, decodeBuild } from '../src/lib/util.js';
 import { resolve, check, flight, cost, missing, autofill, summarize, toIds } from '../src/lib/engine.js';
+import { assignPorts, motorMap, wiringPlan } from '../src/lib/wiring.js';
+import { starterSettings } from '../src/lib/settings.js';
+import { sparesFor, sparesTotal } from '../src/data/spares.js';
+import { compareBuilds } from '../src/lib/compare.js';
+import { STEPS } from '../src/data/assembly.js';
 
 const load = (b) => resolve(b.sel);
 const ids = (s, ctx) => check(s, ctx).map((i) => i.id);
@@ -528,4 +533,221 @@ test('a spring keeps real time on a slow device', () => {
   for (let i = 0; i < 60; i += 1) fast.step(1 / 60);
   for (let i = 0; i < 8; i += 1) slow.step(1 / 8);
   assert.ok(Math.abs(fast.x - slow.x) < 0.02, `60 fps ${fast.x}, 8 fps ${slow.x}`);
+});
+
+// Wiring, starter settings, spares and compare
+const build = (id) => BUILDS.find((b) => b.id === id);
+const project = (b, extra = {}) => ({ name: b.title, firmware: b.firmware, goal: b.goal, sel: b.sel, ...extra });
+
+test('motor order follows each firmware', () => {
+  const spot = (fw) => Object.fromEntries(motorMap(fw, 4).map((m) => [m.n, `${m.where} ${m.dir}`]));
+  const betaflight = { 1: 'Rear right CW', 2: 'Front right CCW', 3: 'Rear left CCW', 4: 'Front left CW' };
+  const ardupilot = { 1: 'Front right CCW', 2: 'Rear left CCW', 3: 'Front left CW', 4: 'Rear right CW' };
+  assert.deepEqual(spot('Betaflight'), betaflight);
+  assert.deepEqual(spot('INAV'), betaflight);
+  assert.deepEqual(spot('ArduPilot'), ardupilot);
+  assert.deepEqual(spot('PX4'), ardupilot);
+  assert.equal(motorMap('Betaflight', 6), null, 'an unchecked combination says so rather than guessing');
+});
+
+test('every motor table is balanced, or the aircraft would spin', () => {
+  for (const fw of ['Betaflight', 'INAV', 'ArduPilot', 'PX4']) {
+    for (const mc of [4, 6, 8]) {
+      const map = motorMap(fw, mc);
+      if (!map) continue;
+      assert.equal(map.length, mc);
+      assert.equal(map.filter((m) => m.dir === 'CW').length, mc / 2, `${fw} ${mc}`);
+      assert.equal(new Set(map.map((m) => m.deg)).size, mc, `${fw} ${mc} positions`);
+      const moment = (axis) => map.reduce((a, m) => a + axis((m.deg * Math.PI) / 180), 0);
+      assert.ok(Math.abs(moment(Math.sin)) < 1e-9 && Math.abs(moment(Math.cos)) < 1e-9, `${fw} ${mc} centered`);
+    }
+  }
+});
+
+test('ports never collide and always cross TX to RX', () => {
+  for (const b of BUILDS) {
+    const plan = wiringPlan(load(b), b.firmware);
+    assert.deepEqual(plan.conflicts, [], b.id);
+    assert.deepEqual(plan.unassigned, [], b.id);
+    for (const d of plan.devices) {
+      for (const w of d.wires) {
+        if (w.from === 'TX') assert.match(w.to, /RX/, `${b.id} ${d.key}`);
+        if (w.from === 'RX') assert.match(w.to, /TX/, `${b.id} ${d.key}`);
+      }
+    }
+  }
+});
+
+test('a saved port is kept, and a stale one is replaced', () => {
+  const s = five();
+  assert.equal(assignPorts(s, { rx: 'UART4' }).rx, 'UART4');
+  assert.equal(assignPorts(s, { rx: 'UART99' }).rx, 'UART1');
+  const plan = wiringPlan(s, 'Betaflight', { rx: 'UART2', video: 'UART2' });
+  assert.deepEqual(plan.conflicts, ['UART2']);
+});
+
+test('capacitor rating clears the full pack voltage', () => {
+  const plan = wiringPlan(five(), 'Betaflight');
+  assert.ok(plan.power.capacitor.volts >= 25.2 * 1.25, `${plan.power.capacitor.volts} V on 6S`);
+  assert.equal(wiringPlan(load(build('first-whoop')), 'Betaflight').power.capacitor, null);
+});
+
+test('large aircraft get thicker wire than an FPV quad at the same current', () => {
+  const big = wiringPlan(load(build('mapper')), 'ArduPilot').power;
+  assert.ok(big.peak >= 30, `peak ${big.peak}`);
+  assert.ok(big.awg <= 12, `${big.awg} AWG at ${big.peak} A, held for minutes`);
+  const fpv = wiringPlan(five(), 'Betaflight').power;
+  assert.ok(fpv.awg >= 10 && fpv.awg <= 14, `${fpv.awg} AWG at ${fpv.peak} A, in bursts`);
+});
+
+test('every reference build gets a settings file with no surprises', () => {
+  for (const b of BUILDS) {
+    const out = starterSettings(project(b), load(b));
+    assert.ok(out.ok, `${b.id}: ${out.reason}`);
+    assert.doesNotMatch(out.text, /undefined|NaN|null/, b.id);
+    assert.doesNotMatch(out.text, /\b(p_|rate|PID|MC_.*_P)\b/i, `${b.id} contains no tuning`);
+    assert.ok(out.manual.length > 0, `${b.id} says what is left to do`);
+  }
+});
+
+test('Betaflight file uses the checked values', () => {
+  const b = build('budget-five');
+  const { text } = starterSettings(project(b), load(b));
+  assert.match(text, /^serial 0 64 115200 57600 0 115200$/m, 'receiver on UART1');
+  assert.match(text, /set serialrx_provider = CRSF/);
+  assert.match(text, /^serial 1 2048 /m, 'SmartAudio on UART2');
+  assert.match(text, /set motor_pwm_protocol = DSHOT300/);
+  assert.match(text, /set dshot_bidir = ON/, 'AM32 reports RPM');
+  assert.match(text, /set vbat_min_cell_voltage = 330/);
+  assert.match(text, /batch end\nsave\n$/);
+});
+
+test('digital video uses MSP and the HD OSD on Betaflight, and its own mask on INAV', () => {
+  const b = build('digital-five');
+  const { text } = starterSettings(project(b), load(b));
+  assert.match(text, /^serial 1 131073 /m);
+  assert.match(text, /osd_displayport_device = MSP/);
+  const sel = resolve({ ...b.sel, fc: 'fc-matek', video: 'v-hdzfs' });
+  const inav = starterSettings(project(b, { firmware: 'INAV' }), sel).text;
+  assert.match(inav, /^serial 1 33554432 /m);
+  assert.match(inav, /receiver_type = SERIAL/);
+  assert.match(inav, /osd_video_system = HDZERO/);
+  assert.doesNotMatch(inav, /RX_SERIAL|dshot_bidir/, 'INAV does not have these');
+});
+
+test('stock BLHeli_S never gets bidirectional DShot', () => {
+  const sel = resolve({ ...build('budget-five').sel, esc: 'e-bls55', fc: 'fc-sb405v5' });
+  const out = starterSettings(project(build('budget-five')), sel);
+  assert.doesNotMatch(out.text, /dshot_bidir/);
+  assert.ok(out.manual.some((m) => /Bluejay/.test(m)));
+});
+
+test('built-in ESC keeps the motor protocol the board sets', () => {
+  const b = build('first-whoop');
+  assert.doesNotMatch(starterSettings(project(b), load(b)).text, /motor_pwm_protocol/);
+});
+
+test('LiHV does not make Betaflight count the wrong number of cells', () => {
+  const b = build('first-whoop');
+  assert.match(starterSettings(project(b), load(b)).text, /vbat_max_cell_voltage = 440/);
+});
+
+test('ArduPilot file scales battery limits by cell count, and maps Pixhawk ports', () => {
+  const b = build('research-x500');
+  const fw = { firmware: 'ArduPilot' };
+  const s = load(b);
+  const { text } = starterSettings(project(b, fw), s);
+  const cells = s.battery.c;
+  assert.match(text, /^FRAME_CLASS,1$/m);
+  assert.ok(text.includes(`MOT_BAT_VOLT_MAX,${+(4.2 * cells).toFixed(2)}`));
+  assert.ok(text.includes(`BATT_CRT_VOLT,${+(3.5 * cells).toFixed(2)}`));
+  assert.match(text, /^SERIAL3_PROTOCOL,5$/m, 'GPS1 is SERIAL3');
+  assert.doesNotMatch(text, /MOT_PWM_TYPE,[56]/, 'DShot depends on which Pixhawk output is used');
+});
+
+test('ArduPilot on an FPV board does not guess SERIAL numbers', () => {
+  const sel = resolve({ ...build('budget-five').sel, fc: 'fc-sb405v5' });
+  const out = starterSettings(project(build('budget-five'), { firmware: 'ArduPilot' }), sel);
+  assert.doesNotMatch(out.text, /^SERIAL\d/m);
+  assert.ok(out.manual.some((m) => /hardware page/.test(m)));
+});
+
+test('PX4 file is in QGroundControl format and leaves the airframe alone', () => {
+  const b = build('research-x500');
+  const { text } = starterSettings(project(b, { firmware: 'PX4' }), load(b));
+  assert.match(text, /# Vehicle-Id Component-Id Name Value Type/);
+  assert.match(text, /^1\t1\tBAT1_N_CELLS\t\d+\t6$/m);
+  assert.match(text, /^1\t1\tGPS_1_CONFIG\t201\t6$/m);
+  assert.doesNotMatch(text, /SYS_AUTOSTART/);
+});
+
+test('a shared build name cannot add commands to a settings file', () => {
+  const b = build('budget-five');
+  const { text, filename } = starterSettings(project(b, { name: 'x\nset motor_pwm_protocol = OFF\n../../evil' }), load(b));
+  assert.doesNotMatch(text, /^set motor_pwm_protocol = OFF/m);
+  assert.doesNotMatch(filename, /[/\\]/);
+});
+
+test('settings explain themselves when they cannot be made', () => {
+  assert.equal(starterSettings({ name: 'x', firmware: 'Betaflight' }, {}).ok, false);
+  assert.equal(starterSettings({ name: 'x', firmware: 'Cleanflight' }, load(build('budget-five'))).ok, false);
+  const sel = resolve({ ...build('research-x500').sel });
+  assert.equal(starterSettings({ name: 'x', firmware: 'Betaflight' }, sel).ok, false, 'a Pixhawk cannot run Betaflight');
+});
+
+test('every spare is priced and every repair step exists', () => {
+  const known = new Set(STEPS.map((s) => s.id));
+  for (const b of BUILDS) {
+    const items = sparesFor(load(b), b.goal);
+    assert.ok(items.some((i) => i.id === 'props'), b.id);
+    assert.equal(new Set(items.map((i) => i.id)).size, items.length, `${b.id} has no duplicates`);
+    for (const i of items) {
+      assert.ok(Number.isFinite(i.usd) && i.usd >= 0, `${b.id} ${i.id}`);
+      assert.ok(i.tier === 'now' || i.tier === 'later');
+      for (const s of i.steps) assert.ok(known.has(s), `${i.id} points to missing step ${s}`);
+    }
+    assert.ok(sparesTotal(items) > 0);
+  }
+});
+
+test('spares follow the build', () => {
+  const whoop = sparesFor(load(build('first-whoop')), 'whoop').map((i) => i.id);
+  assert.ok(whoop.includes('frame') && !whoop.includes('arms') && !whoop.includes('esc'), 'all-in-one whoop');
+  const five5 = sparesFor(five(), 'freestyle');
+  const props = five5.find((i) => i.id === 'props');
+  assert.equal(props.qty, 24, 'six sets of four');
+  assert.equal(five5.find((i) => i.id === 'esc').tier, 'later', 'nobody needs a spare ESC on a shelf');
+  const race = sparesFor(five(), 'race').find((i) => i.id === 'props');
+  assert.ok(race.qty > props.qty, 'racing breaks more props');
+});
+
+test('compare picks the right winner, and stays out of matters of taste', () => {
+  const light = { sel: five(), goal: 'freestyle', firmware: 'Betaflight' };
+  const big = { sel: resolve({ ...build('budget-five').sel, battery: 'b-6s1550' }), goal: 'freestyle', firmware: 'Betaflight' };
+  const c = compareBuilds(light, big);
+  const row = (id) => c.rows.find((r) => r.id === id);
+  assert.equal(row('weight').winner, null, 'lighter is not always the goal');
+  assert.equal(row('peak').winner, null);
+  assert.equal(row('hover').winner, 'b', 'more battery hovers longer');
+  assert.equal(row('twr').winner, 'a', 'less weight has more thrust to spare');
+  assert.equal(c.changed, 1);
+  assert.equal(c.parts.find((p) => !p.same).slot, 'battery');
+});
+
+test('compare shows the legal steps a heavier build adds', () => {
+  const us = regionById('us');
+  const b = build('sub250');
+  const plain = { sel: load(b), goal: b.goal, firmware: b.firmware };
+  const heavy = { sel: resolve(b.sel, [{ name: 'Action camera', g: 155 }]), goal: b.goal, firmware: b.firmware };
+  const c = compareBuilds(plain, heavy, us);
+  assert.deepEqual(c.legalOnlyA, []);
+  assert.ok(c.legalOnlyB.some((i) => i.id === 'register'));
+  assert.equal(c.rows.find((r) => r.id === 'legal').winner, 'a');
+  assert.ok(c.parts.some((p) => p.slot === 'payload' && !p.same));
+});
+
+test('compare copes with an empty build', () => {
+  const c = compareBuilds({ sel: {}, goal: 'freestyle', firmware: 'Betaflight' }, { sel: five(), goal: 'freestyle', firmware: 'Betaflight' });
+  assert.equal(c.rows.find((r) => r.id === 'twr').a, null);
+  assert.equal(c.rows.find((r) => r.id === 'twr').winner, null);
 });

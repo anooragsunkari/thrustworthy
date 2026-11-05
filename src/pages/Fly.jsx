@@ -95,7 +95,12 @@ export function Flight({ projectId }) {
     <div className="wrap narrow">
       <PageHead title={t('Fly')} sub={p ? p.name : t('Your checklist and your fixes, even with no signal at the field.')} back={p ? `/p/${p.id}` : undefined} />
       {region && <A to={`/rules/${region.id}`} className="note info" style={{ display: 'block', marginTop: 14, textDecoration: 'none' }}><b>{t('Rules for {place}', { place: t(region.name) })}</b>{t(region.summary)}</A>}
-      {p && <A to={`/p/${p.id}/legal`} className="btn secondary block" style={{ marginTop: 12 }}>{t('Am I legal?')}</A>}
+      {p && (
+        <div className="btn-row" style={{ marginTop: 12 }}>
+          <A to={`/p/${p.id}/legal`} className="btn secondary">{t('Am I legal?')}</A>
+          <A to={`/p/${p.id}/spares`} className="btn secondary">{t('Spares and repairs')}</A>
+        </div>
+      )}
       <section className="section" style={{ marginTop: 22 }}>
         <div className="row between" style={{ marginBottom: 10 }}>
           <h2>{t('Pre-flight check')}</h2>
@@ -162,7 +167,7 @@ export function Fix({ id, fw }) {
             <h2>{t('Time to ask for help')}</h2>
             <p className="muted">{t('You have tried the usual causes. Post your symptoms and your build link, and include any log. People will be able to help much faster.')}</p>
             <div className="chips">
-              {(state.profile.lang === 'zh' ? [...LEARNING.zh, ...LEARNING.en] : LEARNING.en).map(([a, b]) => <Ext key={a} href={b} className="chip accent">{a}</Ext>)}
+              {LEARNING.map(([a, b]) => <Ext key={a} href={b} className="chip accent">{a}</Ext>)}
             </div>
             <button className="link small" onClick={() => setI(0)}>{t('Start again')}</button>
           </div>

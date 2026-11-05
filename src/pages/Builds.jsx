@@ -28,6 +28,7 @@ export function Builds({ level }) {
         <Row items={['All', ...FIRMWARES]} value={fw} set={setFw} />
       </div>
       <div className="grid three" style={{ marginTop: 6 }}>{list.map((b) => <BuildCard key={b.id} build={b} region={region} />)}</div>
+      <A to="/compare" className="btn secondary block" style={{ marginTop: 14 }}>{t('Compare two builds')}</A>
       {!list.length && <div className="note" style={{ marginTop: 12 }}>{t('No builds match those filters yet. You can start from a blank build in the configurator.')}</div>}
     </div>
   );

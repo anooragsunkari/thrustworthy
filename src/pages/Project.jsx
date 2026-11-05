@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { A, Ext, Icon, PageHead, Progress, useToast } from '../components/ui.jsx';
-import { useStore, createProject, deleteProject, keepCustomParts, deletePhoto, loadPhoto, savePhoto, setProfile, shrinkImage, toggleIn, updateProject } from '../lib/store.js';
+import { useStore, createProject, deleteProject, duplicateProject, keepCustomParts, deletePhoto, loadPhoto, savePhoto, setProfile, shrinkImage, toggleIn, updateProject } from '../lib/store.js';
 import { copyText, decodeBuild, downloadFile, go, grams, shareUrl, t } from '../lib/util.js';
 import { SLOTS, partName } from '../data/parts.js';
 import { GEAR } from '../data/personas.js';
@@ -48,10 +48,22 @@ export function ProjectHome({ id }) {
           </A>
         ))}
       </div>
-      <A to={`/p/${id}/legal`} className="card tap row between" style={{ marginTop: 14, flexWrap: 'nowrap' }}>
-        <span className="grow"><h3>{t('Am I legal?')}</h3><span className="small muted">{t('A checklist for this exact build, in your country.')}</span></span>
-        <Icon name="chev" className="chev" />
-      </A>
+      <h2 style={{ margin: '24px 0 10px' }}>{t('Tools for this build')}</h2>
+      <div className="list">
+        {[
+          [`/p/${id}/wiring`, 'Wiring diagram', 'Power, motor order and every connection, for your exact parts.'],
+          [`/p/${id}/settings`, 'Starter settings', 'A file for your firmware, with ports and battery limits filled in.'],
+          [`/p/${id}/spares`, 'Spares and repairs', 'What usually breaks, how many spares to keep, and how to fix it.'],
+          [`/p/${id}/legal`, 'Am I legal?', 'A checklist for this exact build, in your country.'],
+          [`/compare/p.${p.copyOf && state.projects[p.copyOf] ? `${p.copyOf}/p.${id}` : id}`, 'Compare builds', 'See it side by side with another build.'],
+        ].map(([to, title, sub]) => (
+          <A key={to} to={to} className="li">
+            <span className="grow"><div className="title">{t(title)}</div><div className="sub">{t(sub)}</div></span>
+            <Icon name="chev" className="chev" />
+          </A>
+        ))}
+      </div>
+      <button className="btn secondary block" style={{ marginTop: 14 }} onClick={() => go(`/configure/${duplicateProject(id)}`)}>{t('Try a change on a copy')}</button>
       <button className="btn danger block" style={{ marginTop: 24 }} onClick={remove}>{t('Delete build')}</button>
     </div>
   );
@@ -191,12 +203,6 @@ export function Assemble({ id }) {
   const steps = stepsFor(traits(sel, p.firmware));
   const done = steps.filter((s) => p.steps?.[s.id]).length;
   const pct = steps.length ? (done / steps.length) * 100 : 0;
-  const uarts = [
-    sel.rx && !sel.fc?.includes?.includes('rx') && ['Receiver', 'SBUS or CRSF, using one full UART'],
-    sel.video && sel.video.sys !== 'None' && [t('{sys} video', { sys: sel.video.sys }), sel.video.sys === 'Analog' ? 'One TX pad, for VTX control' : 'One full UART, for OSD and control'],
-    sel.gps && ['GPS', 'One full UART, plus I2C if it has a compass'],
-    sel.companion && ['Companion computer', 'One full UART, or USB, with its own 5 V power'],
-  ].filter(Boolean);
 
   return (
     <div className="wrap narrow">
@@ -206,16 +212,10 @@ export function Assemble({ id }) {
         <div style={{ marginTop: 8 }}><Progress value={pct} ok={pct === 100} /></div>
       </div>
 
-      {!!uarts.length && sel.fc && (
-        <section className="section" style={{ marginTop: 18 }}>
-          <details className="card" open={false}>
-            <summary>{t('Your wiring plan ({n} of {m} UARTs)', { n: uarts.length, m: sel.fc.u })}</summary>
-            <ul className="stack small" style={{ marginTop: 6 }}>
-              {uarts.map(([a, b]) => <li key={a}><b>{t(a)}</b><div className="muted">{t(b)}</div></li>)}
-            </ul>
-          </details>
-        </section>
-      )}
+      <A to={`/p/${id}/wiring`} className="card tap row between" style={{ marginTop: 14, flexWrap: 'nowrap' }}>
+        <span className="grow"><h3>{t('Wiring diagram')}</h3><span className="small muted">{t('Power, motor order and every connection, for your exact parts.')}</span></span>
+        <Icon name="chev" className="chev" />
+      </A>
 
       {PHASES.map((phase) => {
         const list = steps.filter((s) => s.phase === phase);
@@ -269,6 +269,10 @@ export function Setup({ id }) {
       <Ext href={fw.tool.url} className="btn secondary block" style={{ marginTop: 14 }}><Icon name="ext" />{t('Open {tool}', { tool: fw.tool.name })}</Ext>
       <p className="tiny muted" style={{ marginTop: 8 }}>{t(fw.toolNote)}</p>
       <div className="note warn" style={{ marginTop: 14 }}><b>{t('Keep the props off')}</b>{t('Props stay off until every step here is finished.')}</div>
+      <A to={`/p/${id}/settings`} className="card tap row between" style={{ marginTop: 14, flexWrap: 'nowrap' }}>
+        <span className="grow"><h3>{t('Starter settings')}</h3><span className="small muted">{t('A file for your firmware, with ports and battery limits filled in.')}</span></span>
+        <Icon name="chev" className="chev" />
+      </A>
       <section className="section" style={{ marginTop: 18 }}>
         <SoftwareSteps fw={fw} doneMap={p.software} onToggle={(k) => toggleIn(id, 'software', k)} />
       </section>

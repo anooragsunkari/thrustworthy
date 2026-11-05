@@ -362,3 +362,14 @@ details > summary::after { transition: transform var(--dur-bouncy) var(--ease-bo
   main { padding: 0; }
   .list, .card { box-shadow: none; border: 1px solid #bbb; break-inside: avoid; }
 }
+
+/* Wiring diagrams, starter settings and compare */
+.diagram { display: block; width: 100%; height: auto; max-width: 460px; margin: 0 auto; font-family: var(--font); }
+.motor-map { max-width: 340px; }
+.code { margin: 0; padding: 16px; border-radius: var(--r-s); background: var(--surface); font: 13px/1.55 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; overflow-x: auto; white-space: pre; tab-size: 4; max-height: 60vh; overflow-y: auto; }
+.cmp-pick { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.cmp-pick .input { width: 100%; min-width: 0; }
+.cmp-row { display: grid; grid-template-columns: 1fr 1fr; gap: 2px 14px; padding: 12px 18px; }
+.cmp-label { grid-column: 1 / -1; }
+.cmp-win { font-weight: 700; }
+@media print { .diagram { max-width: 340px; } .code { max-height: none; white-space: pre-wrap; } }
