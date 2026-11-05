@@ -84,7 +84,7 @@ export function About() {
       </section>
       <section className="section btn-row">
         <A to="/about/numbers" className="btn secondary">{t('How we calculate')}</A>
-        <Ext href="https://github.com/lazyonbed/Multirotor-build" className="btn secondary"><Icon name="ext" />{t('Source code')}</Ext>
+        <Ext href="https://github.com/lazyonbed/thrustworthy" className="btn secondary"><Icon name="ext" />{t('Source code')}</Ext>
       </section>
     </div>
   );
