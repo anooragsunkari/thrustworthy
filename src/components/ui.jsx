@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+import { animate, prefersStill, SNAPPY, SOFT, Spring } from '../lib/spring.js';
 import { t, grams, minutes } from '../lib/util.js';
 import { resolve, flight, cost } from '../lib/engine.js';
 import { money } from '../data/regions.js';
@@ -42,8 +43,32 @@ export const Logo = () => (
 /** Top-down drone with spinning props. A real part of the brand and not stock art. */
 export const HeroDrone = () => {
   const props = [[46, 46, false], [154, 46, true], [46, 154, true], [154, 154, false]];
+  const ref = useRef(null);
+  useEffect(() => {
+    if (prefersStill()) return undefined;
+    const rx = new Spring(0, { k: 40, c: 7 });
+    const ry = new Spring(0, { k: 40, c: 7 });
+    let clock = 0;
+    const onMove = (e) => {
+      const b2 = ref.current?.getBoundingClientRect();
+      if (!b2) return;
+      const dx = (e.clientX - (b2.left + b2.width / 2)) / window.innerWidth;
+      const dy = (e.clientY - (b2.top + b2.height / 2)) / window.innerHeight;
+      ry.to(Math.max(-1, Math.min(1, dx)) * 26);
+      rx.to(Math.max(-1, Math.min(1, dy)) * -26);
+    };
+    window.addEventListener('pointermove', onMove, { passive: true });
+    const stop = animate((dt) => {
+      clock += dt;
+      rx.step(dt);
+      ry.step(dt);
+      if (ref.current) ref.current.style.transform = `perspective(700px) translateY(${(Math.sin(clock * 1.6) * 5).toFixed(2)}px) rotateX(${rx.x.toFixed(2)}deg) rotateY(${ry.x.toFixed(2)}deg)`;
+      return true;
+    });
+    return () => { stop(); window.removeEventListener('pointermove', onMove); };
+  }, []);
   return (
-    <svg className="hero-art" viewBox="0 0 200 200" role="img" aria-label={t('A quadcopter seen from above')}>
+    <svg ref={ref} className="hero-art" viewBox="0 0 200 200" role="img" aria-label={t('A quadcopter seen from above')}>
       <g stroke="currentColor" strokeWidth="6" strokeLinecap="round"><path d="M64 64l72 72M136 64l-72 72" /></g>
       <rect x="76" y="70" width="48" height="60" rx="12" fill="var(--bg)" stroke="currentColor" strokeWidth="4" />
       <rect x="88" y="82" width="24" height="22" rx="5" fill="currentColor" />
@@ -59,6 +84,35 @@ export const HeroDrone = () => {
     </svg>
   );
 };
+
+/** A number that rolls to its new value, with momentum. */
+export function SpringNum({ value, format }) {
+  const list = Array.isArray(value) ? value : [value];
+  const ref = useRef(null);
+  const springs = useRef(null);
+  if (!springs.current || springs.current.length !== list.length) springs.current = list.map((n) => new Spring(n, SOFT));
+  const show = () => format(...springs.current.map((s) => s.x));
+  useEffect(() => {
+    if (prefersStill()) {
+      springs.current.forEach((s, i) => s.set(list[i]));
+      if (ref.current) ref.current.textContent = show();
+      return undefined;
+    }
+    springs.current.forEach((s, i) => s.to(list[i]));
+    return animate((dt) => {
+      springs.current.forEach((s) => s.step(dt));
+      if (ref.current) ref.current.textContent = show();
+      if (springs.current.every((s) => s.settled)) {
+        springs.current.forEach((s) => s.set(s.target));
+        if (ref.current) ref.current.textContent = show();
+        return false;
+      }
+      return true;
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [list.join('|')]);
+  return <b ref={ref}>{show()}</b>;
+}
 
 export const A = ({ to, children, ...rest }) => <a href={`#${to}`} {...rest}>{children}</a>;
 export const Ext = ({ href, children, className = 'link', ...rest }) => <a className={className} href={href} target="_blank" rel="noopener noreferrer" {...rest}>{children}</a>;
@@ -105,21 +159,83 @@ export function BuildCard({ build, region }) {
 }
 
 export function Sheet({ title, sub, onClose, children }) {
+  const sheet = useRef(null);
+  const bg = useRef(null);
+  const motion = useRef({ y: new Spring(0, { k: 260, c: 28 }), closing: false, dragging: false, h: 1 });
+  const draw = () => {
+    const m = motion.current;
+    if (sheet.current) sheet.current.style.transform = `translateY(${m.y.x.toFixed(1)}px)`;
+    if (bg.current) bg.current.style.opacity = String(Math.max(0, Math.min(1, 1 - m.y.x / m.h)));
+  };
+  const close = () => {
+    const m = motion.current;
+    if (m.closing) return;
+    m.closing = true;
+    if (prefersStill()) { onClose(); return; }
+    m.y.to(m.h + 20);
+  };
   useEffect(() => {
+    const m = motion.current;
+    m.h = sheet.current.offsetHeight || 600;
+    const still = prefersStill();
+    m.y.set(still ? 0 : m.h);
+    m.y.to(0);
+    draw();
+    const stop = animate((dt) => {
+      if (!m.dragging) m.y.step(dt);
+      draw();
+      if (m.closing && m.y.x >= m.h) { onClose(); return false; }
+      return true;
+    });
     const prev = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
-    const onKey = (e) => e.key === 'Escape' && onClose();
+    const onKey = (e) => e.key === 'Escape' && close();
     window.addEventListener('keydown', onKey);
-    return () => { document.body.style.overflow = prev; window.removeEventListener('keydown', onKey); };
-  }, [onClose]);
+    return () => { stop(); document.body.style.overflow = prev; window.removeEventListener('keydown', onKey); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  const drag = useRef(null);
+  const onDown = (e) => {
+    if (e.target.closest('button')) return;
+    try { e.currentTarget.setPointerCapture(e.pointerId); } catch { /* the pointer already ended */ }
+    motion.current.dragging = true;
+    drag.current = { y: e.clientY, start: motion.current.y.x, lastY: e.clientY, lastT: performance.now(), v: 0 };
+  };
+  const onMove = (e) => {
+    const d = drag.current;
+    if (!d) return;
+    const m = motion.current;
+    const raw = d.start + (e.clientY - d.y);
+    // Pulling up past the top resists, like a rubber band.
+    m.y.x = raw < 0 ? -Math.sqrt(-raw) * 2 : raw;
+    const now = performance.now();
+    const dt = Math.max(0.004, (now - d.lastT) / 1000);
+    d.v = d.v * 0.6 + ((e.clientY - d.lastY) / dt) * 0.4;
+    d.lastY = e.clientY;
+    d.lastT = now;
+  };
+  const onUp = () => {
+    const d = drag.current;
+    if (!d) return;
+    drag.current = null;
+    const m = motion.current;
+    m.dragging = false;
+    const held = performance.now() - d.lastT > 90;
+    m.y.v = held ? 0 : d.v; // the sheet leaves at the speed of your finger
+    if (m.y.x > m.h * 0.35 || m.y.v > 900) { m.closing = true; m.y.to(m.h + 20); } else m.y.to(0);
+  };
   return (
-    <div className="sheet-bg" onClick={onClose}>
-      <div className="sheet" role="dialog" aria-modal="true" aria-label={title} onClick={(e) => e.stopPropagation()}>
-        <div className="sheet-head">
-          <div><h2 style={{ fontSize: 20 }}>{title}</h2>{sub && <div className="small muted">{sub}</div>}</div>
-          <button className="icon-btn" onClick={onClose} aria-label={t('Close')}><Icon name="close" /></button>
+    <div className="sheet-bg" onClick={close}>
+      <i ref={bg} className="sheet-shade" />
+      <div ref={sheet} className="sheet" role="dialog" aria-modal="true" aria-label={title} onClick={(e) => e.stopPropagation()}>
+        <div className="sheet-drag" onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp} onPointerCancel={onUp}>
+          <i className="sheet-grab" aria-hidden="true" />
+          <div className="sheet-head">
+            <div><h2 style={{ fontSize: 20 }}>{title}</h2>{sub && <div className="small muted">{sub}</div>}</div>
+            <button className="icon-btn" onClick={close} aria-label={t('Close')}><Icon name="close" /></button>
+          </div>
         </div>
-        <div className="sheet-body">{children}</div>
+        <div className="sheet-body">{typeof children === 'function' ? children(close) : children}</div>
       </div>
     </div>
   );

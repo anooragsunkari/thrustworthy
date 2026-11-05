@@ -29,6 +29,15 @@ export function ProjectHome({ id }) {
         <div style={{ marginTop: 8 }}><Progress value={s.pct} ok={s.pct === 100} /></div>
       </div>
       {s.next && <A to={s.next.to} className="btn block" style={{ marginTop: 14 }}>{t('Next: {step}', { step: t(s.next.title) })}</A>}
+      {resolve(p.sel).frame && (
+        <A to={`/p/${id}/3d`} className="card tap row between" style={{ marginTop: 14, flexWrap: 'nowrap' }}>
+          <span className="grow">
+            <h3>{t(s.pct === 100 ? 'Your finished drone in 3D' : 'See your drone in 3D')}</h3>
+            <span className="small muted">{t('Turn it around, pull it apart, and tap any part for details.')}</span>
+          </span>
+          <Icon name="cpu" className="chev" />
+        </A>
+      )}
       <div className="list" style={{ marginTop: 14 }}>
         {s.list.map((st) => (
           <A key={st.key} to={st.to} className="li">
@@ -325,6 +334,10 @@ export function ShareBuild({ id }) {
         <Ext href={issue} className="btn secondary block"><Icon name="ext" />{t('Post on GitHub')}</Ext>
         <button className="link small" onClick={() => updateProject(id, { shared: true })}>{t('Mark as shared')}</button>
       </div>
+      <A to={`/p/${id}/3d`} className="card tap row between" style={{ marginTop: 12, flexWrap: 'nowrap' }}>
+        <span className="grow"><h3>{t('Share it in 3D')}</h3><span className="small muted">{t('Anyone can open the model in a browser and tap each part.')}</span></span>
+        <Icon name="cpu" className="chev" />
+      </A>
       {toast}
     </div>
   );
@@ -348,7 +361,8 @@ export function ImportBuild({ token }) {
           </div>
         ))}
       </div>
-      <button className="btn block" style={{ marginTop: 14 }} onClick={() => { const id = createProject({ ...shared, sel: shared.sel, name: shared.name }); go(`/p/${id}`); }}>{t('Save a copy to my builds')}</button>
+      <A to={`/v/${token}`} className="btn secondary block" style={{ marginTop: 14 }}><Icon name="cpu" />{t('View in 3D')}</A>
+      <button className="btn block" style={{ marginTop: 10 }} onClick={() => { const id = createProject({ ...shared, sel: shared.sel, name: shared.name }); go(`/p/${id}`); }}>{t('Save a copy to my builds')}</button>
     </div>
   );
 }

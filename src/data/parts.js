@@ -163,7 +163,7 @@ export const GPS = [
 
 export const COMPANIONS = [
   { id: 'c-pi02', b: 'Raspberry Pi', m: 'Zero 2 W', w: 11, pw: 2.5, ros: 'Telemetry bridge', p: 18 },
-  { id: 'c-pi5', b: 'Raspberry Pi', m: 'Pi 5 (4 GB)', w: 46, pw: 7, ros: 'ROS 2, light vision', p: 110 },
+  { id: 'c-pi5', b: 'Raspberry Pi', m: '5 (4 GB)', w: 46, pw: 7, ros: 'ROS 2, light vision', p: 110 },
   { id: 'c-orin', b: 'NVIDIA', m: 'Jetson Orin Nano Super Dev Kit', w: 180, pw: 15, ros: 'ROS 2, onboard neural nets', p: 399, stock: 'low' },
 ];
 

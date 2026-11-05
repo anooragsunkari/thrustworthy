@@ -1,5 +1,5 @@
-import React, { lazy, Suspense, useMemo, useState } from 'react';
-import { A, Icon, Issue, PageHead, Sheet, useToast } from '../components/ui.jsx';
+import React, { useMemo, useState } from 'react';
+import { A, Icon, Issue, PageHead, Sheet, SpringNum, useToast } from '../components/ui.jsx';
 import { useStore, createProject, updateProject } from '../lib/store.js';
 import { go, grams, minutes, t } from '../lib/util.js';
 import { FIRMWARES, GOALS, SLOTS, partName } from '../data/parts.js';
@@ -7,8 +7,6 @@ import { BUILDS } from '../data/builds.js';
 import { regionById, money } from '../data/regions.js';
 import { personaById } from '../data/personas.js';
 import { autofill, check, cost, flight, isIncluded, missing, rate, resolve, summarize, toIds, allUpWeight } from '../lib/engine.js';
-
-const Viewer3D = lazy(() => import('../components/Viewer3D.jsx'));
 
 const specLine = (slot, p) => {
   switch (slot) {
@@ -81,7 +79,6 @@ export function Configure({ id }) {
   const p = state.projects[id];
   const region = regionById(state.profile.region);
   const [open, setOpen] = useState(null);
-  const [show3d, setShow3d] = useState(false);
   const [altitude, setAltitude] = useState(0);
   const [toast, setToast] = useToast();
 
@@ -99,7 +96,6 @@ export function Configure({ id }) {
     const next = { ...p.sel };
     if (part) next[slot] = part.id; else delete next[slot];
     updateProject(p.id, { sel: next });
-    setOpen(null);
   };
   const fill = () => {
     const out = autofill(sel, ctx, { withCompanion: false });
@@ -183,26 +179,17 @@ export function Configure({ id }) {
         </section>
       )}
 
-      {sel.frame && (
-        <section className="section">
-          {show3d ? (
-            <Suspense fallback={<div className="viewer" />}><Viewer3D sel={sel} /></Suspense>
-          ) : (
-            <button className="btn secondary block" onClick={() => setShow3d(true)}><Icon name="cpu" />{t('View in 3D')}</button>
-          )}
-        </section>
-      )}
-
       <div className="section btn-row">
+        {sel.frame && <A to={`/p/${p.id}/3d`} className="btn secondary"><Icon name="cpu" />{t('View in 3D')}</A>}
         <A to={`/p/${p.id}/parts`} className="btn">{t('Get the parts')}</A>
       </div>
 
       <div className="dock">
         <div className="stats">
-          <div className="stat"><b>{money(c.total, region)}</b><span>{t('parts')}</span></div>
-          <div className="stat"><b>{auw ? grams(auw) : '–'}</b><span>{t('weight')}</span></div>
-          <div className="stat"><b>{f ? `${f.twr.toFixed(1)}:1` : '–'}</b><span>{t('T/W')}</span></div>
-          <div className="stat"><b>{f ? minutes(f.flyMin, f.flyMax) : '–'}</b><span>{t('min')}</span></div>
+          <div className="stat"><SpringNum value={c.total} format={(n) => money(n, region)} /><span>{t('parts')}</span></div>
+          <div className="stat">{auw ? <SpringNum value={auw} format={grams} /> : <b>–</b>}<span>{t('weight')}</span></div>
+          <div className="stat">{f ? <SpringNum value={f.twr} format={(n) => `${n.toFixed(1)}:1`} /> : <b>–</b>}<span>{t('T/W')}</span></div>
+          <div className="stat">{f ? <SpringNum value={[f.flyMin, f.flyMax]} format={minutes} /> : <b>–</b>}<span>{t('min')}</span></div>
         </div>
         <div className="row between" style={{ marginTop: 6 }}>
           <span className={`chip ${status.cls}`}>{status.label}</span>
@@ -224,9 +211,10 @@ function Picker({ slot, sel, ctx, region, onPick, onClose }) {
     .sort((a, b) => ({ ok: 0, warn: 1, error: 2 }[a.r.status] - { ok: 0, warn: 1, error: 2 }[b.r.status]) || a.p.p - b.p.p);
   return (
     <Sheet title={t(s.label)} sub={t(s.hint)} onClose={onClose}>
-      {!s.required && sel[slot] && <button className="btn quiet block" style={{ marginBottom: 8 }} onClick={() => onPick(slot, null)}>{t('Remove')}</button>}
+      {(close) => (<>
+      {!s.required && sel[slot] && <button className="btn quiet block" style={{ marginBottom: 8 }} onClick={() => { onPick(slot, null); close(); }}>{t('Remove')}</button>}
       {rated.map(({ p, r }) => (
-        <button key={p.id} className={`pick ${sel[slot]?.id === p.id ? 'on' : ''} ${r.status === 'error' ? 'bad' : ''}`} onClick={() => onPick(slot, p)}>
+        <button key={p.id} className={`pick ${sel[slot]?.id === p.id ? 'on' : ''} ${r.status === 'error' ? 'bad' : ''}`} onClick={() => { onPick(slot, p); close(); }}>
           <i className={`dot ${r.status === 'error' ? 'err' : r.status === 'warn' ? 'warn' : 'ok'}`} aria-hidden="true" />
           <span className="grow">
             <div className="title">{partName(p)}</div>
@@ -236,6 +224,7 @@ function Picker({ slot, sel, ctx, region, onPick, onClose }) {
           {p.p > 0 && <span className="right small num">{money(p.p * ((slot === 'esc' && p.t === 'single') ? (sel.frame?.mc || 4) : qty), region)}</span>}
         </button>
       ))}
+      </>)}
     </Sheet>
   );
 }

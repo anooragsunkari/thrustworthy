@@ -2,12 +2,14 @@ import React, { useEffect } from 'react';
 import { A, Icon, Logo } from './components/ui.jsx';
 import { setProfile, useStore } from './lib/store.js';
 import { t, useRoute } from './lib/util.js';
+import { prefersStill } from './lib/spring.js';
 import { Home, Start } from './pages/Home.jsx';
 import { BuildDetail, Builds } from './pages/Builds.jsx';
 import { Configure, ConfigureEntry } from './pages/Configure.jsx';
 import { Assemble, FlyProject, ImportBuild, Parts, ProjectHome, Setup, ShareBuild } from './pages/Project.jsx';
 import { Fix, Flight, Software, SoftwareDetail } from './pages/Fly.jsx';
 import { Community, Me } from './pages/Me.jsx';
+import { GuideModel, ProjectModel, SharedModel } from './pages/Model.jsx';
 import { About, Numbers, RuleDetail, Rules } from './pages/Info.jsx';
 
 function route(path) {
@@ -17,6 +19,7 @@ function route(path) {
     case 'start': return <Start step={b} />;
     case 'builds':
       if (b === 'level') return <Builds level={c} key={c} />;
+      if (b && c === '3d') return <GuideModel id={b} key={b} />;
       return b ? <BuildDetail id={b} key={b} /> : <Builds />;
     case 'configure': return b ? <Configure id={b} key={b} /> : <ConfigureEntry />;
     case 'p':
@@ -26,9 +29,11 @@ function route(path) {
         case 'setup': return <Setup id={b} />;
         case 'fly': return <FlyProject id={b} />;
         case 'share': return <ShareBuild id={b} />;
+        case '3d': return <ProjectModel id={b} key={b} />;
         default: return <ProjectHome id={b} />;
       }
     case 'b': return <ImportBuild token={b} />;
+    case 'v': return <SharedModel token={b} key={b} />;
     case 'software': return b ? <SoftwareDetail id={b} key={b} /> : <Software />;
     case 'fly':
       if (b === 'fix') return <Fix id={c} fw={d} key={c} />;
@@ -58,8 +63,52 @@ const NAV = [
   { to: '/me', label: 'My hangar', on: (p) => p.startsWith('/me') },
 ];
 
+/** The new theme grows out of the button you pressed, where the browser supports it. */
+function switchTheme(e, theme) {
+  if (!document.startViewTransition || prefersStill()) { setProfile({ theme }); return; }
+  const b = e.currentTarget.getBoundingClientRect();
+  const x = b.left + b.width / 2;
+  const y = b.top + b.height / 2;
+  const r = Math.hypot(Math.max(x, window.innerWidth - x), Math.max(y, window.innerHeight - y));
+  const vt = document.startViewTransition(() => {
+    document.documentElement.dataset.theme = theme;
+    setProfile({ theme });
+  });
+  vt.ready.then(() => {
+    document.documentElement.animate(
+      { clipPath: [`circle(0 at ${x}px ${y}px)`, `circle(${r}px at ${x}px ${y}px)`] },
+      { duration: 620, easing: getComputedStyle(document.documentElement).getPropertyValue('--ease-soft').trim() || 'ease-out', pseudoElement: '::view-transition-new(root)' },
+    );
+  }).catch(() => {});
+}
+
+/** Content below the fold rises in as it reaches the screen, one piece after another. */
+function useReveal(path) {
+  useEffect(() => {
+    if (prefersStill() || !('IntersectionObserver' in window)) return undefined;
+    const io = new IntersectionObserver((entries) => {
+      let n = 0;
+      for (const en of entries) {
+        if (!en.isIntersecting) continue;
+        en.target.style.transitionDelay = `${Math.min(n, 5) * 45}ms`;
+        en.target.classList.remove('pre');
+        io.unobserve(en.target);
+        n += 1;
+      }
+    }, { rootMargin: '0px 0px -6% 0px' });
+    const els = document.querySelectorAll('main .card, main .list, main .section > h2, main .journey > li');
+    els.forEach((el) => {
+      if (el.closest('.model-grid') || el.getBoundingClientRect().top < window.innerHeight * 0.94) return;
+      el.classList.add('pre');
+      io.observe(el);
+    });
+    return () => io.disconnect();
+  }, [path]);
+}
+
 export default function App() {
   const path = useRoute();
+  useReveal(path);
   const { profile } = useStore();
   const isLight = profile.theme === 'light' || (profile.theme === 'auto' && window.matchMedia('(prefers-color-scheme: light)').matches);
   useEffect(() => {
@@ -78,14 +127,14 @@ export default function App() {
             className="theme-toggle"
             aria-label={t(isLight ? 'Switch to dark mode' : 'Switch to light mode')}
             title={t(isLight ? 'Switch to dark mode' : 'Switch to light mode')}
-            onClick={() => setProfile({ theme: isLight ? 'dark' : 'light' })}
+            onClick={(e) => switchTheme(e, isLight ? 'dark' : 'light')}
           >
             <Icon name={isLight ? 'moon' : 'sun'} />
           </button>
         </div>
       </header>
       <main>
-        {route(path)}
+        <div className="page" key={path}>{route(path)}</div>
         <footer className="foot wrap">
           <div className="wrap" style={{ padding: 0 }}>
             <p>{t('By')} <A to="/about" className="link">Anoorag Sunkari</A>. {t('Open source, MIT licensed.')}</p>

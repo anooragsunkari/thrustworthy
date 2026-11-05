@@ -68,6 +68,7 @@ export function BuildDetail({ id }) {
 
       <div className="btn-row" style={{ marginTop: 14 }}>
         <button className="btn" onClick={start}>{t('Start this build')}</button>
+        <A to={`/builds/${b.id}/3d`} className="btn secondary"><Icon name="cpu" />{t('View in 3D')}</A>
         <Ext href={video.url} className="btn secondary"><Icon name="ext" />{t('Watch on {site}', { site: video.site })}</Ext>
       </div>
 

@@ -38,6 +38,10 @@ A free, phone-first guide for anyone building a multirotor. It starts by asking 
 8. **Share** with a link holding your whole build, plus a community gallery through GitHub.
 9. **Come back** to a dashboard with your builds, progress and badges.
 
+**See it in 3D:** every build generates a to-scale model from its parts' specs. Turn it, zoom it, pull it apart into an exploded view, and tap any part for its specs, price, checks and shops. Each model has a link that opens in any browser, with no sign-up.
+
+**Motion:** interface and 3D movement run on a small spring-physics engine (`src/lib/spring.js`) rather than fixed easing curves, and all of it honors the reduced-motion setting.
+
 ## What it deliberately does not do
 
 It is a static site with no server, so there are no accounts, no live prices, no price-drop alerts and no one-click checkout across shops. Everything you do stays on your device, and you can move it with a backup file. Community discussion happens on GitHub. The gallery only ever shows real builds.
@@ -57,6 +61,9 @@ Pushing to `main` runs the tests and deploys to GitHub Pages.
 
 ```
 src/lib/engine.js         Compatibility checks and flight physics, with no UI code
+src/lib/model.js          Where each part sits in the 3D model, in millimeters
+src/lib/spring.js         Spring physics for every animation
+src/components/Drone3D.jsx  The 3D scene and its interaction
 src/data/parts.js         Parts database
 src/data/builds.js        Reference builds, each one tested against the engine
 src/data/regions.js       Laws, radio limits, shops and currency by country

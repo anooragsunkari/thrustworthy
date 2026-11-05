@@ -4,6 +4,8 @@ import { BUILDS } from '../src/data/builds.js';
 import { SLOTS, FCS, FRAMES, partById } from '../src/data/parts.js';
 import { REGIONS, money, regionById, storeLinks, videoSearch, weightNote } from '../src/data/regions.js';
 import { FW, FW_CHOICES } from '../src/data/firmware.js';
+import { layout, partDetails } from '../src/lib/model.js';
+import { Spring, SOFT, SNAPPY, BOUNCY, springCurve } from '../src/lib/spring.js';
 import { resolve, check, flight, cost, missing, autofill, summarize, toIds } from '../src/lib/engine.js';
 
 const load = (b) => resolve(b.sel);
@@ -234,4 +236,114 @@ test('autofill avoids parts we know are hard to find', () => {
     const s = autofill(resolve({ frame }), { goal: 'freestyle', firmware: 'Betaflight' });
     for (const [k, p] of Object.entries(s)) if (k !== 'frame') assert.notEqual(p.stock, 'low', `${frame} ${k} ${p.m}`);
   }
+});
+
+test('every build lays out in 3D with one model per visible part', () => {
+  for (const b of BUILDS) {
+    const s = load(b);
+    const plan = layout(s);
+    const slots = plan.parts.map((p) => p.slot);
+    for (const key of Object.keys(s)) {
+      if (s[key].sys === 'None') continue;
+      if (s.fc?.includes?.includes(key)) continue;
+      assert.ok(slots.includes(key), `${b.id} draws ${key}`);
+    }
+    for (const p of plan.parts) {
+      assert.equal(p.explode.length, 3, `${b.id} ${p.slot}`);
+      for (const n of p.explode) assert.ok(Number.isFinite(n), `${b.id} ${p.slot} explode`);
+      if (p.pos) for (const n of p.pos) assert.ok(Number.isFinite(n), `${b.id} ${p.slot} pos`);
+      if (p.size) for (const n of Object.values(p.size)) assert.ok(Number.isFinite(n) && n > 0, `${b.id} ${p.slot} size`);
+    }
+  }
+});
+
+test('the 3D model is to scale, with arms and props from real specs', () => {
+  const s = five();
+  const plan = layout(s);
+  const motors = plan.parts.find((p) => p.slot === 'motor');
+  assert.equal(motors.mounts.length, s.frame.mc);
+  const m = motors.mounts[0];
+  assert.ok(Math.abs(Math.hypot(m.x, m.z) * 2 - s.frame.wheel) < 0.01, 'motor to motor equals wheelbase');
+  assert.ok(Math.abs(plan.parts.find((p) => p.slot === 'prop').r - (s.prop.d * 25.4) / 2) < 0.01, 'prop radius');
+  const hex = layout(resolve({ frame: 'f-t680' }));
+  assert.equal(hex.parts[0].mounts.length, 6, 'hex has six arms');
+});
+
+test('a build with no frame has no model yet', () => {
+  assert.equal(layout(resolve({ motor: 'm-eco2207' })), null);
+});
+
+test('the props on a real build do not hit each other', () => {
+  for (const b of BUILDS) {
+    const s = load(b);
+    const { mounts } = layout(s).parts[0];
+    const gap = Math.hypot(mounts[0].x - mounts[1].x, mounts[0].z - mounts[1].z);
+    assert.ok(gap > s.prop.d * 25.4, `${b.id}: ${gap} mm between motors, ${s.prop.d * 25.4} mm props`);
+  }
+});
+
+test('tapping any part gives details, with price and checks', () => {
+  const s = five();
+  for (const key of Object.keys(s)) {
+    const d = partDetails(key, s, { firmware: 'Betaflight', goal: 'freestyle' });
+    assert.ok(d.name && d.role && d.rows.length, key);
+    assert.ok(d.rows.some((r) => r.label === 'Weight'), `${key} weight`);
+    for (const r of d.rows) assert.ok(!/undefined|NaN/.test(r.value), `${key} ${r.label}: ${r.value}`);
+  }
+  assert.equal(partDetails('motor', s, {}).qty, 4);
+  assert.equal(partDetails('gps', s, {}), null);
+  const aio = load(BUILDS[0]);
+  assert.deepEqual(partDetails('fc', aio, {}).includes, ['esc', 'rx']);
+});
+
+const run = (s, seconds, dt = 1 / 60) => { let peak = s.x; for (let i = 0; i < seconds / dt; i += 1) { s.step(dt); peak = Math.max(peak, s.x); } return peak; };
+
+test('springs settle on their target at any frame rate', () => {
+  for (const preset of [SOFT, SNAPPY, BOUNCY]) {
+    for (const dt of [1 / 120, 1 / 60, 1 / 30, 1 / 10]) {
+      const s = new Spring(0, preset).to(1);
+      run(s, 4, dt);
+      assert.ok(Math.abs(s.x - 1) < 0.01, `x=${s.x} at dt=${dt}`);
+      assert.ok(s.settled, `settled at dt=${dt}`);
+    }
+  }
+});
+
+test('a bouncy spring overshoots, and a soft one barely does', () => {
+  assert.ok(run(new Spring(0, BOUNCY).to(1), 2) > 1.05);
+  assert.ok(run(new Spring(0, SOFT).to(1), 3) < 1.05);
+});
+
+test('a moving spring keeps its velocity when the target changes', () => {
+  const s = new Spring(0, SNAPPY).to(1);
+  run(s, 0.1);
+  const v = s.v;
+  s.to(-1);
+  assert.equal(s.v, v);
+  s.step(1 / 240);
+  assert.ok(s.v > 0, 'still heading the old way for a moment');
+});
+
+test('a long stall does not blow up a spring', () => {
+  const s = new Spring(0, BOUNCY).to(1);
+  s.step(30);
+  assert.ok(Number.isFinite(s.x) && Math.abs(s.x) < 3, `x=${s.x}`);
+});
+
+test('a delayed spring waits before it moves', () => {
+  const s = new Spring(0, SNAPPY).to(1, 0.5);
+  run(s, 0.4);
+  assert.equal(s.x, 0);
+  run(s, 1);
+  assert.ok(s.x > 0.9);
+});
+
+test('spring curves become valid CSS easing, starting at 0 and ending at 1', () => {
+  for (const preset of [SOFT, SNAPPY, BOUNCY]) {
+    const c = springCurve(preset);
+    assert.match(c.easing, /^linear\(0, /);
+    assert.match(c.easing, /, 1\)$/);
+    assert.ok(c.seconds > 0.2 && c.seconds < 3, `${c.seconds}`);
+  }
+  assert.ok(springCurve(BOUNCY).peak > 1.05);
 });

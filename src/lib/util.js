@@ -63,6 +63,8 @@ export function decodeBuild(token) {
 }
 export const shareUrl = (project) => `${window.location.origin}${window.location.pathname}#/b/${encodeBuild(project)}`;
 
+export const model3dUrl = (project) => `${window.location.origin}${window.location.pathname}#/v/${encodeBuild(project)}`;
+
 export async function copyText(text) {
   try { await navigator.clipboard.writeText(text); return true; } catch {
     const el = document.createElement('textarea');
