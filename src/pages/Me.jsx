@@ -216,7 +216,7 @@ export function Community() {
             <p className="small muted">{t('This gallery only shows real builds from real people, so it is empty until the first one arrives. Finish a build and post it, and it could be yours.')}</p>
             <div className="btn-row">
               <A to={mine.length ? `/p/${mine[0].id}/share` : '/start'} className="btn">{t(mine.length ? 'Share my build' : 'Start a build')}</A>
-              <Ext href="https://github.com/chahatdeep/thrustworthy/discussions" className="btn secondary"><Icon name="ext" />{t('Join the discussion')}</Ext>
+              <Ext href="https://github.com/lazyonbed/thrustworthy/discussions" className="btn secondary"><Icon name="ext" />{t('Join the discussion')}</Ext>
             </div>
           </div>
         ) : (
