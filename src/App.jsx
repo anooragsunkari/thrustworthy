@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { A, Icon, Logo } from './components/ui.jsx';
-import { setProfile, useStore } from './lib/store.js';
+import { setProfile, useSaveError, useStore } from './lib/store.js';
+import { storageProblem } from './lib/problems.js';
 import { t, useRoute } from './lib/util.js';
 import { prefersStill } from './lib/spring.js';
 import { Home, Start } from './pages/Home.jsx';
@@ -116,6 +117,8 @@ export default function App() {
   const path = useRoute();
   useReveal(path);
   const { profile } = useStore();
+  const saveError = useSaveError();
+  const saveProblem = saveError ? storageProblem(saveError) : null;
   const isLight = profile.theme === 'light' || (profile.theme === 'auto' && window.matchMedia('(prefers-color-scheme: light)').matches);
   useEffect(() => {
     document.documentElement.dataset.theme = profile.theme || 'light';
@@ -140,6 +143,14 @@ export default function App() {
         </div>
       </header>
       <main>
+        {saveProblem && (
+          <div className="wrap" style={{ paddingTop: 12 }}>
+            <div className="note warn" role="alert">
+              <b>{t(saveProblem.title)}</b>{t(saveProblem.body)}
+              {!path.startsWith('/me') && <div className="fix"><A to="/me" className="link">{t('Go to Me to download a backup')}</A></div>}
+            </div>
+          </div>
+        )}
         <div className="page" key={path}>{route(path)}</div>
         <footer className="foot wrap">
           <div className="wrap" style={{ padding: 0 }}>

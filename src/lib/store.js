@@ -32,10 +32,40 @@ let state = read();
 registerCustom(cleanSharedParts(state.customParts));
 const listeners = new Set();
 
+// Null while saving works; otherwise the error, so the page can say why nothing is being kept.
+let saveError = null;
+const saveListeners = new Set();
+function setSaveError(err) {
+  if (err === saveError) return;
+  saveError = err;
+  saveListeners.forEach((l) => l());
+}
+export const useSaveError = () => useSyncExternalStore((l) => { saveListeners.add(l); return () => saveListeners.delete(l); }, () => saveError);
+
+try {
+  localStorage.setItem(`${KEY}:probe`, '1');
+  localStorage.removeItem(`${KEY}:probe`);
+} catch (err) {
+  saveError = err;
+}
+
 function commit(next) {
   state = next;
-  try { localStorage.setItem(KEY, JSON.stringify(state)); } catch { /* private mode: keep working in memory */ }
+  try {
+    localStorage.setItem(KEY, JSON.stringify(state));
+    setSaveError(null);
+  } catch (err) {
+    setSaveError(err);
+  }
   listeners.forEach((l) => l());
+}
+
+// Without this, browsers may clear the site's data to free space, and Safari does after 7 days unused.
+let askedToKeep = false;
+function keepData() {
+  if (askedToKeep || !globalThis.navigator?.storage?.persist) return;
+  askedToKeep = true;
+  navigator.storage.persisted().then((yes) => yes || navigator.storage.persist()).catch(() => {});
 }
 
 export const getState = () => state;
@@ -51,6 +81,7 @@ export function createProject({ name, goal, firmware, sel, fromBuild = null, pay
   const id = newId();
   const project = { id, name: name || 'My build', goal: goal || 'freestyle', firmware: firmware || 'Betaflight', sel: sel || {}, payload, fromBuild, created: Date.now(), updated: Date.now(), have: {}, extras: {}, steps: {}, software: {}, shared: false };
   commit({ ...state, projects: { ...state.projects, [id]: project } });
+  keepData();
   return id;
 }
 
@@ -83,6 +114,7 @@ export function addCustomPart(part) {
   const saved = { ...part, id };
   registerCustom({ [id]: saved });
   commit({ ...state, customParts: { ...state.customParts, [id]: saved } });
+  keepData();
   return saved;
 }
 
@@ -127,6 +159,7 @@ export function importData(text) {
   if (!s || typeof s !== 'object' || !s.profile) throw new Error('Not a Thrustworthy backup');
   registerCustom(cleanSharedParts(s.customParts));
   commit({ ...BLANK, ...s, profile: { ...BLANK.profile, ...s.profile } });
+  keepData();
 }
 
 export function resetAll() {
@@ -137,7 +170,9 @@ export function resetAll() {
 const DB = 'thrustworthy-photos';
 function db() {
   return new Promise((resolve, reject) => {
-    const req = indexedDB.open(DB, 1);
+    if (!globalThis.indexedDB) { reject(new DOMException('Storage is not available', 'SecurityError')); return; }
+    let req;
+    try { req = indexedDB.open(DB, 1); } catch (err) { reject(err); return; }
     req.onupgradeneeded = () => req.result.createObjectStore('photos');
     req.onsuccess = () => resolve(req.result);
     req.onerror = () => reject(req.error);
@@ -150,26 +185,62 @@ async function tx(mode, fn) {
     const out = fn(t.objectStore('photos'));
     t.oncomplete = () => resolve(out.result);
     t.onerror = () => reject(t.error);
+    // A full disk aborts the transaction instead of raising onerror.
+    t.onabort = () => reject(t.error || new DOMException('The save was cancelled', 'AbortError'));
   });
 }
-export const savePhoto = (key, dataUrl) => tx('readwrite', (s) => s.put(dataUrl, key));
+// Each photo has a "#meta" record with its file name and size, so picking the same file twice can be spotted.
+const META = '#meta';
+export async function savePhoto(key, dataUrl, file) {
+  await tx('readwrite', (s) => {
+    s.put({ name: file?.name || '', size: file?.size || 0 }, key + META);
+    return s.put(dataUrl, key);
+  });
+  keepData();
+}
 export const loadPhoto = (key) => tx('readonly', (s) => s.get(key));
-export const deletePhoto = (key) => tx('readwrite', (s) => s.delete(key));
+export const deletePhoto = (key) => tx('readwrite', (s) => { s.delete(key + META); return s.delete(key); });
+
+/** The key of a photo in this build that came from the same file, or null. */
+export async function findSamePhoto(pid, file) {
+  try {
+    const d = await db();
+    return await new Promise((resolve) => {
+      const req = d.transaction('photos', 'readonly').objectStore('photos').openCursor(IDBKeyRange.bound(`${pid}:`, `${pid}:￿`));
+      req.onsuccess = () => {
+        const c = req.result;
+        if (!c) { resolve(null); return; }
+        const k = String(c.key);
+        if (k.endsWith(META) && c.value?.name === file.name && c.value?.size === file.size) { resolve(k.slice(0, -META.length)); return; }
+        c.continue();
+      };
+      req.onerror = () => resolve(null);
+    });
+  } catch {
+    return null;
+  }
+}
 
 export function shrinkImage(file, max = 1000) {
   return new Promise((resolve, reject) => {
     const url = URL.createObjectURL(file);
     const img = new Image();
     img.onload = () => {
-      const k = Math.min(1, max / Math.max(img.width, img.height));
-      const c = document.createElement('canvas');
-      c.width = Math.round(img.width * k);
-      c.height = Math.round(img.height * k);
-      c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
-      URL.revokeObjectURL(url);
-      resolve(c.toDataURL('image/jpeg', 0.82));
+      try {
+        if (!img.width || !img.height) throw new Error('The image has no size');
+        const k = Math.min(1, max / Math.max(img.width, img.height));
+        const c = document.createElement('canvas');
+        c.width = Math.round(img.width * k);
+        c.height = Math.round(img.height * k);
+        c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+        resolve(c.toDataURL('image/jpeg', 0.82));
+      } catch (err) {
+        reject(err);
+      } finally {
+        URL.revokeObjectURL(url);
+      }
     };
-    img.onerror = reject;
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('The browser could not decode the image')); };
     img.src = url;
   });
 }

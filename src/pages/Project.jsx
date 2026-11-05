@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { A, Ext, Icon, PageHead, Progress, useToast } from '../components/ui.jsx';
-import { useStore, createProject, deleteProject, duplicateProject, keepCustomParts, deletePhoto, loadPhoto, savePhoto, setProfile, shrinkImage, toggleIn, updateProject } from '../lib/store.js';
+import { useStore, createProject, deleteProject, duplicateProject, findSamePhoto, keepCustomParts, deletePhoto, loadPhoto, savePhoto, setProfile, shrinkImage, toggleIn, updateProject } from '../lib/store.js';
+import { photoDuplicate, photoPrecheck, photoReadProblem, photoSaveProblem } from '../lib/problems.js';
 import { copyText, decodeBuild, downloadFile, go, grams, shareUrl, t } from '../lib/util.js';
 import { SLOTS, partName } from '../data/parts.js';
 import { GEAR } from '../data/personas.js';
@@ -170,25 +171,39 @@ export function Parts({ id }) {
   );
 }
 
-function StepPhoto({ pid, sid }) {
+function StepPhoto({ pid, sid, titleOf }) {
   const key = `${pid}:${sid}`;
   const [src, setSrc] = useState(null);
+  const [problem, setProblem] = useState(null);
   const ref = useRef(null);
   useEffect(() => { let on = true; loadPhoto(key).then((d) => on && setSrc(d || null)).catch(() => {}); return () => { on = false; }; }, [key]);
   const pick = async (e) => {
     const f = e.target.files?.[0];
+    // Clear the picker so choosing the same file again still fires a change.
+    e.target.value = '';
     if (!f) return;
-    const data = await shrinkImage(f);
-    await savePhoto(key, data);
+    setProblem(null);
+    const early = photoPrecheck(f);
+    if (early) { setProblem(early); return; }
+    const same = await findSamePhoto(pid, f);
+    if (same && same !== key) { setProblem(photoDuplicate(f, titleOf(same.slice(pid.length + 1)))); return; }
+    let data;
+    try { data = await shrinkImage(f); } catch { setProblem(photoReadProblem(f)); return; }
+    try { await savePhoto(key, data, f); } catch (err) { setProblem(photoSaveProblem(err)); return; }
     setSrc(data);
+  };
+  const remove = async () => {
+    setProblem(null);
+    try { await deletePhoto(key); setSrc(null); } catch (err) { setProblem(photoSaveProblem(err, 'removed')); }
   };
   return (
     <div style={{ marginTop: 10 }}>
       <input ref={ref} type="file" accept="image/*" hidden onChange={pick} />
+      {problem && <div className="note err" role="alert" style={{ marginBottom: 8 }}><b>{t(problem.title)}</b>{t(problem.body)}</div>}
       {src ? (
         <>
           <img src={src} alt={t('Your progress photo')} className="photo" />
-          <button className="link small" style={{ marginTop: 4 }} onClick={async () => { await deletePhoto(key); setSrc(null); }}>{t('Remove photo')}</button>
+          <button className="link small" style={{ marginTop: 4 }} onClick={remove}>{t('Remove photo')}</button>
         </>
       ) : <button className="btn secondary small" onClick={() => ref.current.click()}><Icon name="camera" />{t('Add a progress photo')}</button>}
     </div>
@@ -236,7 +251,7 @@ export function Assemble({ id }) {
                           <ol className="numbered small">{s.do.map((d) => <li key={d}>{t(d)}</li>)}</ol>
                           {s.tip && <div className="note ok" style={{ marginTop: 10 }}><b>{t('Tip')}</b>{t(s.tip)}</div>}
                           {s.mistake && <div className="note warn" style={{ marginTop: 8 }}><b>{t('Common mistake')}</b>{t(s.mistake)}</div>}
-                          <StepPhoto pid={id} sid={s.id} />
+                          <StepPhoto pid={id} sid={s.id} titleOf={(x) => t(steps.find((st) => st.id === x)?.title)} />
                         </div>
                       </details>
                     </div>
