@@ -437,7 +437,7 @@ export function ShareBuild({ id }) {
   const sel = loadBuild(p);
   const f = flight(sel, { goal: p.goal });
   const body = encodeURIComponent(`Build link: ${url}\n\nFirmware: ${p.firmware}\n${f ? `Weight: ${Math.round(f.auw)} g\n` : ''}\nWhat I learned:\n\nPhotos (drag them in):\n`);
-  const issue = `https://github.com/Anooragsunkari/thrustworthy/issues/new?title=${encodeURIComponent(`Build: ${p.name}`)}&labels=gallery&body=${body}`;
+  const issue = `https://github.com/anooragsunkari/thrustworthy/issues/new?title=${encodeURIComponent(`Build: ${p.name}`)}&labels=gallery&body=${body}`;
   const nativeShare = async () => {
     updateProject(id, { shared: true });
     if (navigator.share) {
