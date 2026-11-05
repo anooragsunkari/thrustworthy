@@ -64,7 +64,7 @@ export function About() {
           <div>
             <h3>Anoorag Sunkari</h3>
             <p className="small muted">{t('Author')}</p>
-            <div style={{ marginTop: 6 }}><Ext href="https://github.com/lazyonbed"><span className="small">github.com/lazyonbed</span></Ext></div>
+            <div style={{ marginTop: 6 }}><Ext href="https://github.com/Anooragsunkari"><span className="small">github.com/Anooragsunkari</span></Ext></div>
           </div>
           <div>
             <h3>Chahat Deep Singh</h3>
@@ -84,7 +84,7 @@ export function About() {
       </section>
       <section className="section btn-row">
         <A to="/about/numbers" className="btn secondary">{t('How we calculate')}</A>
-        <Ext href="https://github.com/lazyonbed/thrustworthy" className="btn secondary"><Icon name="ext" />{t('Source code')}</Ext>
+        <Ext href="https://github.com/Anooragsunkari/thrustworthy" className="btn secondary"><Icon name="ext" />{t('Source code')}</Ext>
       </section>
     </div>
   );
