@@ -2,7 +2,7 @@
 
 **Build a drone you can trust, from first idea to first flight.**
 
-**Live:** [chahatdeep.github.io/thrustworthy](https://chahatdeep.github.io/thrustworthy/)
+**Live:** [lazyonbed.github.io/thrustworthy](https://lazyonbed.github.io/thrustworthy/)
 
 A free, phone-first guide for anyone building a multirotor. It starts by asking who you are, where you fly and what you want to do, then adapts everything to that.
 
