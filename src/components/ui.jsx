@@ -36,6 +36,12 @@ export function Icon({ name, className }) {
   return <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={PATHS[name]} /></svg>;
 }
 
+// Each project's own logo, unaltered, on a dark plate because most were drawn for dark backgrounds.
+const FIRMWARE_LOGOS = { Betaflight: 'betaflight-dark.svg', INAV: 'inav.png', ArduPilot: 'ardupilot.png', PX4: 'px4.svg' };
+export const FirmwareLogo = ({ id, name }) => (FIRMWARE_LOGOS[id]
+  ? <span className="fw-logo"><img src={`logos/${FIRMWARE_LOGOS[id]}`} alt={t('{name} logo', { name: name || id })} loading="lazy" /></span>
+  : null);
+
 export const Logo = () => (
   <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true">
     <path d="M10 10l12 12M22 10L10 22" /><circle cx="8.500" cy="8.500" r="5" /><circle cx="23.500" cy="8.500" r="5" /><circle cx="8.500" cy="23.500" r="5" /><circle cx="23.500" cy="23.500" r="5" /><rect x="13" y="13" width="6" height="6" rx="1.500" fill="currentColor" stroke="none" />

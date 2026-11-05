@@ -228,7 +228,7 @@ button.li:hover, a.li:hover { background: color-mix(in srgb, var(--sunken) 55%, 
 .li .right, .pick .right { flex: none; text-align: right; white-space: nowrap; }
 .back-link { text-decoration: none; display: inline-flex; align-items: center; gap: 2px; min-height: 36px; margin-bottom: 4px; font-size: 16px; }
 .back-link svg { width: 17px; height: 17px; }
-.li svg.chev { width: 15px; height: 15px; color: var(--faint); flex: none; }
+svg.chev { width: 15px; height: 15px; color: var(--faint); flex: none; }
 .dot { flex: none; width: 9px; height: 9px; border-radius: 50%; background: var(--sunken); }
 .dot.ok { background: var(--ok); } .dot.warn { background: var(--warn); } .dot.err { background: var(--err); }
 .bullets li { position: relative; padding-left: 16px; margin-top: 7px; }
@@ -382,3 +382,10 @@ details > summary::after { transition: transform var(--dur-bouncy) var(--ease-bo
 .pick-row .pick { flex: 1 1 0; min-width: 0; }
 .pick-row > .icon-btn { margin-bottom: 8px; }
 button.own-btn { border: 0; cursor: pointer; min-height: 30px; font-family: inherit; color: var(--ink); flex: none; }
+
+/* Firmware logos. The plate stays dark in both themes, so each logo keeps its own colors. */
+.fw-logo { display: inline-grid; place-items: center; flex: none; width: 84px; height: 44px; border-radius: 10px; background: #111114; vertical-align: middle; }
+.fw-logo img { display: block; width: 68px; height: 34px; object-fit: contain; }
+
+/* A card can also be a row, with its arrow at the end. */
+.card.row { display: flex; align-items: center; gap: 12px; }

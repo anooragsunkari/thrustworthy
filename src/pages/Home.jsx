@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { A, BuildCard, HeroDrone, Icon, Progress } from '../components/ui.jsx';
+import { A, BuildCard, HeroDrone, Icon, Progress, FirmwareLogo } from '../components/ui.jsx';
 import { useStore, setProfile, createProject } from '../lib/store.js';
 import { go, t } from '../lib/util.js';
 import { PERSONAS, LEVELS, personaById } from '../data/personas.js';
@@ -117,7 +117,7 @@ export function Home() {
         <div className="list">
           {['Betaflight', 'INAV', 'ArduPilot', 'PX4', 'Cleanflight'].map((id) => (
             <A key={id} to={`/software/${id}`} className="li">
-              <span className="grow"><div className="title">{FW[id].name}</div><div className="sub">{t(FW[id].tag)}</div></span>
+              <FirmwareLogo id={id} name={FW[id].name} /><span className="grow"><div className="title">{FW[id].name}</div><div className="sub">{t(FW[id].tag)}</div></span>
               <Icon name="chev" className="chev" />
             </A>
           ))}
@@ -184,7 +184,7 @@ export function Start({ step }) {
             </button>
             {FW_CHOICES.map((id) => (
               <button key={id} className="li" onClick={() => { setProfile({ firmware: id === 'Cleanflight' ? 'Betaflight' : id }); nextOf('firmware'); }}>
-                <span className="grow"><div className="title">{FW[id].name}</div><div className="sub">{t(FW[id].tag)}</div></span><Icon name="chev" className="chev" />
+                <FirmwareLogo id={id} name={FW[id].name} /><span className="grow"><div className="title">{FW[id].name}</div><div className="sub">{t(FW[id].tag)}</div></span><Icon name="chev" className="chev" />
               </button>
             ))}
           </div>

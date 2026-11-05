@@ -90,3 +90,7 @@ Part figures are typical values and prices are rough estimates. Legal summaries 
 ## License
 
 MIT, copyright Anoorag Sunkari.
+
+## Firmware logos
+
+The logos in `public/logos` belong to their projects and come from their official repositories: [Betaflight](https://github.com/betaflight/.github), [INAV](https://github.com/iNavFlight/inav-configurator), [ArduPilot](https://github.com/ArduPilot/ardupilot_wiki) and [PX4](https://github.com/PX4/PX4-Autopilot). They only identify each project, and Thrustworthy is not affiliated with any of them. The Betaflight file has its empty margin trimmed. Nothing else is changed.
