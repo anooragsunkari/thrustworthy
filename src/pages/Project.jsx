@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { A, Ext, Icon, PageHead, Progress, useToast } from '../components/ui.jsx';
-import { useStore, createProject, deleteProject, duplicateProject, findSamePhoto, keepCustomParts, deletePhoto, loadPhoto, savePhoto, setProfile, shrinkImage, toggleIn, updateProject } from '../lib/store.js';
-import { photoDuplicate, photoPrecheck, photoReadProblem, photoSaveProblem } from '../lib/problems.js';
+import { useStore, createProject, deleteProject, duplicateProject, findSamePhoto, keepCustomParts, deletePhoto, loadPhoto, readPhoto, savePhoto, setProfile, toggleIn, updateProject } from '../lib/store.js';
+import { isHeic, photoDuplicate, photoPrecheck, photoReadProblem, photoSaveProblem } from '../lib/problems.js';
 import { copyText, decodeBuild, downloadFile, go, grams, shareUrl, t } from '../lib/util.js';
 import { SLOTS, partName } from '../data/parts.js';
 import { GEAR } from '../data/personas.js';
@@ -175,6 +175,7 @@ function StepPhoto({ pid, sid, titleOf }) {
   const key = `${pid}:${sid}`;
   const [src, setSrc] = useState(null);
   const [problem, setProblem] = useState(null);
+  const [converting, setConverting] = useState(false);
   const ref = useRef(null);
   useEffect(() => { let on = true; loadPhoto(key).then((d) => on && setSrc(d || null)).catch(() => {}); return () => { on = false; }; }, [key]);
   const pick = async (e) => {
@@ -188,7 +189,14 @@ function StepPhoto({ pid, sid, titleOf }) {
     const same = await findSamePhoto(pid, f);
     if (same && same !== key) { setProblem(photoDuplicate(f, titleOf(same.slice(pid.length + 1)))); return; }
     let data;
-    try { data = await shrinkImage(f); } catch { setProblem(photoReadProblem(f)); return; }
+    try {
+      data = await readPhoto(f, isHeic(f), () => setConverting(true));
+    } catch (err) {
+      setProblem(photoReadProblem(f, err?.stage));
+      return;
+    } finally {
+      setConverting(false);
+    }
     try { await savePhoto(key, data, f); } catch (err) { setProblem(photoSaveProblem(err)); return; }
     setSrc(data);
   };
@@ -198,9 +206,11 @@ function StepPhoto({ pid, sid, titleOf }) {
   };
   return (
     <div style={{ marginTop: 10 }}>
-      <input ref={ref} type="file" accept="image/*" hidden onChange={pick} />
+      <input ref={ref} type="file" accept="image/*,.heic,.heif" hidden onChange={pick} />
       {problem && <div className="note err" role="alert" style={{ marginBottom: 8 }}><b>{t(problem.title)}</b>{t(problem.body)}</div>}
-      {src ? (
+      {converting ? (
+        <div className="small muted" role="status">{t('Converting your iPhone photo. This can take a few seconds.')}</div>
+      ) : src ? (
         <>
           <img src={src} alt={t('Your progress photo')} className="photo" />
           <button className="link small" style={{ marginTop: 4 }} onClick={remove}>{t('Remove photo')}</button>

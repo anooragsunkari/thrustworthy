@@ -27,13 +27,19 @@ export function photoPrecheck(file) {
   return null;
 }
 
-/** The browser could not turn the file into a picture. */
-export function photoReadProblem(file) {
+/** The file could not be turned into a picture. `stage` says which step failed. */
+export function photoReadProblem(file, stage = 'read') {
   const name = file?.name || 'This photo';
-  if (isHeic(file)) {
+  if (stage === 'heic-download') {
     return {
-      title: 'This browser cannot open HEIC photos',
-      body: `"${name}" is in HEIC, the format iPhones save photos in by default, and this browser cannot read it. Add the photo from the iPhone itself, which converts it to JPEG for you, or convert it to JPEG first. On an iPhone you can also choose Settings, Camera, Formats, Most Compatible.`,
+      title: 'The HEIC converter could not be downloaded',
+      body: `"${name}" is a HEIC photo, the format iPhones use by default. This browser cannot open HEIC on its own, so the site downloads a converter the first time you add one, and that download failed. Check your internet connection and try again.`,
+    };
+  }
+  if (stage === 'heic-convert' || isHeic(file)) {
+    return {
+      title: 'This HEIC photo could not be converted',
+      body: `"${name}" could not be turned into a JPEG. The file may be damaged or only partly downloaded, for example still syncing from iCloud. Open it once in your photos app and try again, or export it as a JPEG.`,
     };
   }
   if (file?.size > 25 * 1048576) {

@@ -24,7 +24,8 @@ test('a file that is not an image names its type', () => {
 
 test('read failures explain HEIC, size, or damage', () => {
   assert.ok(isHeic(file('IMG_1.HEIC', '')));
-  assert.match(photoReadProblem(file('IMG_1.heic', 'image/heic')).title, /HEIC/);
+  assert.match(photoReadProblem(file('IMG_1.heic', 'image/heic'), 'heic-convert').title, /could not be converted/);
+  assert.match(photoReadProblem(file('IMG_1.heic', 'image/heic'), 'heic-download').body, /internet connection/);
   assert.match(photoReadProblem(file('huge.jpg', 'image/jpeg', 40 * 1048576)).body, /40 MB/);
   assert.match(photoReadProblem(file('bad.jpg', 'image/jpeg')).body, /damaged/);
 });
