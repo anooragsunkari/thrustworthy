@@ -521,3 +521,11 @@ test('payload can push a build over a legal limit', () => {
   const cam = resolve({ frame: 'f-m65', motor: 'm-ex0802' }, [{ name: 'Depth camera', g: 50 }]);
   assert.ok(buildFacts(cam, null).camera, 'a camera payload counts as a camera');
 });
+
+test('a spring keeps real time on a slow device', () => {
+  const fast = new Spring(0, SNAPPY).to(1);
+  const slow = new Spring(0, SNAPPY).to(1);
+  for (let i = 0; i < 60; i += 1) fast.step(1 / 60);
+  for (let i = 0; i < 8; i += 1) slow.step(1 / 8);
+  assert.ok(Math.abs(fast.x - slow.x) < 0.02, `60 fps ${fast.x}, 8 fps ${slow.x}`);
+});

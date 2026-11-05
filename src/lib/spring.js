@@ -7,7 +7,7 @@ export const SNAPPY = { k: 320, c: 32 };    // quick, settles fast
 export const BOUNCY = { k: 240, c: 16 };    // a visible overshoot
 
 const STEP = 1 / 240;
-const MAX_DT = 1 / 20; // after a stalled frame, slow down instead of exploding
+const MAX_DT = 1 / 3; // slow devices keep real time, and a long stall cannot blow up the physics
 
 export class Spring {
   constructor(value = 0, preset = SNAPPY) {
