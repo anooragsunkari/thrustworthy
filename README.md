@@ -1,53 +1,89 @@
-# Multirotor.build
+# Thrustworthy
 
-Interactive multi-rotor drone configurator with real-time compatibility checking, physics-based flight time estimation, and 3D component visualization.
+**Build a drone you can trust, from first idea to first flight.**
 
-**Live:** [lazyonbed.github.io/Multirotor-build](https://lazyonbed.github.io/Multirotor-build)
+**Live:** [lazyonbed.github.io/thrustworthy](https://lazyonbed.github.io/thrustworthy/)
 
-## Features
+A free, phone-first guide for anyone building a multirotor. It starts by asking who you are, where you fly and what you want to do, then adapts everything to that.
 
-**3D Visualization** — 360° interactive drone viewer built with Three.js. Components appear as you select them. FC and ESC can be independently positioned above, between, or below the frame plates. Battery position and frame standoff height adapt dynamically.
+**Author:** [Anoorag Sunkari](https://github.com/lazyonbed), who created the original Multirotor.build configurator, its parts database and its flight model.
+**Contributor and maintainer:** [Chahat Deep Singh](https://github.com/chahatdeep).
 
-**Compatibility Engine** — Real-time validation across 15+ rules: voltage ranges, current limits, C-rating adequacy, ESC/FC protocol matching, mounting pattern compatibility, VTX/camera ecosystem locks, and thrust-to-weight thresholds. Results are color-coded green (compatible), amber (warning), red (error).
+## Who it is for
 
-**Flight Physics** — Momentum-theory hover power: `P = T^1.5 / √(2ρAN) / FM`. Includes Peukert discharge correction (k=1.05 LiPo, k=1.02 Li-Ion), ISA atmosphere density model, figure-of-merit prop efficiency, CG shift penalties from component placement, and frame material stiffness effects on vibration damping.
+| You are | You get |
+|---|---|
+| New and curious | Plain language, simulator-first advice, a tiny safe first build |
+| An FPV pilot | Live thrust, current and tip-speed checks across freestyle, racing and long-range |
+| A filmmaker | Cinewhoops and sub-250 g rigs with honest flight times |
+| A researcher or student | PX4 and ArduPilot, ROS 2, companion computers, simulation first, CSV parts lists |
+| A teacher | Cheap repairable frames and step tracking on students' own phones |
+| A professional | RTK, heavy lift, missions, and the rules that apply to commercial work |
 
-**Frame Materials** — Carbon fiber, aluminum 6061, 3D-printed TPU, fiberglass/FR4, and titanium. Each material has density and stiffness factors that affect frame weight, AUW, thrust-to-weight, and propeller efficiency through the figure of merit.
+**Firmware:** Betaflight, INAV, ArduPilot and PX4 each have their own setup steps, checks and troubleshooting. Anyone asking about Cleanflight gets told plainly what to use instead.
 
-**Component Database** — 100+ real OEM parts across 9 categories: motors, ESCs, flight controllers, batteries, propellers, VTX, cameras, receivers, and GPS modules from T-Motor, EMAX, iFlight, Holybro, SpeedyBee, DJI, BetaFPV, and more.
+**Country:** the US, Canada, the UK, the EU, China, India, Australia, Japan and Brazil each get their own currency, shops, drone laws and radio limits. The checker warns about things like a sub-GHz radio that is illegal where you live.
 
-## Supported Configurations
+The site loads no Google Fonts or foreign CDNs, so it does not depend on services that are often blocked.
 
-11 frame types (true-x, stretched-x, deadcat, h-frame, plus, v-shape, hex, octo, Y6, tricopter, bicopter) across 15 size classes from 65mm whoops to 15"+ industrial platforms.
+## The journey
 
-## Quick Start
+1. **Find** your starting point in four quick questions, or just browse.
+2. **Learn** from reference builds, each with cost, weight, flight time, and what it can and cannot do.
+3. **Configure** with a checker covering voltage, fit, current, tip speed, firmware, serial ports and local law. Add payload such as a camera, and enter your own parts when one is not listed.
+4. **Get parts** with local prices and shops, the extras first-timers forget, and export as text, PDF, CSV or a link.
+5. **Build** with a checklist generated for your exact parts, a wiring diagram showing power, motor order and each connection, tips, common mistakes and progress photos.
+6. **Set up** firmware with step-by-step guides linked to the official docs, plus a starter settings file with your ports and battery limits filled in.
+7. **Fly** with an "Am I legal?" list for your exact build and country, a pre-flight checklist that works offline, a flight log, a troubleshooter that goes one fix at a time, and a spares list with repair steps.
+8. **Share** with a link holding your whole build, plus a community gallery through GitHub.
+9. **Come back** to a dashboard with your builds, progress and badges, and compare any two builds side by side before you change anything.
+
+**See it in 3D:** every build generates a to-scale model from its parts' specs. Turn it, zoom it, pull it apart into an exploded view, and tap any part for its specs, price, checks and shops. Each model has a link that opens in any browser, with no sign-up.
+
+**Motion:** interface and 3D movement run on a small spring-physics engine (`src/lib/spring.js`) rather than fixed easing curves, and all of it honors the reduced-motion setting.
+
+## What it deliberately does not do
+
+It is a static site with no server, so there are no accounts, no live prices, no price-drop alerts and no one-click checkout across shops. Everything you do stays on your device, and you can move it with a backup file. Community discussion happens on GitHub. The gallery only ever shows real builds.
+
+## Run it
 
 ```bash
-git clone https://github.com/lazyonbed/multirotor-build.git
-cd multirotor-build
 npm install
 npm run dev
+npm test
+npm run build
 ```
 
-Open `http://localhost:5173` in your browser.
+Pushing to `main` runs the tests and deploys to GitHub Pages.
 
-## Build & Deploy
+## Project layout
 
-```bash
-npm run build        # Creates dist/ folder
-npm run preview      # Preview the production build locally
+```
+src/lib/engine.js         Compatibility checks and flight physics, with no UI code
+src/lib/model.js          Where each part sits in the 3D model, in millimeters
+src/lib/spring.js         Spring physics for every animation
+src/components/Drone3D.jsx  The 3D scene and its interaction
+src/data/parts.js         Parts database
+src/data/builds.js        Reference builds, each one tested against the engine
+src/data/regions.js       Laws, radio limits, shops and currency by country
+src/data/legal.js         The "Am I legal?" checklist for one build
+src/data/spares.js        What breaks, how many spares to keep, and how to repair it
+src/lib/wiring.js         Motor order, ports and wires for one build
+src/lib/settings.js       Starter settings files, one maker per firmware
+src/lib/compare.js        Two builds side by side
+src/lib/custom.js         Validation for parts people enter themselves
+src/data/firmware.js      Setup guides and official links
+src/data/assembly.js      Build steps, selected by the features of your build
+src/data/troubleshoot.js  Fixes, ordered by how likely they are
 ```
 
-Pushing to `main` triggers automatic deployment to GitHub Pages via the included GitHub Actions workflow.
+## Contributing
 
-## Contributing Components
+Specs, prices, laws and links all go out of date, and corrections are very welcome. Please include a source. To add a part, add it to `src/data/parts.js`.
 
-Fork the repo, add your component JSON to `src/App.jsx` in the appropriate database array (MOTORS, ESCS, FCS, etc.), and open a PR. Each component type has a defined schema — see the Upload modal in the app for required fields.
-
-## Tech Stack
-
-React 18, Three.js, Vite, DM Sans + DM Mono typography. Single-file architecture with no external state management. Light/dark theme toggle throughout.
+Part figures are typical values and prices are rough estimates. Legal summaries were checked in November 2026 and are not legal advice.
 
 ## License
 
-MIT
+MIT, copyright Anoorag Sunkari.
