@@ -2,11 +2,11 @@
 
 **Build a drone you can trust, from first idea to first flight.**
 
-**Live:** [lazyonbed.github.io/thrustworthy](https://lazyonbed.github.io/thrustworthy/)
+**Live:** [anooragsunkari.github.io/thrustworthy](https://anooragsunkari.github.io/thrustworthy/)
 
 A free, phone-first guide for anyone building a multirotor. It starts by asking who you are, where you fly and what you want to do, then adapts everything to that.
 
-**Author:** [Anoorag Sunkari](https://github.com/lazyonbed), who created the original Multirotor.build configurator, its parts database and its flight model.
+**Author:** [Anoorag Sunkari](https://github.com/Anooragsunkari), who created the original Multirotor.build configurator, its parts database and its flight model.
 **Contributor and maintainer:** [Chahat Deep Singh](https://github.com/chahatdeep).
 
 ## Who it is for
