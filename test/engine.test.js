@@ -4,7 +4,7 @@ import { BUILDS } from '../src/data/builds.js';
 import { SLOTS, FCS, FRAMES, partById } from '../src/data/parts.js';
 import { REGIONS, money, regionById, storeLinks, videoSearch, weightNote } from '../src/data/regions.js';
 import { FW, FW_CHOICES } from '../src/data/firmware.js';
-import { layout, partDetails } from '../src/lib/model.js';
+import { layout, partDetails, view3dHelp } from '../src/lib/model.js';
 import { Spring, SOFT, SNAPPY, BOUNCY, springCurve } from '../src/lib/spring.js';
 import { cleanCustom, cleanPayload, cleanSharedParts, fieldsFor, formValues, CUSTOM_FIELDS, CUSTOM_ID } from '../src/lib/custom.js';
 import { brokenBuilds, buildAround, buildsUsing, cleanOwned, EVERY_BUILD_GEAR, gearOwned, MAX_OWNED, ownedList, shopping } from '../src/lib/owned.js';
@@ -969,4 +969,16 @@ test('everything with an icon points at one that exists', () => {
   need(STAGE_ICON, stages({ id: 'a', goal: 'freestyle', firmware: 'Betaflight', sel: {} }).list.map((x) => x.key), 'stage');
   for (const b of BUILDS) assert.ok(PATHS[GOAL_ICON[b.goal]], `build ${b.id}`);
   for (const p of PERSONAS) assert.ok(PATHS[p.icon], `persona ${p.id}`);
+});
+
+test('3D failure help names the browser and only blames graphics when graphics failed', () => {
+  const edge = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/156.0.0.0 Safari/537.36 Edg/156.0.0.0';
+  const chrome = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/156.0.0.0 Safari/537.36';
+  const safari = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 14_0) AppleWebKit/605.1.15 Version/18.0 Safari/605.1.15';
+  const gpu = { gpu: true };
+  assert.ok(view3dHelp(gpu, edge).steps.some((s) => s.includes('edge://settings/system')));
+  assert.ok(view3dHelp(gpu, edge).steps.every((s) => !s.includes('chrome://')));
+  assert.ok(view3dHelp(gpu, chrome).steps.some((s) => s.includes('chrome://settings/system')));
+  assert.ok(view3dHelp(gpu, safari).steps.every((s) => !s.includes('://')));
+  assert.deepEqual(view3dHelp(new Error('a bug'), edge), { gpu: false, steps: [] });
 });

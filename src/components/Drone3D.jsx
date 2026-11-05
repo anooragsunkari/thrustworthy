@@ -2,7 +2,7 @@
 // Three.js is large, so this chunk only loads on the 3D page.
 import React, { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
-import { layout } from '../lib/model.js';
+import { layout, view3dHelp } from '../lib/model.js';
 import { t } from '../lib/util.js';
 import { animate, BOUNCY, prefersStill, SNAPPY, SOFT, Spring } from '../lib/spring.js';
 
@@ -24,9 +24,24 @@ function palette(dark) {
   };
 }
 
+// Some graphics drivers refuse the nicer settings but accept plainer ones.
+const GL_OPTIONS = [{ antialias: true }, { antialias: false }, { antialias: false, powerPreference: 'low-power' }];
+
+function createRenderer(canvas) {
+  let failure;
+  for (const options of GL_OPTIONS) {
+    try {
+      return new THREE.WebGLRenderer({ canvas, alpha: true, ...options });
+    } catch (e) {
+      failure = e;
+    }
+  }
+  throw Object.assign(failure, { gpu: true });
+}
+
 function buildScene(canvas, sel, dark) {
   const plan = layout(sel);
-  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+  const renderer = createRenderer(canvas);
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(32, 1, 1, 50000);
@@ -441,7 +456,8 @@ function buildScene(canvas, sel, dark) {
 export default function Drone3D({ sel, selected, exploded, onPick, theme }) {
   const ref = useRef(null);
   const api = useRef(null);
-  const [failed, setFailed] = useState(false);
+  const [failure, setFailure] = useState(null);
+  const [attempt, setAttempt] = useState(0);
   const pickRef = useRef(onPick);
   pickRef.current = onPick;
 
@@ -450,8 +466,9 @@ export default function Drone3D({ sel, selected, exploded, onPick, theme }) {
     let scene;
     try {
       scene = buildScene(ref.current, sel, dark);
-    } catch {
-      setFailed(true);
+    } catch (e) {
+      console.error('3D view could not start:', e);
+      setFailure(e);
       return undefined;
     }
     api.current = scene;
@@ -461,13 +478,31 @@ export default function Drone3D({ sel, selected, exploded, onPick, theme }) {
     scene.setExploded(!!exploded);
     return () => { scene.dispose(); api.current = null; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sel, theme]);
+  }, [sel, theme, attempt]);
+
+  const retry = () => { setFailure(null); setAttempt((n) => n + 1); };
+  // A graphics process that just crashed is often back within a moment, so try once on our own.
+  useEffect(() => {
+    if (!failure?.gpu || attempt > 0) return undefined;
+    const timer = setTimeout(retry, 1500);
+    return () => clearTimeout(timer);
+  }, [failure, attempt]);
 
   useEffect(() => { api.current?.setSelected(selected || null); }, [selected]);
   useEffect(() => { api.current?.setExploded(!!exploded); }, [exploded]);
 
-  if (failed) {
-    return <div className="viewer viewer-fail"><p className="small muted">{t('This browser could not start 3D graphics. You can still tap any part in the list.')}</p></div>;
+  if (failure) {
+    const help = view3dHelp(failure, navigator.userAgent);
+    return (
+      <div className="viewer viewer-fail" role="alert">
+        <div>
+          <h3>{t(help.gpu ? 'This browser has 3D graphics turned off' : 'This build could not be drawn')}</h3>
+          <p className="small muted" style={{ marginTop: 4 }}>{t('You can still tap any part in the list.')}</p>
+          {!!help.steps.length && <ol className="viewer-steps small">{help.steps.map((s) => <li key={s}>{t(s)}</li>)}</ol>}
+          <button className="btn secondary small" style={{ marginTop: 12 }} onClick={retry}>{t('Try again')}</button>
+        </div>
+      </div>
+    );
   }
   return (
     <div className="viewer">

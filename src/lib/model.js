@@ -6,6 +6,25 @@
 import { isIncluded, cost, check } from './engine.js';
 import { SLOTS, partName } from '../data/parts.js';
 
+/**
+ * What to tell someone when the 3D view will not start. `gpu` means the browser refused
+ * to give us graphics, which steps on their side can fix. Anything else is our bug.
+ */
+export function view3dHelp(error, userAgent = '') {
+  if (!error?.gpu) return { gpu: false, steps: [] };
+  const name = /\bEdg(e|A|iOS)?\//.test(userAgent) ? 'Edge' : /\b(Chrome|CriOS)\//.test(userAgent) ? 'Chrome' : null;
+  if (!name) return { gpu: true, steps: ['Close the browser completely and open it again.', 'Turn on hardware acceleration in the browser settings.', 'Update your graphics driver.'] };
+  const scheme = name.toLowerCase();
+  return {
+    gpu: true,
+    steps: [
+      `Close every ${name} window and open it again. After a graphics crash, ${name} can keep 3D off until it restarts.`,
+      `Open ${scheme}://settings/system and turn on graphics acceleration, then restart ${name}.`,
+      `Still stuck? Open ${scheme}://gpu and look at the WebGL lines. Updating your graphics driver often helps.`,
+    ],
+  };
+}
+
 const cube = (grams, density, ratio) => {
   // Box dimensions from weight, for parts where we know weight but not exact size.
   const volume = (grams / density) * 1000; // mm^3
