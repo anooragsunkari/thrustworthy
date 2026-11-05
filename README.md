@@ -7,7 +7,7 @@
 A free, phone-first guide for anyone building a multirotor. It starts by asking who you are, where you fly and what you want to do, then adapts everything to that.
 
 **Author:** [Anoorag Sunkari](https://github.com/anooragsunkari), who created the original Multirotor.build configurator, its parts database and its flight model.
-**Contributor and maintainer:** [Chahat Deep Singh](https://github.com/chahatdeep).
+**Other Contributors:** [Chahat Deep Singh](https://github.com/chahatdeep).
 
 ## Who it is for
 
