@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { partById, registerCustom } from '../data/parts.js';
-import { cleanPayload, cleanSharedParts } from './custom.js';
+import { cleanPayload, cleanSharedParts, reconcileShared } from './custom.js';
 
 // Fills {name} placeholders in a sentence. Non-strings pass through untouched.
 export function t(s, vars) {
@@ -44,9 +44,9 @@ export function decodeBuild(token) {
     if (typeof j !== 'object' || !j.s) return null;
     const sel = {};
     for (const [k, v] of Object.entries(j.s)) if (typeof k === 'string' && typeof v === 'string') sel[k] = v;
-    const custom = cleanSharedParts(j.x);
-    registerCustom(custom);
-    return { name: String(j.n || 'Shared build').slice(0, 80), goal: String(j.g || 'freestyle'), firmware: String(j.f || 'Betaflight'), sel, payload: cleanPayload(j.p), custom };
+    const shared = reconcileShared(cleanSharedParts(j.x), sel, partById);
+    registerCustom(shared.custom);
+    return { name: String(j.n || 'Shared build').slice(0, 80), goal: String(j.g || 'freestyle'), firmware: String(j.f || 'Betaflight'), sel: shared.sel, payload: cleanPayload(j.p), custom: shared.custom };
   } catch {
     return null;
   }

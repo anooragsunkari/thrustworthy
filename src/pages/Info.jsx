@@ -75,7 +75,7 @@ export function About() {
       <section className="section">
         <h2>{t('What we promise')}</h2>
         <ul className="bullets" style={{ marginTop: 6 }}>
-          {['No account, no tracking, and no ads. Your builds stay on your device.', 'No affiliate links. Shop links are plain searches.', 'No invented reviews or fake community numbers.', 'Works offline at the field once you have opened it.', 'No Google Fonts or foreign CDNs, so it loads the same way in every country.'].map((x) => <li key={x}>{t(x)}</li>)}
+          {['No account, no tracking, and no ads. Your builds stay on your device.', 'No affiliate links. Shop links are plain searches.', 'No invented reviews or fake community numbers.', 'Works offline at the field once you have opened it.', 'No Google Fonts or foreign CDNs, so it loads the same way in every country.', 'Firmware logos belong to their projects and only identify them. We are not affiliated with any of them.'].map((x) => <li key={x}>{t(x)}</li>)}
         </ul>
       </section>
       <section className="section">

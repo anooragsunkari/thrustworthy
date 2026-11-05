@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { A, Ext, Icon, PageHead, Progress } from '../components/ui.jsx';
+import { A, Ext, Icon, PageHead, Progress, FirmwareLogo, Tile } from '../components/ui.jsx';
+import { SYMPTOM_ICON } from '../lib/icons.js';
 import { addLog, deleteLog, useStore } from '../lib/store.js';
 import { dateStr, t } from '../lib/util.js';
 import { SYMPTOMS } from '../data/troubleshoot.js';
@@ -117,6 +118,7 @@ export function Flight({ projectId }) {
         <div className="list">
           {SYMPTOMS.filter((s) => !s.only || s.only.includes(p?.firmware || fw)).map((s) => (
             <A key={s.id} to={`/fly/fix/${s.id}${p ? `/${p.firmware}` : `/${fw}`}`} className="li">
+              <Tile name={SYMPTOM_ICON[s.id]} />
               <span className="grow"><div className="title">{t(s.title)}</div><div className="sub">{t(s.hint)}</div></span>
               <Icon name="chev" className="chev" />
             </A>
@@ -191,12 +193,13 @@ export function Software() {
             ['I have an old board with Cleanflight', 'Cleanflight'],
           ].map(([q, id]) => (
             <A key={id} to={`/software/${id}`} className="card tap row between" style={{ flexWrap: 'nowrap' }}>
+              <FirmwareLogo id={id} name={FW[id].name} />
               <span className="grow"><div className="small muted">{t(q)}</div><h3>{FW[id].name}</h3></span>
               <Icon name="chev" className="chev" />
             </A>
           ))}
         </div>
-        <p className="tiny muted" style={{ marginTop: 10 }}>{t('Checked {date}. Firmware moves quickly, so trust the official docs if they disagree with us.', { date: CHECKED })}</p>
+        <p className="tiny muted" style={{ marginTop: 10 }}>{t('Checked {date}. Firmware moves quickly, so trust the official docs if they disagree with us.', { date: CHECKED })} {t('Logos belong to their projects and only identify them. We are not affiliated with any of them.')}</p>
       </section>
     </div>
   );
@@ -208,6 +211,7 @@ export function SoftwareDetail({ id }) {
   return (
     <div className="wrap narrow">
       <PageHead title={fw.name} sub={t(fw.tag)} back="/software">
+        <div style={{ marginTop: 10 }}><FirmwareLogo id={id} name={fw.name} /></div>
         <div className="chips" style={{ marginTop: 10 }}><span className={`chip ${fw.legacy ? 'warn' : ''}`}>{t('Latest stable: {v}', { v: fw.version })}</span></div>
       </PageHead>
       {fw.legacyNote && <div className="note warn" style={{ marginTop: 14 }}><b>{t('Not for new builds')}</b>{t(fw.legacyNote)}</div>}

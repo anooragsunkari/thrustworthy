@@ -119,21 +119,24 @@ export function flight(sel, { altitude = 0, goal = 'freestyle' } = {}) {
   };
 }
 
+/** How many of this part one aircraft needs. */
+export function partQty(sel, slot, part) {
+  if (slot === 'motor' || slot === 'prop' || (slot === 'esc' && part?.t === 'single')) return motorCount(sel);
+  return 1;
+}
+
 export function cost(sel) {
-  const mc = motorCount(sel);
   let total = 0;
   const lines = [];
   for (const s of SLOTS) {
     const p = sel[s.key];
     if (!p) continue;
-    let qty = 1;
-    if (s.key === 'motor') qty = mc;
-    if (s.key === 'prop') qty = mc;
-    if (s.key === 'esc' && p.t === 'single') qty = mc;
+    const qty = partQty(sel, s.key, p);
     if (s.key === 'esc' && included(sel, 'esc')) continue;
     if (s.key === 'rx' && included(sel, 'rx')) continue;
     if (s.key === 'video' && included(sel, 'video')) continue;
-    if (p.p === 0) continue;
+    // Your own part with no price is still a part to get. Only "no video" costs nothing and is nothing.
+    if (p.p === 0 && !p.custom) continue;
     lines.push({ slot: s.key, part: p, qty, unit: p.p, total: p.p * qty });
     total += p.p * qty;
   }
@@ -281,6 +284,7 @@ export function autofill(sel, ctx = {}, opts = {}) {
   const tiny = (next.frame?.wheel || 200) < 100;
   const order = ['frame', 'motor', 'prop', 'battery', ...(tiny ? ['fc', 'esc'] : ['esc', 'fc']), 'rx', 'video'];
   if (ctx.firmware === 'INAV' || ctx.firmware === 'ArduPilot' || ctx.firmware === 'PX4') order.push('gps');
+  if (opts.onlyOwned && !order.includes('gps')) order.push('gps');
   if (opts.withCompanion) order.push('companion');
   // Compatible is not the same as good. Cheapest wins only among parts that suit the job:
   // use the prop size the frame was designed for, and buy endurance when the goal needs it.
@@ -288,7 +292,7 @@ export function autofill(sel, ctx = {}, opts = {}) {
   const prefer = (key, p) => {
     if (key === 'motor' && next.frame) return Math.abs(p.ref.d - next.frame.maxProp) * 100 + p.p;
     if (key === 'prop' && next.frame) return Math.abs(Math.min(next.frame.maxProp, next.motor?.ref.d ?? Infinity) - p.d) * 100 + p.p;
-    if (key === 'battery' && endurance) return -flight({ ...next, battery: p }, { goal: ctx.goal }).hover * 20 + p.p / 10;
+    if (key === 'battery' && endurance) return -(flight({ ...next, battery: p }, { goal: ctx.goal })?.hover ?? 0) * 20 + p.p / 10;
     return p.p;
   };
   const score = (r, key, p) => (r.status === 'error' ? 1e6 : r.status === 'warn' ? 1e3 : 0) + prefer(key, p);
@@ -301,7 +305,8 @@ export function autofill(sel, ctx = {}, opts = {}) {
       // A large frame carries a battery and payload, so check it can lift roughly 800 g on top.
       return fr.wheel < 400 || p.ref.t * fr.mc >= (fr.w + 800) * 2;
     }
-    if (key === 'prop' && fr) return p.d <= fr.maxProp && /ducted/.test(p.m) === (fr.cat === 'cinewhoop');
+    // The model name only tells us about parts in the database. Your own part can be called anything.
+    if (key === 'prop' && fr) return p.d <= fr.maxProp && (p.custom || /ducted/.test(p.m) === (fr.cat === 'cinewhoop'));
     if (key === 'esc' && fr) return (p.t === 'single') === (fr.wheel >= 400);
     if (key === 'battery' && next.motor) {
       if (p.c !== next.motor.ref.c) return false;
@@ -315,6 +320,19 @@ export function autofill(sel, ctx = {}, opts = {}) {
     const slot = SLOTS.find((s) => s.key === key);
     let best = null;
     let bestScore = Infinity;
+    // A part you own wins over buying one, as long as you have enough of it and it creates no
+    // error. One spare motor should not decide which motors a whole quad gets.
+    for (const { part: p, qty } of opts.owned || []) {
+      if (p.slot !== key || qty < partQty(next, key, p) || !sensible(key, p)) continue;
+      const r = rate(key, p, next, ctx);
+      if (r.status === 'error') continue;
+      const s = score(r, key, p) - 1e5;
+      if (s < bestScore) { bestScore = s; best = p; }
+    }
+    if (best || opts.onlyOwned) {
+      if (best) next[key] = best;
+      continue;
+    }
     for (const p of slot.list) {
       if (key === 'video' && p.id === 'v-none' && ctx.goal !== 'lab' && ctx.goal !== 'heavy') continue;
       if (p.legacy || p.stock === 'low' || !sensible(key, p)) continue;

@@ -3,36 +3,31 @@ import { animate, prefersStill, SNAPPY, SOFT, Spring } from '../lib/spring.js';
 import { t, grams, minutes } from '../lib/util.js';
 import { resolve, flight, cost } from '../lib/engine.js';
 import { money } from '../data/regions.js';
+import { GOAL_ICON, PATHS } from '../lib/icons.js';
 
-const PATHS = {
-  home: 'M3 11l9-8 9 8M5 9.5V20a1 1 0 001 1h4v-6h4v6h4a1 1 0 001-1V9.5',
-  list: 'M4 6h16M4 12h16M4 18h10',
-  build: 'M14.7 6.3a4 4 0 00-5.4 5.1L3 17.7V21h3.3l6.3-6.3a4 4 0 005.1-5.4l-2.6 2.6-2.3-.5-.5-2.3z',
-  fly: 'M12 3v6m0 0l-8 5v2l8-3 8 3v-2l-8-5zm0 4v8m-3 3l3-1 3 1',
-  user: 'M12 12a4 4 0 100-8 4 4 0 000 8zm-8 9a8 8 0 0116 0',
-  chev: 'M9 5l7 7-7 7',
-  back: 'M15 5l-7 7 7 7',
-  close: 'M6 6l12 12M18 6L6 18',
-  check: 'M5 12.5l4.5 4.5L19 7.5',
-  spark: 'M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8L12 3zM19 16l.8 2.2L22 19l-2.2.8L19 22l-.8-2.2L16 19l2.2-.8L19 16z',
-  bolt: 'M13 3L5 14h6l-1 7 8-11h-6l1-7z',
-  camera: 'M4 7h3l2-3h6l2 3h3a1 1 0 011 1v11a1 1 0 01-1 1H4a1 1 0 01-1-1V8a1 1 0 011-1zm8 10a4 4 0 100-8 4 4 0 000 8z',
-  flask: 'M9 3h6M10 3v6L4.5 18.5A1.7 1.7 0 006 21h12a1.7 1.7 0 001.5-2.5L14 9V3M7.5 15h9',
-  book: 'M4 5a2 2 0 012-2h13v16H6a2 2 0 00-2 2V5zm0 14a2 2 0 012-2h13v4H6a2 2 0 01-2-2z',
-  map: 'M9 4L3 6v14l6-2 6 2 6-2V4l-6 2-6-2zm0 0v14m6-12v14',
-  share: 'M12 15V3m0 0L8 7m4-4l4 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7',
-  globe: 'M12 21a9 9 0 100-18 9 9 0 000 18zM3 12h18M12 3c2.5 2.5 3.5 5.5 3.5 9s-1 6.500-3.500 9c-2.500-2.500-3.500-5.500-3.500-9s1-6.500 3.500-9z',
-  ext: 'M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 01-1 1H5a1 1 0 01-1-1V7a1 1 0 011-1h5',
-  plus: 'M12 5v14M5 12h14',
-  cog: 'M4 7h9M17 7h3M4 17h3M11 17h9M15 5v4M9 15v4',
-  sun: 'M12 16a4 4 0 100-8 4 4 0 000 8zM12 3v2m0 14v2M3 12h2m14 0h2M5.600 5.600L7 7m10 10l1.400 1.400M5.600 18.400L7 17m10-10l1.400-1.400',
-  moon: 'M20 14.500A8.500 8.500 0 019.500 4a8.500 8.500 0 1010.500 10.500z',
-  cpu: 'M8 8h8v8H8zM9 3v3m6-3v3M9 18v3m6-3v3M3 9h3m-3 6h3m12-6h3m-3 6h3',
-};
 
 export function Icon({ name, className }) {
   return <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={PATHS[name]} /></svg>;
 }
+
+// Each project's own logo, unaltered, on a dark plate because most were drawn for dark backgrounds.
+const FIRMWARE_LOGOS = { Betaflight: 'betaflight-dark.svg', INAV: 'inav.png', ArduPilot: 'ardupilot.png', PX4: 'px4.svg' };
+export const FirmwareLogo = ({ id, name, icon = 'cpu' }) => (FIRMWARE_LOGOS[id]
+  ? <span className="fw-logo"><img src={`logos/${FIRMWARE_LOGOS[id]}`} alt={t('{name} logo', { name: name || id })} loading="lazy" /></span>
+  : <span className="fw-logo" aria-hidden="true"><Icon name={icon} /></span>);
+
+/** An icon on a rounded tile. A finished step shows a tick. */
+export const Tile = ({ name, done, children }) => <span className={`ico ${done ? 'ok' : ''}`} aria-hidden="true">{children || <Icon name={done ? 'check' : name} />}</span>;
+
+/** Three bars, so Beginner, Intermediate and Pro read as a scale at a glance. */
+export const LevelBars = ({ level }) => {
+  const n = { Beginner: 1, Intermediate: 2, Pro: 3 }[level] || 0;
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+      {[[4, 14, 6], [10, 9, 11], [16, 4, 16]].map(([x, y, h], i) => <rect key={x} x={x} y={y} width="4.5" height={h} rx="1.5" opacity={i < n ? 1 : 0.22} />)}
+    </svg>
+  );
+};
 
 export const Logo = () => (
   <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true">
@@ -142,10 +137,13 @@ export function BuildCard({ build, region }) {
   const f = flight(sel, { goal: build.goal });
   return (
     <A to={`/builds/${build.id}`} className="card tap">
-      <div className="chips" style={{ marginBottom: 8 }}>
-        <span className="chip accent">{t(build.type)}</span>
-        <span className="chip">{t(build.level)}</span>
-        <span className="chip">{build.firmware}</span>
+      <div className="row" style={{ marginBottom: 12, flexWrap: 'nowrap' }}>
+        <Tile name={GOAL_ICON[build.goal] || 'frame'} />
+        <div className="chips">
+          <span className="chip accent">{t(build.type)}</span>
+          <span className="chip">{t(build.level)}</span>
+          <span className="chip">{build.firmware}</span>
+        </div>
       </div>
       <h3>{t(build.title)}</h3>
       <p className="small muted" style={{ margin: '4px 0 12px' }}>{t(build.pitch)}</p>

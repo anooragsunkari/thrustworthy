@@ -1,5 +1,6 @@
 import React, { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
-import { A, Ext, Icon, Issue, PageHead, useToast } from '../components/ui.jsx';
+import { A, Ext, Icon, Issue, PageHead, useToast, Tile } from '../components/ui.jsx';
+import { SLOT_ICON } from '../lib/icons.js';
 import { createProject, keepCustomParts, useStore } from '../lib/store.js';
 import { copyText, decodeBuild, go, grams, minutes, model3dUrl, t } from '../lib/util.js';
 import { SLOTS, partName } from '../data/parts.js';
@@ -99,12 +100,14 @@ function Viewer({ name, firmware, goal, ids, payload, back, editTo, shareProject
           <div className="list" style={{ marginTop: 12 }}>
             {list.map((s) => (
               <button key={s.key} className={`li ${selected === s.key ? 'li-on' : ''}`} aria-pressed={selected === s.key} onClick={() => setSelected(s.key)}>
+                <Tile name={SLOT_ICON[s.key]} />
                 <span className="grow"><div className="sub">{t(s.label)}</div><div className="title">{partName(sel[s.key])}</div></span>
                 <Icon name="chev" className="chev" />
               </button>
             ))}
             {sel.payload && (
               <button className={`li ${selected === 'payload' ? 'li-on' : ''}`} aria-pressed={selected === 'payload'} onClick={() => setSelected('payload')}>
+                <Tile name={SLOT_ICON.payload} />
                 <span className="grow"><div className="sub">{t('Payload')}</div><div className="title">{sel.payload.m}</div></span>
                 <Icon name="chev" className="chev" />
               </button>

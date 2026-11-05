@@ -1,13 +1,16 @@
 import React, { useMemo, useState } from 'react';
-import { A, Icon, Issue, PageHead, Sheet, SpringNum, useToast } from '../components/ui.jsx';
-import { addCustomPart, useStore, createProject, updateProject } from '../lib/store.js';
+import { A, Icon, Issue, PageHead, Sheet, SpringNum, Tile, useToast } from '../components/ui.jsx';
+import { GOAL_ICON, SLOT_ICON } from '../lib/icons.js';
+import { PartForm } from '../components/PartForm.jsx';
+import { useStore, createProject, updateProject } from '../lib/store.js';
 import { go, grams, minutes, t } from '../lib/util.js';
 import { FIRMWARES, GOALS, SLOTS, partName } from '../data/parts.js';
 import { BUILDS } from '../data/builds.js';
 import { regionById, money } from '../data/regions.js';
 import { personaById } from '../data/personas.js';
-import { autofill, check, cost, flight, isIncluded, missing, rate, resolve, summarize, toIds, allUpWeight, loadBuild } from '../lib/engine.js';
-import { cleanCustom, fieldsFor, PAYLOAD_PRESETS } from '../lib/custom.js';
+import { autofill, check, flight, isIncluded, missing, partQty, rate, summarize, toIds, allUpWeight, loadBuild } from '../lib/engine.js';
+import { PAYLOAD_PRESETS } from '../lib/custom.js';
+import { firmwareForGoal, ownedList, ownedQty, shopping } from '../lib/owned.js';
 
 const specLine = (slot, p) => {
   switch (slot) {
@@ -50,12 +53,18 @@ export function ConfigureEntry() {
           </div>
         </section>
       )}
+      <A to="/gear" className="card tap row between" style={{ marginTop: 18, flexWrap: 'nowrap' }}>
+        <Tile name="toolbox" />
+        <span className="grow"><h3>{t('Start from what you have')}</h3><span className="small muted">{t('Tell us what is on your bench, and build around it.')}</span></span>
+        <Icon name="chev" className="chev" />
+      </A>
       <section className="section">
         <h2>{t('Start from a blank build')}</h2>
         <p className="muted small" style={{ marginBottom: 12 }}>{t('What do you want it to do?')}</p>
         <div className="list">
           {GOALS.map((g) => (
-            <button key={g.id} className="li" onClick={() => fresh(g.id, g.id === 'lab' ? 'PX4' : g.id === 'heavy' ? 'ArduPilot' : g.id === 'longrange' ? 'INAV' : 'Betaflight')}>
+            <button key={g.id} className="li" onClick={() => fresh(g.id, firmwareForGoal(g.id))}>
+              <Tile name={GOAL_ICON[g.id]} />
               <span className="grow title">{t(g.label)}</span><Icon name="chev" className="chev" />
             </button>
           ))}
@@ -66,6 +75,7 @@ export function ConfigureEntry() {
         <div className="list">
           {BUILDS.map((b) => (
             <A key={b.id} to={`/builds/${b.id}`} className="li">
+              <Tile name={GOAL_ICON[b.goal] || 'frame'} />
               <span className="grow"><div className="title">{t(b.title)}</div><div className="sub">{t(b.type)} · {b.firmware}</div></span><Icon name="chev" className="chev" />
             </A>
           ))}
@@ -83,14 +93,14 @@ export function Configure({ id }) {
   const [altitude, setAltitude] = useState(0);
   const [toast, setToast] = useToast();
 
-  const sel = useMemo(() => (p ? loadBuild(p) : {}), [p, Object.keys(state.customParts || {}).length]);
+  const sel = useMemo(() => (p ? loadBuild(p) : {}), [p, state.customParts]);
   if (!p) return <div className="wrap"><PageHead title={t('Build not found')} back="/configure" /></div>;
 
   const ctx = { firmware: p.firmware, goal: p.goal, region };
   const issues = check(sel, ctx);
   const n = summarize(issues);
   const f = flight(sel, { goal: p.goal, altitude });
-  const c = cost(sel);
+  const c = shopping(sel, state.owned);
   const miss = missing(sel);
   const auw = allUpWeight(sel).total;
   const setPart = (slot, part) => {
@@ -99,7 +109,7 @@ export function Configure({ id }) {
     updateProject(p.id, { sel: next });
   };
   const fill = () => {
-    const out = autofill(sel, ctx, { withCompanion: false });
+    const out = autofill(sel, ctx, { withCompanion: false, owned: ownedList(state.owned) });
     updateProject(p.id, { sel: toIds(out) });
     setToast(t('Filled in the rest with parts that suit this frame'));
   };
@@ -131,13 +141,16 @@ export function Configure({ id }) {
             const part = sel[s.key];
             const bad = issues.filter((i) => i.parts.includes(s.key));
             const level = bad.some((i) => i.level === 'error') ? 'err' : bad.some((i) => i.level === 'warn') ? 'warn' : part ? 'ok' : '';
+            const line = c.lines.find((l) => l.slot === s.key);
             return (
               <button key={s.key} className="li" onClick={() => setOpen(s.key)} disabled={inc} style={inc ? { opacity: .7, cursor: 'default' } : undefined}>
-                <i className={`dot ${inc ? 'ok' : level}`} aria-hidden="true" />
+                <Tile name={SLOT_ICON[s.key]} />
                 <span className="grow">
                   <div className="sub">{t(s.label)}{!s.required && ` · ${t('optional')}`}</div>
                   <div className="title">{inc ? t('Included in the flight controller') : part ? partName(part) : <span className="muted" style={{ fontWeight: 500 }}>{t('Choose')}</span>}</div>
+                  {line?.own > 0 && <div className="chips" style={{ marginTop: 4 }}><span className="chip ok">{line.buy ? t('You own {have} of {need}', { have: line.own, need: line.qty }) : t('You own this')}</span></div>}
                 </span>
+                <i className={`dot ${inc ? 'ok' : level}`} aria-hidden="true" />
                 {!inc && <Icon name="chev" className="chev" />}
               </button>
             );
@@ -189,7 +202,7 @@ export function Configure({ id }) {
 
       <div className="dock">
         <div className="stats">
-          <div className="stat"><SpringNum value={c.total} format={(n) => money(n, region)} /><span>{t('parts')}</span></div>
+          <div className="stat"><SpringNum value={c.toBuy} format={(n) => money(n, region)} /><span>{c.saved > 0 ? t('to buy') : t('parts')}</span></div>
           <div className="stat">{auw ? <SpringNum value={auw} format={grams} /> : <b>–</b>}<span>{t('weight')}</span></div>
           <div className="stat">{f ? <SpringNum value={f.twr} format={(n) => `${n.toFixed(1)}:1`} /> : <b>–</b>}<span>{t('T/W')}</span></div>
           <div className="stat">{f ? <SpringNum value={[f.flyMin, f.flyMax]} format={minutes} /> : <b>–</b>}<span>{t('min')}</span></div>
@@ -200,7 +213,7 @@ export function Configure({ id }) {
         </div>
       </div>
 
-      {open && <Picker slot={open} sel={sel} ctx={ctx} region={region} mine={Object.values(state.customParts || {}).filter((c) => c.slot === open)} onPick={setPart} onClose={() => setOpen(null)} />}
+      {open && <Picker slot={open} sel={sel} ctx={ctx} region={region} owned={state.owned} mine={Object.values(state.customParts || {}).filter((x) => x.slot === open)} onPick={setPart} onClose={() => setOpen(null)} />}
       {toast}
     </div>
   );
@@ -247,88 +260,59 @@ function Payload({ project }) {
   );
 }
 
-function CustomForm({ slot, onDone, onCancel }) {
-  const fields = fieldsFor(slot);
-  const [values, setValues] = useState(() => Object.fromEntries(fields.map((f) => [f.key, f.kind === 'multi' ? [] : f.def ?? ''])));
-  const [errors, setErrors] = useState({});
-  const set = (k, v) => setValues({ ...values, [k]: v });
-  const save = (e) => {
-    e.preventDefault();
-    const { part, errors: errs } = cleanCustom(slot, values);
-    if (!part) {
-      setErrors(Object.fromEntries(errs.map((x) => [x.key, x.message])));
-      return;
-    }
-    onDone(addCustomPart(part));
+function Picker({ slot, sel, ctx, region, mine, owned, onPick, onClose }) {
+  const [adding, setAdding] = useState(false);
+  const [editing, setEditing] = useState(null);
+  const s = SLOTS.find((x) => x.key === slot);
+  const rate1 = (p) => ({ p, r: rate(slot, p, sel, ctx) });
+  const order = { ok: 0, warn: 1, error: 2 };
+  // What you have comes first, including your own parts you have not said you own yet.
+  const ownedHere = ownedList(owned).map((e) => e.part).filter((p) => p.slot === slot);
+  const firstIds = new Set([...ownedHere, ...mine].map((p) => p.id));
+  const first = [...ownedHere, ...mine.filter((p) => !ownedHere.some((o) => o.id === p.id))].map(rate1).sort((a, b) => order[a.r.status] - order[b.r.status]);
+  const rated = s.list
+    .filter((p) => !firstIds.has(p.id))
+    .map(rate1)
+    .sort((a, b) => order[a.r.status] - order[b.r.status] || a.p.p - b.p.p);
+  const row = (close) => ({ p, r }) => {
+    const need = partQty(sel, slot, p);
+    const have = Math.min(ownedQty(owned, p.id), need);
+    const button = (
+      <button key={p.id} className={`pick ${sel[slot]?.id === p.id ? 'on' : ''} ${r.status === 'error' ? 'bad' : ''}`} onClick={() => { onPick(slot, p); close(); }}>
+        <i className={`dot ${r.status === 'error' ? 'err' : r.status === 'warn' ? 'warn' : 'ok'}`} aria-hidden="true" />
+        <span className="grow">
+          <div className="title">{partName(p)}{p.custom && <span className="chip accent" style={{ marginLeft: 6 }}>{t('Yours')}</span>}</div>
+          <div className="sub num">{specLine(slot, p)}</div>
+          {have > 0 && <div className="chips" style={{ marginTop: 4 }}><span className="chip ok">{have >= need ? t('You own this') : t('You own {have} of {need}', { have, need })}</span></div>}
+          {r.reason && <div className={`why ${r.status}`}>{t(r.reason)}</div>}
+        </span>
+        {p.p > 0 && have < need && <span className="right small num">{money(p.p * (need - have), region)}</span>}
+      </button>
+    );
+    if (!p.custom) return button;
+    return (
+      <div className="pick-row" key={p.id}>
+        {button}
+        <button className="icon-btn" aria-label={t('Edit {name}', { name: partName(p) })} onClick={() => setEditing(p)}><Icon name="edit" /></button>
+      </div>
+    );
   };
   return (
-    <form className="stack" onSubmit={save} noValidate>
-      <div className="note">{t('It is saved on this device and works in the checker like any other part. Use the maker\'s published numbers if you can.')}</div>
-      {fields.map((f) => (
-        <div key={f.key}>
-          {f.kind === 'multi' ? (
-            <fieldset style={{ border: 0, padding: 0, margin: 0 }}>
-              <legend className="tiny muted" style={{ marginBottom: 6, padding: 0 }}>{t(f.label)}</legend>
-              <div className="chips">
-                {f.options.map((o) => {
-                  const on = values[f.key].includes(o);
-                  return <button type="button" key={o} className={`filter ${on ? 'on' : ''}`} aria-pressed={on} onClick={() => set(f.key, on ? values[f.key].filter((x) => x !== o) : [...values[f.key], o])}>{o === 'pixhawk' ? 'Pixhawk' : o}</button>;
-                })}
-              </div>
-            </fieldset>
-          ) : (
-            <label className="field">
-              <span>{t(f.label)}{f.required ? '' : ''}</span>
-              {f.kind === 'select' ? (
-                <select className="input" value={values[f.key]} onChange={(e) => set(f.key, e.target.value)}>
-                  {f.options.map((o) => <option key={o} value={o}>{o === 'sub' ? '868/915 MHz' : o === '2.4' ? '2.4 GHz' : o === '4in1' ? '4-in-1' : o === 'single' ? t('Single') : o === 'pixhawk' ? 'Pixhawk' : o === 'arm' ? t('On the arms') : o}</option>)}
-                </select>
-              ) : f.kind === 'bool' ? (
-                <select className="input" value={String(values[f.key])} onChange={(e) => set(f.key, e.target.value === 'true')}>
-                  <option value="true">{t('Yes')}</option><option value="false">{t('No')}</option>
-                </select>
-              ) : (
-                <input className="input" type={f.kind === 'num' ? 'number' : 'text'} inputMode={f.kind === 'num' ? 'decimal' : undefined} step="any" value={values[f.key]} maxLength={60} aria-invalid={!!errors[f.key]} onChange={(e) => set(f.key, e.target.value)} />
-              )}
-            </label>
-          )}
-          {errors[f.key] && <div className="small" role="alert" style={{ color: 'var(--err)', marginTop: 4 }}>{t(errors[f.key])}</div>}
-        </div>
-      ))}
-      <div className="btn-row">
-        <button type="button" className="btn secondary" onClick={onCancel}>{t('Back')}</button>
-        <button className="btn">{t('Save and use it')}</button>
-      </div>
-    </form>
-  );
-}
-
-function Picker({ slot, sel, ctx, region, mine, onPick, onClose }) {
-  const [adding, setAdding] = useState(false);
-  const s = SLOTS.find((x) => x.key === slot);
-  const qty = (slot === 'motor' || slot === 'prop') ? (sel.frame?.mc || 4) : 1;
-  const rate1 = (p) => ({ p, r: rate(slot, p, sel, ctx) });
-  const yours = mine.map(rate1);
-  const rated = s.list
-    .map(rate1)
-    .sort((a, b) => ({ ok: 0, warn: 1, error: 2 }[a.r.status] - { ok: 0, warn: 1, error: 2 }[b.r.status]) || a.p.p - b.p.p);
-  return (
     <Sheet title={t(s.label)} sub={t(s.hint)} onClose={onClose}>
-      {(close) => (adding ? <CustomForm slot={slot} onCancel={() => setAdding(false)} onDone={(part) => { onPick(slot, part); close(); }} /> : <>
-      <button className="btn secondary block" style={{ marginBottom: 12 }} onClick={() => setAdding(true)}><Icon name="plus" />{t('Add my own part')}</button>
-      {!s.required && sel[slot] && <button className="btn quiet block" style={{ marginBottom: 8 }} onClick={() => { onPick(slot, null); close(); }}>{t('Remove')}</button>}
-      {[...yours, ...rated].map(({ p, r }) => (
-        <button key={p.id} className={`pick ${sel[slot]?.id === p.id ? 'on' : ''} ${r.status === 'error' ? 'bad' : ''}`} onClick={() => { onPick(slot, p); close(); }}>
-          <i className={`dot ${r.status === 'error' ? 'err' : r.status === 'warn' ? 'warn' : 'ok'}`} aria-hidden="true" />
-          <span className="grow">
-            <div className="title">{partName(p)}{p.custom && <span className="chip accent" style={{ marginLeft: 6 }}>{t('Yours')}</span>}</div>
-            <div className="sub num">{specLine(slot, p)}</div>
-            {r.reason && <div className={`why ${r.status}`}>{t(r.reason)}</div>}
-          </span>
-          {p.p > 0 && <span className="right small num">{money(p.p * ((slot === 'esc' && p.t === 'single') ? (sel.frame?.mc || 4) : qty), region)}</span>}
-        </button>
-      ))}
-      </>)}
+      {(close) => {
+        if (editing) return <PartForm part={editing} onCancel={() => setEditing(null)} onDone={() => setEditing(null)} />;
+        if (adding) return <PartForm slot={slot} askOwn own={(part) => partQty(sel, slot, part)} onCancel={() => setAdding(false)} onDone={(part) => { onPick(slot, part); close(); }} />;
+        return (
+          <>
+            <button className="btn secondary block" style={{ marginBottom: 12 }} onClick={() => setAdding(true)}><Icon name="plus" />{t('Add my own part')}</button>
+            {!s.required && sel[slot] && <button className="btn quiet block" style={{ marginBottom: 8 }} onClick={() => { onPick(slot, null); close(); }}>{t('Remove')}</button>}
+            {!!first.length && <p className="tiny muted" style={{ margin: '4px 0 8px' }}>{t('Yours')}</p>}
+            {first.map(row(close))}
+            {!!first.length && <p className="tiny muted" style={{ margin: '12px 0 8px' }}>{t('All parts')}</p>}
+            {rated.map(row(close))}
+          </>
+        );
+      }}
     </Sheet>
   );
 }
