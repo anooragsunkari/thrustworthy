@@ -141,7 +141,42 @@ export function cleanCustom(slot, raw = {}) {
   return { part: out, errors: [] };
 }
 
+/** What the form starts with: empty for a new part, or a saved part's numbers to edit. */
+export function formValues(slot, part = null) {
+  return Object.fromEntries(fieldsFor(slot).map((f) => {
+    const saved = part?.[f.key];
+    if (f.kind === 'multi') return [f.key, Array.isArray(saved) ? saved : []];
+    if (saved === undefined || saved === null) return [f.key, f.def ?? ''];
+    return [f.key, f.kind === 'select' ? String(saved) : saved];
+  }));
+}
+
 export const CUSTOM_ID = /^x-[a-z0-9-]{1,40}$/;
+
+const canonical = (p) => JSON.stringify(Object.keys(p).sort().map((k) => [k, p[k]]));
+const shortHash = (s) => {
+  let h = 5381;
+  for (let i = 0; i < s.length; i += 1) h = (h * 33 + s.charCodeAt(i)) >>> 0;
+  return h.toString(36);
+};
+
+/**
+ * A link is a snapshot, and you can edit a part after sending it. If a link carries different specs
+ * under an id already in use, give the link's version its own id, so opening an old link never
+ * overwrites what you saved. The same link always gets the same id.
+ */
+export function reconcileShared(custom, sel, lookup) {
+  const out = {};
+  const nextSel = { ...sel };
+  for (const [id, part] of Object.entries(custom)) {
+    const mine = lookup(id);
+    if (!mine || canonical(mine) === canonical(part)) { out[id] = part; continue; }
+    const fresh = `x-shared-${shortHash(canonical({ ...part, id: '' }))}`;
+    out[fresh] = { ...part, id: fresh };
+    for (const [slot, v] of Object.entries(nextSel)) if (v === id) nextSel[slot] = fresh;
+  }
+  return { custom: out, sel: nextSel };
+}
 
 /** Read the custom parts carried by a share link, ignoring anything that does not validate. */
 export function cleanSharedParts(raw) {

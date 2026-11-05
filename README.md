@@ -38,6 +38,8 @@ The site loads no Google Fonts or foreign CDNs, so it does not depend on service
 8. **Share** with a link holding your whole build, plus a community gallery through GitHub.
 9. **Come back** to a dashboard with your builds, progress and badges, and compare any two builds side by side before you change anything.
 
+Already have parts? List them under **Gear I own**. They come off every shopping list, get offered first when you choose or auto-fill, and you can start a new build around them. Parts you entered yourself can be edited at any time, and every build using them picks up the change.
+
 **See it in 3D:** every build generates a to-scale model from its parts' specs. Turn it, zoom it, pull it apart into an exploded view, and tap any part for its specs, price, checks and shops. Each model has a link that opens in any browser, with no sign-up.
 
 **Motion:** interface and 3D movement run on a small spring-physics engine (`src/lib/spring.js`) rather than fixed easing curves, and all of it honors the reduced-motion setting.
@@ -73,6 +75,7 @@ src/lib/wiring.js         Motor order, ports and wires for one build
 src/lib/settings.js       Starter settings files, one maker per firmware
 src/lib/compare.js        Two builds side by side
 src/lib/custom.js         Validation for parts people enter themselves
+src/lib/owned.js          What you own: shopping lists, building around your gear
 src/data/firmware.js      Setup guides and official links
 src/data/assembly.js      Build steps, selected by the features of your build
 src/data/troubleshoot.js  Fixes, ordered by how likely they are
@@ -87,3 +90,7 @@ Part figures are typical values and prices are rough estimates. Legal summaries 
 ## License
 
 MIT, copyright Anoorag Sunkari.
+
+## Firmware logos
+
+The logos in `public/logos` belong to their projects and come from their official repositories: [Betaflight](https://github.com/betaflight/.github), [INAV](https://github.com/iNavFlight/inav-configurator), [ArduPilot](https://github.com/ArduPilot/ardupilot_wiki) and [PX4](https://github.com/PX4/PX4-Autopilot). They only identify each project, and Thrustworthy is not affiliated with any of them. The Betaflight file has its empty margin trimmed. Nothing else is changed.

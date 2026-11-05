@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { A, Ext, Icon, PageHead, Progress, useToast } from '../components/ui.jsx';
-import { useStore, createProject, deleteProject, duplicateProject, findSamePhoto, keepCustomParts, deletePhoto, loadPhoto, readPhoto, savePhoto, setProfile, toggleIn, updateProject } from '../lib/store.js';
+import { A, Ext, Icon, PageHead, Progress, Tile, useToast } from '../components/ui.jsx';
+import { STAGE_ICON } from '../lib/icons.js';
+import { useStore, createProject, deleteProject, duplicateProject, findSamePhoto, keepCustomParts, deletePhoto, loadPhoto, readPhoto, savePhoto, setGearOwned, setOwnedQty, setProfile, toggleIn, updateProject } from '../lib/store.js';
 import { isHeic, photoDuplicate, photoPrecheck, photoReadProblem, photoSaveProblem } from '../lib/problems.js';
 import { copyText, decodeBuild, downloadFile, go, grams, shareUrl, t } from '../lib/util.js';
 import { SLOTS, partName } from '../data/parts.js';
@@ -10,6 +11,7 @@ import { FW, ESC_NOTE, RADIO_NOTE } from '../data/firmware.js';
 import { REGIONS, RULES_CHECKED, regionById, money, storeLinks } from '../data/regions.js';
 import { buildFacts, legalChecklist } from '../data/legal.js';
 import { check, cost, loadBuild, resolve, summarize, traits, flight } from '../lib/engine.js';
+import { EVERY_BUILD_GEAR, gearOwned, ownedQty, shopping } from '../lib/owned.js';
 import { stages } from '../lib/progress.js';
 import { Flight } from './Fly.jsx';
 
@@ -19,7 +21,7 @@ export function ProjectHome({ id }) {
   const state = useStore();
   const p = state.projects[id];
   if (!p) return notFound();
-  const s = stages(p, state.logs);
+  const s = stages(p, state.logs, state.owned);
   const remove = () => {
     if (window.confirm(t('Delete this build from this device?'))) { deleteProject(id); go('/me'); }
   };
@@ -33,17 +35,18 @@ export function ProjectHome({ id }) {
       {s.next && <A to={s.next.to} className="btn block" style={{ marginTop: 14 }}>{t('Next: {step}', { step: t(s.next.title) })}</A>}
       {loadBuild(p).frame && (
         <A to={`/p/${id}/3d`} className="card tap row between" style={{ marginTop: 14, flexWrap: 'nowrap' }}>
+          <Tile name="box" />
           <span className="grow">
             <h3>{t(s.pct === 100 ? 'Your finished drone in 3D' : 'See your drone in 3D')}</h3>
             <span className="small muted">{t('Turn it around, pull it apart, and tap any part for details.')}</span>
           </span>
-          <Icon name="cpu" className="chev" />
+          <Icon name="chev" className="chev" />
         </A>
       )}
       <div className="list" style={{ marginTop: 14 }}>
         {s.list.map((st) => (
           <A key={st.key} to={st.to} className="li">
-            <i className={`dot ${st.done ? 'ok' : ''}`} aria-hidden="true" />
+            <Tile name={STAGE_ICON[st.key]} done={st.done} />
             <span className="grow"><div className="title">{t(st.title)}</div><div className="sub">{t(st.detail)}</div></span>
             <Icon name="chev" className="chev" />
           </A>
@@ -52,13 +55,14 @@ export function ProjectHome({ id }) {
       <h2 style={{ margin: '24px 0 10px' }}>{t('Tools for this build')}</h2>
       <div className="list">
         {[
-          [`/p/${id}/wiring`, 'Wiring diagram', 'Power, motor order and every connection, for your exact parts.'],
-          [`/p/${id}/settings`, 'Starter settings', 'A file for your firmware, with ports and battery limits filled in.'],
-          [`/p/${id}/spares`, 'Spares and repairs', 'What usually breaks, how many spares to keep, and how to fix it.'],
-          [`/p/${id}/legal`, 'Am I legal?', 'A checklist for this exact build, in your country.'],
-          [`/compare/p.${p.copyOf && state.projects[p.copyOf] ? `${p.copyOf}/p.${id}` : id}`, 'Compare builds', 'See it side by side with another build.'],
-        ].map(([to, title, sub]) => (
+          [`/p/${id}/wiring`, 'Wiring diagram', 'Power, motor order and every connection, for your exact parts.', 'plug'],
+          [`/p/${id}/settings`, 'Starter settings', 'A file for your firmware, with ports and battery limits filled in.', 'cog'],
+          [`/p/${id}/spares`, 'Spares and repairs', 'What usually breaks, how many spares to keep, and how to fix it.', 'build'],
+          [`/p/${id}/legal`, 'Am I legal?', 'A checklist for this exact build, in your country.', 'shield'],
+          [`/compare/p.${p.copyOf && state.projects[p.copyOf] ? `${p.copyOf}/p.${id}` : id}`, 'Compare builds', 'See it side by side with another build.', 'columns'],
+        ].map(([to, title, sub, icon]) => (
           <A key={to} to={to} className="li">
+            <Tile name={icon} />
             <span className="grow"><div className="title">{t(title)}</div><div className="sub">{t(sub)}</div></span>
             <Icon name="chev" className="chev" />
           </A>
@@ -77,21 +81,25 @@ export function Parts({ id }) {
   const [toast, setToast] = useToast();
   if (!p) return notFound();
   const sel = loadBuild(p);
-  const c = cost(sel);
+  const c = shopping(sel, state.owned);
+  const buying = c.lines.filter((l) => l.buy > 0);
+  const mine = c.lines.filter((l) => l.buy === 0);
+  const price = (n, l) => (l.unit ? money(n, region) : t('Price not set'));
   const tr = traits(sel, p.firmware);
   const gear = GEAR.filter((g) => !g.when || g.when(tr));
-  const gearTotal = gear.filter((g) => !p.extras?.[g.id]).reduce((a, g) => a + g.p, 0);
+  const gearTotal = gear.filter((g) => !gearOwned(g, p, state.owned)).reduce((a, g) => a + g.p, 0);
   const n = summarize(check(sel, { firmware: p.firmware, goal: p.goal, region }));
 
   const asText = () => [
     p.name, `${t('Firmware')}: ${p.firmware}`, '',
-    ...c.lines.map((l) => `${t(SLOTS.find((s) => s.key === l.slot).label)}: ${l.qty > 1 ? `${l.qty} x ` : ''}${partName(l.part)} (${money(l.total, region)})`),
+    ...buying.map((l) => `${t(SLOTS.find((s) => s.key === l.slot).label)}: ${l.buy > 1 ? `${l.buy} x ` : ''}${partName(l.part)} (${price(l.buyTotal, l)})`),
+    ...(mine.length ? ['', `${t('Already own')}: ${mine.map((l) => partName(l.part)).join(', ')}`] : []),
     ...(sel.payload ? ['', `${t('Payload')}: ${sel.payload.items.map((i) => `${i.name} (${i.g} g)`).join(', ')}`] : []),
-    '', `${t('Total')}: ${money(c.total, region)}`, shareUrl(p),
+    '', `${t(c.saved ? 'Left to buy' : 'Total')}: ${money(c.toBuy, region)}`, shareUrl(p),
   ].join('\n');
   const csv = () => {
     const esc = (x) => `"${String(x).replace(/"/g, '""')}"`;
-    const rows = [['Slot', 'Brand', 'Model', 'Qty', 'Approx unit USD', 'Approx total USD'], ...c.lines.map((l) => [l.slot, l.part.b, l.part.m, l.qty, l.unit, l.total])];
+    const rows = [['Slot', 'Brand', 'Model', 'Qty', 'Owned', 'To buy', 'Approx unit USD', 'Approx to buy USD'], ...c.lines.map((l) => [l.slot, l.part.b, l.part.m, l.qty, l.own, l.buy, l.unit, l.buyTotal])];
     downloadFile(`${p.name.replace(/[^\w-]+/g, '_')}.csv`, rows.map((r) => r.map(esc).join(',')).join('\n'), 'text/csv');
   };
 
@@ -104,11 +112,12 @@ export function Parts({ id }) {
       <section className="section" style={{ marginTop: 18 }}>
         <div className="row between" style={{ marginBottom: 10 }}>
           <h2>{t('Drone parts')}</h2>
-          <b className="num">{money(c.total, region)}</b>
+          <b className="num">{money(c.toBuy, region)}</b>
         </div>
+        {c.saved > 0 && <p className="small muted" style={{ marginBottom: 10 }}>{t('You save about {sum} with parts you own.', { sum: money(c.saved, region) })}</p>}
         {!c.lines.length && <div className="note">{t('Nothing here yet.')} <A to={`/configure/${id}`} className="link">{t('Pick your parts')}</A></div>}
         <div className="list">
-          {c.lines.map((l) => {
+          {buying.map((l) => {
             const done = !!p.have?.[l.slot];
             return (
               <div key={l.slot}>
@@ -116,12 +125,14 @@ export function Parts({ id }) {
                   <input type="checkbox" checked={done} onChange={() => toggleIn(id, 'have', l.slot)} />
                   <span className="grow">
                     <div className="sub small muted">{t(SLOTS.find((s) => s.key === l.slot).label)}</div>
-                    <div className="title">{l.qty > 1 && `${l.qty} × `}{partName(l.part)}</div>
+                    <div className="title">{l.buy > 1 && `${l.buy} × `}{partName(l.part)}</div>
+                    {l.own > 0 && <div className="small muted">{t('You own {have} of {need}', { have: l.own, need: l.qty })}</div>}
                   </span>
-                  <span className="small num">{money(l.total, region)}</span>
+                  <span className="small num">{price(l.buyTotal, l)}</span>
                 </label>
                 <div className="chips no-print" style={{ padding: '0 14px 12px 48px' }}>
                   {storeLinks(region, partName(l.part)).map((st) => <Ext key={st.name} href={st.url} className="chip accent">{st.name}</Ext>)}
+                  <button className="chip own-btn" onClick={() => setOwnedQty(l.part.id, Math.max(ownedQty(state.owned, l.part.id), l.qty))}><Icon name="plus" />{t('I own this')}</button>
                 </div>
               </div>
             );
@@ -129,6 +140,27 @@ export function Parts({ id }) {
         </div>
         <p className="tiny muted" style={{ marginTop: 8 }}>{t('Tick a part once you have ordered it or it has arrived. Shop links open a search, so you can compare prices. We have no affiliate deals. Prices here are rough estimates.')}</p>
       </section>
+
+      {!!mine.length && (
+        <section className="section">
+          <div className="row between" style={{ marginBottom: 10 }}>
+            <h2>{t('Already yours')}</h2>
+            <A to="/gear" className="link small no-print">{t('Gear I own')}</A>
+          </div>
+          <div className="list">
+            {mine.map((l) => (
+              <div className="li" key={l.slot}>
+                <i className="dot ok" aria-hidden="true" />
+                <span className="grow" style={{ minWidth: 0 }}>
+                  <div className="sub">{t(SLOTS.find((s) => s.key === l.slot).label)}</div>
+                  <div className="title">{l.qty > 1 && `${l.qty} × `}{partName(l.part)}</div>
+                </span>
+                <button className="chip own-btn no-print" onClick={() => setOwnedQty(l.part.id, 0)}>{t('I do not own this')}</button>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       <section className="section">
         <div className="row between" style={{ marginBottom: 4 }}>
@@ -138,11 +170,11 @@ export function Parts({ id }) {
         <p className="small muted" style={{ marginBottom: 10 }}>{t('The costs most first-time guides forget. Untick anything you already own.')}</p>
         <div className="list">
           {gear.map((g) => {
-            const owned = !!p.extras?.[g.id];
+            const owned = gearOwned(g, p, state.owned);
             const link = g.query && storeLinks(region, g.query)[0];
             return (
               <label key={g.id} className="check">
-                <input type="checkbox" checked={!owned} onChange={() => toggleIn(id, 'extras', g.id)} />
+                <input type="checkbox" checked={!owned} onChange={() => (EVERY_BUILD_GEAR(g) ? setGearOwned(g.id, !owned) : toggleIn(id, 'extras', g.id))} />
                 <span className="grow">
                   <div className="title" style={owned ? { color: 'var(--muted)' } : undefined}>{t(g.title)}</div>
                   <div className="small muted">{t(g.detail)}</div>
@@ -156,7 +188,7 @@ export function Parts({ id }) {
       </section>
 
       <div className="card section">
-        <div className="row between"><b>{t('All in')}</b><b className="num" style={{ fontSize: 20 }}>{money(c.total + gearTotal, region)}</b></div>
+        <div className="row between"><b>{t('All in')}</b><b className="num" style={{ fontSize: 20 }}>{money(c.toBuy + gearTotal, region)}</b></div>
       </div>
 
       <section className="section btn-row no-print">
@@ -238,6 +270,7 @@ export function Assemble({ id }) {
       </div>
 
       <A to={`/p/${id}/wiring`} className="card tap row between" style={{ marginTop: 14, flexWrap: 'nowrap' }}>
+        <Tile name="plug" />
         <span className="grow"><h3>{t('Wiring diagram')}</h3><span className="small muted">{t('Power, motor order and every connection, for your exact parts.')}</span></span>
         <Icon name="chev" className="chev" />
       </A>
@@ -295,6 +328,7 @@ export function Setup({ id }) {
       <p className="tiny muted" style={{ marginTop: 8 }}>{t(fw.toolNote)}</p>
       <div className="note warn" style={{ marginTop: 14 }}><b>{t('Keep the props off')}</b>{t('Props stay off until every step here is finished.')}</div>
       <A to={`/p/${id}/settings`} className="card tap row between" style={{ marginTop: 14, flexWrap: 'nowrap' }}>
+        <Tile name="cog" />
         <span className="grow"><h3>{t('Starter settings')}</h3><span className="small muted">{t('A file for your firmware, with ports and battery limits filled in.')}</span></span>
         <Icon name="chev" className="chev" />
       </A>
@@ -426,8 +460,9 @@ export function ShareBuild({ id }) {
         <button className="link small" onClick={() => updateProject(id, { shared: true })}>{t('Mark as shared')}</button>
       </div>
       <A to={`/p/${id}/3d`} className="card tap row between" style={{ marginTop: 12, flexWrap: 'nowrap' }}>
+        <Tile name="box" />
         <span className="grow"><h3>{t('Share it in 3D')}</h3><span className="small muted">{t('Anyone can open the model in a browser and tap each part.')}</span></span>
-        <Icon name="cpu" className="chev" />
+        <Icon name="chev" className="chev" />
       </A>
       {toast}
     </div>

@@ -1,15 +1,18 @@
-import { loadBuild, check, summarize, missing, traits, cost } from './engine.js';
+import { loadBuild, check, summarize, missing, traits } from './engine.js';
+import { shopping } from './owned.js';
 import { stepsFor } from '../data/assembly.js';
 import { FW } from '../data/firmware.js';
 
 /** The journey for one build: where it stands and what comes next. */
-export function stages(p, logs = []) {
+export function stages(p, logs = [], owned = null) {
   const sel = loadBuild(p);
   const ctx = { firmware: p.firmware, goal: p.goal };
   const n = summarize(check(sel, ctx));
   const configured = missing(sel).length === 0 && n.errors === 0;
-  const lines = cost(sel).lines;
-  const partsDone = lines.length > 0 && lines.every((l) => p.have?.[l.slot]);
+  // A part you already own is ready without being ordered.
+  const lines = shopping(sel, owned).lines;
+  const ready = (l) => l.buy === 0 || !!p.have?.[l.slot];
+  const partsDone = lines.length > 0 && lines.every(ready);
   const steps = stepsFor(traits(sel, p.firmware));
   const stepsDone = steps.filter((s) => p.steps?.[s.id]).length;
   const swSteps = FW[p.firmware]?.steps || [];
@@ -18,7 +21,7 @@ export function stages(p, logs = []) {
 
   const list = [
     { key: 'configure', title: 'Configure', detail: 'Pick compatible parts', done: configured, to: `/configure/${p.id}` },
-    { key: 'parts', title: 'Get parts', detail: `${lines.filter((l) => p.have?.[l.slot]).length} of ${lines.length} parts ready`, done: partsDone, to: `/p/${p.id}/parts` },
+    { key: 'parts', title: 'Get parts', detail: `${lines.filter(ready).length} of ${lines.length} parts ready`, done: partsDone, to: `/p/${p.id}/parts` },
     { key: 'build', title: 'Build', detail: `${stepsDone} of ${steps.length} steps`, done: steps.length > 0 && stepsDone === steps.length, to: `/p/${p.id}/assemble` },
     { key: 'software', title: 'Set up software', detail: `${swDone} of ${swSteps.length} steps`, done: swSteps.length > 0 && swDone === swSteps.length, to: `/p/${p.id}/setup` },
     { key: 'fly', title: 'Fly', detail: flights ? `${flights} flights logged` : 'Pre-flight, then log your first flight', done: flights > 0, to: `/p/${p.id}/fly` },
@@ -43,7 +46,7 @@ export function earned(state) {
   const set = new Set();
   const projects = Object.values(state.projects);
   for (const p of projects) {
-    for (const s of stages(p, state.logs).list) {
+    for (const s of stages(p, state.logs, state.owned).list) {
       if (!s.done) continue;
       if (s.key === 'configure') set.add('planner');
       if (s.key === 'parts') set.add('gathered');

@@ -3,12 +3,14 @@
 import { useSyncExternalStore } from 'react';
 import { registerCustom, unregisterCustom } from '../data/parts.js';
 import { cleanSharedParts } from './custom.js';
+import { cleanOwned, MAX_OWNED } from './owned.js';
 
 const KEY = 'thrustworthy:v1';
 const BLANK = {
   profile: { persona: null, region: null, level: null, firmware: null, theme: 'light' },
   projects: {},
   customParts: {},
+  owned: { parts: {}, gear: {} },
   logs: [],
   themeVersion: 2,
   lastVisit: null,
@@ -22,7 +24,7 @@ function read() {
     const s = JSON.parse(raw);
     // Earlier versions saved a default theme for every visitor, so reset it once to the white default.
     if (s.themeVersion !== 2) { s.themeVersion = 2; if (s.profile) s.profile.theme = 'light'; }
-    return { ...BLANK, ...s, profile: { ...BLANK.profile, ...s.profile } };
+    return { ...BLANK, ...s, profile: { ...BLANK.profile, ...s.profile }, owned: cleanOwned(s.owned) };
   } catch {
     return structuredClone(BLANK);
   }
@@ -125,11 +127,44 @@ export function keepCustomParts(map = {}) {
   commit({ ...state, customParts: { ...state.customParts, ...map } });
 }
 
+/** Change a saved part in place. Every build using it picks up the new numbers. */
+export function updateCustomPart(id, part) {
+  const saved = { ...part, id };
+  registerCustom({ [id]: saved });
+  commit({ ...state, customParts: { ...state.customParts, [id]: saved } });
+  return saved;
+}
+
 export function deleteCustomPart(id) {
   const customParts = { ...state.customParts };
   delete customParts[id];
+  const parts = { ...state.owned.parts };
+  delete parts[id];
   unregisterCustom(id);
-  commit({ ...state, customParts });
+  commit({ ...state, customParts, owned: { ...state.owned, parts } });
+}
+
+/** How many of a part you own. Zero removes it. */
+export function setOwnedQty(id, qty) {
+  const parts = { ...state.owned.parts };
+  if (qty >= 1) parts[id] = Math.min(Math.floor(qty), MAX_OWNED); else delete parts[id];
+  commit({ ...state, owned: { ...state.owned, parts } });
+}
+
+/** A radio or charger you own serves every build, so this also clears any older per-build tick. */
+export function setGearOwned(id, on) {
+  const gear = { ...state.owned.gear };
+  if (on) gear[id] = true; else delete gear[id];
+  const projects = { ...state.projects };
+  if (!on) {
+    for (const [pid, p] of Object.entries(projects)) {
+      if (!p.extras?.[id]) continue;
+      const extras = { ...p.extras };
+      delete extras[id];
+      projects[pid] = { ...p, extras };
+    }
+  }
+  commit({ ...state, projects, owned: { ...state.owned, gear } });
 }
 
 export function deleteProject(id) {
@@ -158,7 +193,7 @@ export function importData(text) {
   const s = JSON.parse(text);
   if (!s || typeof s !== 'object' || !s.profile) throw new Error('Not a Thrustworthy backup');
   registerCustom(cleanSharedParts(s.customParts));
-  commit({ ...BLANK, ...s, profile: { ...BLANK.profile, ...s.profile } });
+  commit({ ...BLANK, ...s, profile: { ...BLANK.profile, ...s.profile }, owned: cleanOwned(s.owned) });
   keepData();
 }
 

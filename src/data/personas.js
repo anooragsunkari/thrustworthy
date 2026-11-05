@@ -107,6 +107,9 @@ export const LEVELS = [
   { id: 'Pro', title: 'Pro', text: 'I know what I want. Give me numbers and get out of the way.' },
 ];
 
+// The firmware a new build of each kind starts on. Anything else starts on Betaflight.
+export const GOALS_FIRMWARE = { lab: 'PX4', heavy: 'ArduPilot', longrange: 'INAV' };
+
 // Things people forget to budget for. `when` reads the traits of the build (see engine.traits).
 export const GEAR = [
   { id: 'radio', title: 'Radio controller', detail: 'Choose one that matches your receiver link. It lasts for years across many drones.', p: 90, query: 'RadioMaster Pocket ELRS' },

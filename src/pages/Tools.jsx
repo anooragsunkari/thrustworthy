@@ -104,7 +104,7 @@ function SourcePick({ label, value, onChange, sources }) {
 }
 
 export function Compare({ a: startA, b: startB }) {
-  const { projects, profile } = useStore();
+  const { projects, profile, owned } = useStore();
   const region = regionById(profile.region);
   const sources = sourcesOf(projects);
   const has = (k) => sources.some((s) => s.key === k);
@@ -114,7 +114,7 @@ export function Compare({ a: startA, b: startB }) {
   const A1 = loadSource(a, projects);
   const B1 = loadSource(b, projects);
   if (!A1 || !B1) return notFound();
-  const c = compareBuilds(A1, B1, region);
+  const c = compareBuilds(A1, B1, region, owned);
   const show = {
     weight: (v) => grams(v),
     twr: (v) => `${v.toFixed(1)}:1`,
@@ -122,6 +122,7 @@ export function Compare({ a: startA, b: startB }) {
     hover: (v) => `${Math.round(v)}`,
     peak: (v) => `${Math.round(v)}`,
     cost: (v) => money(v, region),
+    tobuy: (v) => money(v, region),
     spares: (v) => money(v, region),
   };
   const fmt = (r, v) => (v === null ? '–' : (show[r.id] ? show[r.id](v) : `${v}`));

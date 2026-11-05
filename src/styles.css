@@ -201,8 +201,14 @@ a.chip { min-height: 30px; }
 @keyframes spin { to { transform: rotate(360deg); } }
 @media (min-width: 900px) { .hero { padding-top: 84px; } }
 .card.persona { display: flex; gap: 14px; align-items: flex-start; }
-.persona .ico { flex: none; width: 42px; height: 42px; border-radius: 50%; background: var(--accent-soft); color: var(--accent); display: grid; place-items: center; }
-.persona .ico svg { width: 22px; height: 22px; }
+/* Icon tile: one size on cards, a smaller one in lists, the same line weight everywhere. */
+.ico { flex: none; width: 42px; height: 42px; border-radius: 12px; background: var(--bg); color: var(--ink); display: grid; place-items: center; box-shadow: inset 0 0 0 .5px var(--line); }
+.ico svg { width: 22px; height: 22px; }
+.ico b { font-size: 16px; font-weight: 600; }
+.ico.ok { background: var(--ok-soft); color: var(--ok); box-shadow: none; }
+.li > .ico { width: 34px; height: 34px; border-radius: 10px; }
+.li > .ico svg { width: 18px; height: 18px; }
+.badge.off .ico { opacity: .55; }
 .journey { counter-reset: j; display: grid; gap: 0; }
 .journey li { counter-increment: j; position: relative; padding: 0 0 22px 44px; }
 .journey li::before { content: counter(j); position: absolute; left: 0; top: 0; width: 30px; height: 30px; border-radius: 50%; background: var(--sunken); display: grid; place-items: center; font-size: 14px; font-weight: 600; }
@@ -228,7 +234,7 @@ button.li:hover, a.li:hover { background: color-mix(in srgb, var(--sunken) 55%, 
 .li .right, .pick .right { flex: none; text-align: right; white-space: nowrap; }
 .back-link { text-decoration: none; display: inline-flex; align-items: center; gap: 2px; min-height: 36px; margin-bottom: 4px; font-size: 16px; }
 .back-link svg { width: 17px; height: 17px; }
-.li svg.chev { width: 15px; height: 15px; color: var(--faint); flex: none; }
+svg.chev { width: 15px; height: 15px; color: var(--faint); flex: none; }
 .dot { flex: none; width: 9px; height: 9px; border-radius: 50%; background: var(--sunken); }
 .dot.ok { background: var(--ok); } .dot.warn { background: var(--warn); } .dot.err { background: var(--err); }
 .bullets li { position: relative; padding-left: 16px; margin-top: 7px; }
@@ -373,3 +379,20 @@ details > summary::after { transition: transform var(--dur-bouncy) var(--ease-bo
 .cmp-label { grid-column: 1 / -1; }
 .cmp-win { font-weight: 700; }
 @media print { .diagram { max-width: 340px; } .code { max-height: none; white-space: pre-wrap; } }
+
+/* Gear you own */
+.stepper { display: inline-flex; align-items: center; gap: 2px; flex: none; }
+.stepper b { min-width: 26px; text-align: center; font-size: 15px; font-weight: 600; }
+.stepper .icon-btn:disabled { opacity: .4; cursor: default; }
+.pick-row { display: flex; align-items: center; gap: 8px; }
+.pick-row .pick { flex: 1 1 0; min-width: 0; }
+.pick-row > .icon-btn { margin-bottom: 8px; }
+button.own-btn { border: 0; cursor: pointer; min-height: 30px; font-family: inherit; color: var(--ink); flex: none; }
+
+/* Firmware logos. The plate stays dark in both themes, so each logo keeps its own colors. */
+.fw-logo { display: inline-grid; place-items: center; flex: none; width: 84px; height: 44px; border-radius: 10px; background: #111114; vertical-align: middle; }
+.fw-logo svg { width: 22px; height: 22px; color: #fff; }
+.fw-logo img { display: block; width: 68px; height: 34px; object-fit: contain; }
+
+/* A card can also be a row, with its arrow at the end. */
+.card.row { display: flex; align-items: center; gap: 12px; }
