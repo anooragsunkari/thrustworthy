@@ -1,7 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { A, Ext, Icon, PageHead, Progress, Tile, useToast } from '../components/ui.jsx';
 import { STAGE_ICON } from '../lib/icons.js';
-import { useStore, createProject, deleteProject, duplicateProject, keepCustomParts, deletePhoto, loadPhoto, savePhoto, setGearOwned, setOwnedQty, setProfile, shrinkImage, toggleIn, updateProject } from '../lib/store.js';
+import { useStore, createProject, deleteProject, duplicateProject, findSamePhoto, keepCustomParts, deletePhoto, loadPhoto, readPhoto, savePhoto, setGearOwned, setOwnedQty, setProfile, toggleIn, updateProject } from '../lib/store.js';
+import { isHeic, photoDuplicate, photoPrecheck, photoReadProblem, photoSaveProblem } from '../lib/problems.js';
 import { copyText, decodeBuild, downloadFile, go, grams, shareUrl, t } from '../lib/util.js';
 import { SLOTS, partName } from '../data/parts.js';
 import { GEAR } from '../data/personas.js';
@@ -202,25 +203,49 @@ export function Parts({ id }) {
   );
 }
 
-function StepPhoto({ pid, sid }) {
+function StepPhoto({ pid, sid, titleOf }) {
   const key = `${pid}:${sid}`;
   const [src, setSrc] = useState(null);
+  const [problem, setProblem] = useState(null);
+  const [converting, setConverting] = useState(false);
   const ref = useRef(null);
   useEffect(() => { let on = true; loadPhoto(key).then((d) => on && setSrc(d || null)).catch(() => {}); return () => { on = false; }; }, [key]);
   const pick = async (e) => {
     const f = e.target.files?.[0];
+    // Clear the picker so choosing the same file again still fires a change.
+    e.target.value = '';
     if (!f) return;
-    const data = await shrinkImage(f);
-    await savePhoto(key, data);
+    setProblem(null);
+    const early = photoPrecheck(f);
+    if (early) { setProblem(early); return; }
+    const same = await findSamePhoto(pid, f);
+    if (same && same !== key) { setProblem(photoDuplicate(f, titleOf(same.slice(pid.length + 1)))); return; }
+    let data;
+    try {
+      data = await readPhoto(f, isHeic(f), () => setConverting(true));
+    } catch (err) {
+      setProblem(photoReadProblem(f, err?.stage));
+      return;
+    } finally {
+      setConverting(false);
+    }
+    try { await savePhoto(key, data, f); } catch (err) { setProblem(photoSaveProblem(err)); return; }
     setSrc(data);
+  };
+  const remove = async () => {
+    setProblem(null);
+    try { await deletePhoto(key); setSrc(null); } catch (err) { setProblem(photoSaveProblem(err, 'removed')); }
   };
   return (
     <div style={{ marginTop: 10 }}>
-      <input ref={ref} type="file" accept="image/*" hidden onChange={pick} />
-      {src ? (
+      <input ref={ref} type="file" accept="image/*,.heic,.heif" hidden onChange={pick} />
+      {problem && <div className="note err" role="alert" style={{ marginBottom: 8 }}><b>{t(problem.title)}</b>{t(problem.body)}</div>}
+      {converting ? (
+        <div className="small muted" role="status">{t('Converting your iPhone photo. This can take a few seconds.')}</div>
+      ) : src ? (
         <>
           <img src={src} alt={t('Your progress photo')} className="photo" />
-          <button className="link small" style={{ marginTop: 4 }} onClick={async () => { await deletePhoto(key); setSrc(null); }}>{t('Remove photo')}</button>
+          <button className="link small" style={{ marginTop: 4 }} onClick={remove}>{t('Remove photo')}</button>
         </>
       ) : <button className="btn secondary small" onClick={() => ref.current.click()}><Icon name="camera" />{t('Add a progress photo')}</button>}
     </div>
@@ -269,7 +294,7 @@ export function Assemble({ id }) {
                           <ol className="numbered small">{s.do.map((d) => <li key={d}>{t(d)}</li>)}</ol>
                           {s.tip && <div className="note ok" style={{ marginTop: 10 }}><b>{t('Tip')}</b>{t(s.tip)}</div>}
                           {s.mistake && <div className="note warn" style={{ marginTop: 8 }}><b>{t('Common mistake')}</b>{t(s.mistake)}</div>}
-                          <StepPhoto pid={id} sid={s.id} />
+                          <StepPhoto pid={id} sid={s.id} titleOf={(x) => t(steps.find((st) => st.id === x)?.title)} />
                         </div>
                       </details>
                     </div>
@@ -412,7 +437,7 @@ export function ShareBuild({ id }) {
   const sel = loadBuild(p);
   const f = flight(sel, { goal: p.goal });
   const body = encodeURIComponent(`Build link: ${url}\n\nFirmware: ${p.firmware}\n${f ? `Weight: ${Math.round(f.auw)} g\n` : ''}\nWhat I learned:\n\nPhotos (drag them in):\n`);
-  const issue = `https://github.com/lazyonbed/thrustworthy/issues/new?title=${encodeURIComponent(`Build: ${p.name}`)}&labels=gallery&body=${body}`;
+  const issue = `https://github.com/anooragsunkari/thrustworthy/issues/new?title=${encodeURIComponent(`Build: ${p.name}`)}&labels=gallery&body=${body}`;
   const nativeShare = async () => {
     updateProject(id, { shared: true });
     if (navigator.share) {
