@@ -6,7 +6,10 @@ import { REGIONS, money, regionById, storeLinks, videoSearch, weightNote } from 
 import { FW, FW_CHOICES } from '../src/data/firmware.js';
 import { layout, partDetails } from '../src/lib/model.js';
 import { Spring, SOFT, SNAPPY, BOUNCY, springCurve } from '../src/lib/spring.js';
-import { cleanCustom, cleanPayload, cleanSharedParts, fieldsFor, CUSTOM_FIELDS } from '../src/lib/custom.js';
+import { cleanCustom, cleanPayload, cleanSharedParts, fieldsFor, formValues, CUSTOM_FIELDS, CUSTOM_ID } from '../src/lib/custom.js';
+import { brokenBuilds, buildAround, buildsUsing, cleanOwned, EVERY_BUILD_GEAR, gearOwned, MAX_OWNED, ownedList, shopping } from '../src/lib/owned.js';
+import { stages } from '../src/lib/progress.js';
+import { GEAR } from '../src/data/personas.js';
 import { buildFacts, legalChecklist } from '../src/data/legal.js';
 import { registerCustom } from '../src/data/parts.js';
 import { encodeBuild, decodeBuild } from '../src/lib/util.js';
@@ -750,4 +753,206 @@ test('compare copes with an empty build', () => {
   const c = compareBuilds({ sel: {}, goal: 'freestyle', firmware: 'Betaflight' }, { sel: five(), goal: 'freestyle', firmware: 'Betaflight' });
   assert.equal(c.rows.find((r) => r.id === 'twr').a, null);
   assert.equal(c.rows.find((r) => r.id === 'twr').winner, null);
+});
+
+// Gear you already own
+
+const ownedOf = (map) => cleanOwned({ parts: map });
+
+test('owned quantities are cleaned, so a bad backup cannot break a shopping list', () => {
+  const c = cleanOwned({ parts: { good: 4.9, none: 0, neg: -2, text: 'x', big: 5000, 'bad id!': 2 }, gear: { radio: true, iron: 'yes' } });
+  assert.deepEqual(c, { parts: { good: 4, big: MAX_OWNED }, gear: { radio: true } });
+  assert.deepEqual(cleanOwned(null), { parts: {}, gear: {} });
+  assert.deepEqual(cleanOwned('nonsense'), { parts: {}, gear: {} });
+});
+
+test('owned parts come off the bill, and owning some of a part buys only the rest', () => {
+  const sel = five();
+  const motor = sel.motor;
+  const none = shopping(sel, null);
+  assert.equal(none.toBuy, none.total);
+  assert.equal(none.saved, 0);
+
+  const some = shopping(sel, ownedOf({ [motor.id]: 2, [sel.frame.id]: 1 }));
+  const line = some.lines.find((l) => l.slot === 'motor');
+  assert.equal(line.qty, 4);
+  assert.equal(line.own, 2);
+  assert.equal(line.buy, 2);
+  assert.equal(line.buyTotal, motor.p * 2);
+  assert.equal(some.saved, motor.p * 2 + sel.frame.p);
+  assert.ok(Math.abs(some.toBuy + some.saved - some.total) < 1e-9);
+  assert.equal(some.ownedCount, 2);
+
+  // Owning more than a build needs saves no more than the build costs.
+  const spare = shopping(sel, ownedOf({ [motor.id]: 12 })).lines.find((l) => l.slot === 'motor');
+  assert.equal(spare.own, 4);
+  assert.equal(spare.buy, 0);
+});
+
+test('an owned id that no longer exists drops out and changes nothing', () => {
+  assert.deepEqual(ownedList(ownedOf({ 'no-such-part': 3 })), []);
+  assert.equal(shopping(five(), ownedOf({ 'no-such-part': 3 })).saved, 0);
+});
+
+test('your own part with no price still appears on the parts list', () => {
+  const { part } = cleanCustom('gps', { b: 'Acme', m: 'Unpriced GPS', w: 12 });
+  const sel = { ...five(), gps: { ...part, id: 'x-test-unpriced' } };
+  const line = cost(sel).lines.find((l) => l.slot === 'gps');
+  assert.ok(line);
+  assert.equal(line.total, 0);
+});
+
+test('fill in the rest picks parts you own, but not when they break the build', () => {
+  const frame = five().frame;
+  const ctx = { firmware: 'Betaflight', goal: 'freestyle' };
+  const plain = autofill({ frame }, ctx);
+  const otherRx = SLOTS.find((s) => s.key === 'rx').list.find((p) => p.id !== plain.rx.id && check({ ...plain, rx: p }, ctx).every((i) => i.level !== 'error'));
+  const out = autofill({ frame }, ctx, { owned: [{ part: partById(otherRx.id), qty: 1 }] });
+  assert.equal(out.rx.id, otherRx.id);
+
+  // An owned ESC that cannot take the battery is left out, and the fill buys one that works.
+  const weak = cleanCustom('esc', { b: 'A', m: 'Weak ESC', w: 10, a: 40, cMin: 1, cMax: 1 }).part;
+  const safe = autofill({ frame, battery: plain.battery }, ctx, { owned: [{ part: { ...weak, id: 'x-weak' }, qty: 1 }] });
+  assert.notEqual(safe.esc.id, 'x-weak');
+  assert.equal(summarize(check(safe, ctx)).errors, 0);
+});
+
+test('one spare motor does not decide the motors for a whole quad', () => {
+  const frame = five().frame;
+  const ctx = { firmware: 'Betaflight', goal: 'freestyle' };
+  const plain = autofill({ frame }, ctx);
+  const other = SLOTS.find((s) => s.key === 'motor').list.find((p) => p.id !== plain.motor.id && p.ref.d === plain.motor.ref.d);
+  const one = autofill({ frame }, ctx, { owned: [{ part: partById(other.id), qty: 1 }] });
+  assert.equal(one.motor.id, plain.motor.id);
+  const four = autofill({ frame }, ctx, { owned: [{ part: partById(other.id), qty: 4 }] });
+  assert.equal(four.motor.id, other.id);
+});
+
+test('building around your gear uses only what you own and leaves the rest to choose', () => {
+  const sel = five();
+  const owned = ownedOf({ [sel.motor.id]: 4, [sel.battery.id]: 2, [sel.rx.id]: 1 });
+  const out = buildAround(owned, { firmware: 'Betaflight', goal: 'freestyle' });
+  assert.equal(out.motor.id, sel.motor.id);
+  assert.equal(out.battery.id, sel.battery.id);
+  assert.equal(out.rx.id, sel.rx.id);
+  assert.equal(out.frame, undefined);
+  assert.equal(out.fc, undefined);
+  assert.deepEqual(Object.keys(buildAround(ownedOf({}), { firmware: 'PX4', goal: 'lab' })), []);
+});
+
+test('building around gear for an endurance goal works with no motors chosen', () => {
+  const battery = five().battery;
+  for (const goal of ['longrange', 'lab', 'heavy', 'cine']) {
+    const out = buildAround(ownedOf({ [battery.id]: 1 }), { firmware: 'ArduPilot', goal });
+    assert.equal(out.battery.id, battery.id);
+  }
+});
+
+test('building around your gear leaves out an owned part that makes an error', () => {
+  const wrong = FCS.find((f) => !f.fw.includes('Betaflight'));
+  assert.ok(wrong);
+  const out = buildAround(ownedOf({ [wrong.id]: 1 }), { firmware: 'Betaflight', goal: 'freestyle' });
+  assert.equal(out.fc, undefined);
+});
+
+test('goggles and spare props stay per build, and a charger counts for every build', () => {
+  const owned = { parts: {}, gear: { charger: true, 'goggles-digital': true } };
+  assert.equal(gearOwned({ id: 'charger' }, {}, owned), true);
+  assert.equal(gearOwned({ id: 'goggles-digital' }, {}, owned), false);
+  assert.equal(gearOwned({ id: 'goggles-digital' }, { extras: { 'goggles-digital': 1 } }, owned), true);
+  assert.equal(GEAR.filter(EVERY_BUILD_GEAR).some((g) => g.id === 'spares'), false);
+});
+
+test('a part you own counts as ready, so it needs no ordered tick', () => {
+  const ids = toIds(five());
+  const project = { id: 'a', goal: 'freestyle', firmware: 'Betaflight', sel: ids, have: {}, steps: {}, software: {} };
+  const parts = (o) => stages(project, [], o).list.find((s) => s.key === 'parts');
+  assert.equal(parts(null).done, false);
+  assert.equal(parts(ownedOf(Object.fromEntries(Object.values(ids).map((id) => [id, 8])))).done, true);
+  assert.match(parts(ownedOf({ [ids.frame]: 1 })).detail, /^1 of/);
+});
+
+test('compare adds a left-to-buy row only when you own something in those builds', () => {
+  const b = five();
+  const pair = { sel: b, goal: 'freestyle', firmware: 'Betaflight' };
+  assert.equal(compareBuilds(pair, pair).rows.some((r) => r.id === 'tobuy'), false);
+  const owned = ownedOf({ [b.frame.id]: 1 });
+  const c = compareBuilds(pair, pair, null, owned);
+  assert.equal(c.rows.find((r) => r.id === 'tobuy').a, shopping(b, owned).toBuy);
+});
+
+// Editing your own parts
+
+const SAMPLES = {
+  frame: { b: 'A', m: 'Frame', w: 120, wheel: 225, mc: '6', maxProp: 5, mount: ['16', '19'], stack: ['30.5', 'pixhawk'], ducted: true, p: 44 },
+  motor: { b: 'A', m: 'Motor', w: 32, sz: '2207', kv: 1750, cMin: 4, cMax: 6, mount: '16', refT: 1500, refD: 5, refC: 6, refA: 40, p: 20 },
+  esc: { b: 'A', m: 'ESC', w: 12, t: 'single', a: 45, cMin: 3, cMax: 6, fw: 'BLHeli_32', dshot: false, mount: 'arm' },
+  fc: { b: 'A', m: 'FC', w: 8, mcu: 'STM32H743', cMin: 3, cMax: 6, u: 6, fw: ['Betaflight', 'INAV'], mount: 'pixhawk' },
+  prop: { b: 'A', m: 'Prop', w: 4, d: 5.1, pi: 3.5, bl: 2 },
+  battery: { b: 'A', m: 'Pack', w: 220, c: 6, ch: 'LiHV', cap: 1300, dr: 100, cn: 'XT30' },
+  video: { b: 'A', m: 'VTX', w: 30, sys: 'Walksnail', cMin: 2, cMax: 6, lat: 22, pw: 7 },
+  rx: { b: 'A', m: 'RX', w: 2, proto: 'CRSF', band: 'sub' },
+  gps: { b: 'A', m: 'GPS', w: 11, chip: 'u-blox M10', rtk: true },
+  companion: { b: 'A', m: 'Pi', w: 40, pw: 9, ros: 'Vision' },
+};
+
+test('every kind of custom part opens in the form with its values and saves back unchanged', () => {
+  for (const slot of Object.keys(CUSTOM_FIELDS)) {
+    const { part, errors } = cleanCustom(slot, SAMPLES[slot]);
+    assert.deepEqual(errors, [], slot);
+    const again = cleanCustom(slot, formValues(slot, part));
+    assert.deepEqual(again.errors, [], slot);
+    assert.deepEqual(again.part, part, slot);
+  }
+});
+
+test('a new part starts from the form defaults, and an edit updates derived values', () => {
+  assert.equal(formValues('battery').ch, 'LiPo');
+  assert.deepEqual(formValues('frame').mount, []);
+
+  const fc = cleanCustom('fc', SAMPLES.fc).part;
+  assert.equal(fc.needsPM, true);
+  assert.equal(cleanCustom('fc', { ...formValues('fc', fc), mount: '30.5' }).part.needsPM, undefined);
+
+  const frame = cleanCustom('frame', SAMPLES.frame).part;
+  assert.equal(frame.mc, 6);
+  assert.equal(cleanCustom('frame', { ...formValues('frame', frame), ducted: false, wheel: 450 }).part.cat, 'lab');
+});
+
+test('editing a part changes every build using it, and the checker sees the new numbers', () => {
+  const id = 'x-test-edit-motor';
+  const sel = five();
+  const good = cleanCustom('motor', { ...SAMPLES.motor, cMin: sel.battery.c - 1, cMax: sel.battery.c + 1 }).part;
+  registerCustom({ [id]: { ...good, id } });
+  const project = { id: 'p', goal: 'freestyle', firmware: 'Betaflight', sel: { ...toIds(sel), motor: id } };
+  const projects = { p: project, other: { id: 'other', sel: { frame: sel.frame.id } } };
+  assert.deepEqual(buildsUsing(projects, id).map((p) => p.id), ['p']);
+  const before = brokenBuilds(projects, id).length;
+
+  // The motor can no longer take this battery.
+  const bad = cleanCustom('motor', { ...formValues('motor', good), cMin: 1, cMax: sel.battery.c - 1 }).part;
+  registerCustom({ [id]: { ...bad, id } });
+  assert.equal(resolve(project.sel).motor.cMax, sel.battery.c - 1);
+  assert.equal(brokenBuilds(projects, id).length, before + 1);
+});
+
+test('opening an old link never overwrites a part you have since edited', () => {
+  const id = 'x-test-link-part';
+  const old = { ...cleanCustom('gps', { b: 'Acme', m: 'Old', w: 10 }).part, id };
+  const edited = { ...cleanCustom('gps', { b: 'Acme', m: 'New', w: 20 }).part, id };
+  registerCustom({ [id]: old });
+  const token = encodeBuild({ name: 'x', goal: 'lab', firmware: 'PX4', sel: { gps: id } });
+  registerCustom({ [id]: edited });
+
+  const first = decodeBuild(token);
+  assert.equal(partById(id).m, 'New');
+  assert.notEqual(first.sel.gps, id);
+  assert.equal(partById(first.sel.gps).m, 'Old');
+  assert.match(first.sel.gps, CUSTOM_ID);
+  assert.equal(decodeBuild(token).sel.gps, first.sel.gps);
+
+  // A link that matches what you have keeps its id, so nothing piles up.
+  const same = decodeBuild(encodeBuild({ name: 'x', goal: 'lab', firmware: 'PX4', sel: { gps: id } }));
+  assert.equal(same.sel.gps, id);
+  assert.deepEqual(Object.keys(same.custom), [id]);
 });

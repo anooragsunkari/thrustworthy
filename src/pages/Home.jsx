@@ -30,7 +30,7 @@ export function Home() {
   const projects = Object.values(state.projects).sort((a, b) => b.updated - a.updated);
   const current = projects[0];
   const featured = rankBuilds(profile);
-  const s = current && stages(current, state.logs);
+  const s = current && stages(current, state.logs, state.owned);
 
   return (
     <div className="wrap">

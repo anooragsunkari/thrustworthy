@@ -6,6 +6,7 @@ import { BUILDS, BUILD_TYPES, buildById } from '../data/builds.js';
 import { SLOTS, FIRMWARES, partName } from '../data/parts.js';
 import { regionById, money, videoSearch, weightNote } from '../data/regions.js';
 import { check, cost, flight, resolve, isIncluded } from '../lib/engine.js';
+import { shopping } from '../lib/owned.js';
 
 export function Builds({ level }) {
   const { profile } = useStore();
@@ -35,13 +36,13 @@ export function Builds({ level }) {
 }
 
 export function BuildDetail({ id }) {
-  const { profile } = useStore();
+  const { profile, owned } = useStore();
   const region = regionById(profile.region);
   const b = buildById(id);
   if (!b) return <div className="wrap"><PageHead title={t('Build not found')} back="/builds" /></div>;
   const sel = resolve(b.sel);
   const f = flight(sel, { goal: b.goal });
-  const c = cost(sel);
+  const c = shopping(sel, owned);
   const notes = check(sel, { firmware: b.firmware, goal: b.goal, region }).filter((i) => i.level !== 'info' || i.id.startsWith('r-'));
   const video = videoSearch(region, `${b.title} ${b.type} drone build`);
   const start = () => {
@@ -73,6 +74,7 @@ export function BuildDetail({ id }) {
         <Ext href={video.url} className="btn secondary"><Icon name="ext" />{t('Watch on {site}', { site: video.site })}</Ext>
       </div>
 
+      {c.saved > 0 && <div className="note ok" style={{ marginTop: 14 }}><b>{t(c.ownedCount === 1 ? 'You own one of these parts' : 'You own {n} of these parts', { n: c.ownedCount })}</b>{t('You would pay about {left} of the {total}.', { left: money(c.toBuy, region), total: money(c.total, region) })}</div>}
       {w && <div className="note info" style={{ marginTop: 14 }}><b>{t('Rules for {place}', { place: t(region.name) })}</b>{t(w)} <A to={`/rules/${region.id}`} className="link">{t('Full rules')}</A></div>}
       {!region && <div className="note" style={{ marginTop: 14 }}><A to="/start/where" className="link">{t('Tell us your country')}</A> {t('to see local prices, shops and rules.')}</div>}
 
@@ -91,7 +93,7 @@ export function BuildDetail({ id }) {
             return (
               <div className="li" key={s.key}>
                 <span className="grow"><div className="sub">{t(s.label)}</div><div className="title">{inc ? t('Included in the flight controller') : partName(sel[s.key])}</div></span>
-                {line && <span className="right small num">{line.qty > 1 && <span className="muted">{line.qty} × </span>}{money(line.total, region)}</span>}
+                {line && (line.buy === 0 ? <span className="chip ok">{t('You own this')}</span> : <span className="right small num">{line.buy > 1 && <span className="muted">{line.buy} × </span>}{money(line.buyTotal, region)}</span>)}
               </div>
             );
           })}

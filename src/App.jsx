@@ -9,6 +9,7 @@ import { Configure, ConfigureEntry } from './pages/Configure.jsx';
 import { Assemble, FlyProject, ImportBuild, Legal, Parts, ProjectHome, Setup, ShareBuild } from './pages/Project.jsx';
 import { Fix, Flight, Software, SoftwareDetail } from './pages/Fly.jsx';
 import { Community, Me } from './pages/Me.jsx';
+import { Gear } from './pages/Gear.jsx';
 import { GuideModel, ProjectModel, SharedModel } from './pages/Model.jsx';
 import { About, Numbers, RuleDetail, Rules } from './pages/Info.jsx';
 import { Compare, Spares, StarterSettings, Wiring } from './pages/Tools.jsx';
@@ -46,6 +47,7 @@ function route(path) {
       return <Flight />;
     case 'community': return <Community />;
     case 'me': return <Me />;
+    case 'gear': return <Gear />;
     case 'rules': return b ? <RuleDetail id={b} key={b} /> : <Rules />;
     case 'about': return b === 'numbers' ? <Numbers /> : <About />;
     default: return <div className="wrap"><div className="page-head"><h1>{t('Not found')}</h1><A to="/" className="link">{t('Back to home')}</A></div></div>;
@@ -57,7 +59,7 @@ const TABS = [
   { to: '/builds', label: 'Builds', icon: 'list', on: (p) => p.startsWith('/builds') || p.startsWith('/community') },
   { to: '/configure', label: 'Configure', icon: 'build', on: (p) => p.startsWith('/configure') || p.startsWith('/p/') || p.startsWith('/compare') },
   { to: '/fly', label: 'Fly', icon: 'fly', on: (p) => p.startsWith('/fly') || p.startsWith('/software') || p.startsWith('/rules') },
-  { to: '/me', label: 'Me', icon: 'user', on: (p) => p.startsWith('/me') },
+  { to: '/me', label: 'Me', icon: 'user', on: (p) => p.startsWith('/me') || p.startsWith('/gear') },
 ];
 const NAV = [
   { to: '/builds', label: 'Builds', on: (p) => p.startsWith('/builds') },
@@ -66,7 +68,7 @@ const NAV = [
   { to: '/fly', label: 'Fly', on: (p) => p.startsWith('/fly') },
   { to: '/rules', label: 'Rules', on: (p) => p.startsWith('/rules') },
   { to: '/community', label: 'Community', on: (p) => p.startsWith('/community') },
-  { to: '/me', label: 'My hangar', on: (p) => p.startsWith('/me') },
+  { to: '/me', label: 'My hangar', on: (p) => p.startsWith('/me') || p.startsWith('/gear') },
 ];
 
 /** The new theme grows out of the button you pressed, where the browser supports it. */

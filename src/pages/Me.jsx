@@ -1,5 +1,6 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { A, BuildCard, Ext, Icon, PageHead, Progress, useToast } from '../components/ui.jsx';
+import { BrokenBuilds, EditPartSheet } from '../components/PartForm.jsx';
 import { deleteCustomPart, exportData, importData, markSeen, resetAll, setProfile, useStore } from '../lib/store.js';
 import { downloadFile, t, go } from '../lib/util.js';
 import { BUILDS } from '../data/builds.js';
@@ -9,6 +10,7 @@ import { REGIONS, regionById } from '../data/regions.js';
 import { FW_CHOICES } from '../data/firmware.js';
 import { BADGES, earned, stages } from '../lib/progress.js';
 import { cost, loadBuild } from '../lib/engine.js';
+import { buildsUsing, ownedList } from '../lib/owned.js';
 import { GALLERY } from '../data/gallery.js';
 
 export function Me() {
@@ -19,6 +21,9 @@ export function Me() {
   const region = regionById(profile.region);
   const fileRef = useRef(null);
   const [toast, setToast] = useToast();
+  const [editing, setEditing] = useState(null);
+  const [broken, setBroken] = useState([]);
+  const ownedCount = ownedList(state.owned).length + Object.keys(state.owned.gear).length;
   const types = new Set(list.map((p) => p.goal));
   const fresh = BUILDS.filter((b) => seenAt && b.added > seenAt && (types.has(b.goal) || b.personas.includes(profile.persona)));
   useEffect(() => () => { if (fresh.length || !seenAt) markSeen(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
@@ -59,7 +64,7 @@ export function Me() {
         )}
         <div className="stack">
           {list.map((p) => {
-            const s = stages(p, logs);
+            const s = stages(p, logs, state.owned);
             return (
               <A to={`/p/${p.id}`} key={p.id} className="card tap">
                 <div className="row between"><h3>{p.name}</h3><span className="small num muted">{s.pct}%</span></div>
@@ -71,10 +76,20 @@ export function Me() {
         </div>
       </section>
 
+      <section className="section">
+        <A to="/gear" className="card tap row between" style={{ flexWrap: 'nowrap' }}>
+          <span className="grow">
+            <h3>{t('Gear I own')}</h3>
+            <span className="small muted">{ownedCount ? t(ownedCount === 1 ? 'One item. It comes off your shopping lists.' : '{n} items. They come off your shopping lists.', { n: ownedCount }) : t('Leftover parts, your radio, your charger. They come off your shopping lists.')}</span>
+          </span>
+          <Icon name="chev" className="chev" />
+        </A>
+      </section>
+
       {!!ordered.length && (
         <section className="section">
           <details className="card">
-            <summary>{t('Parts ordered or owned ({n})', { n: ordered.length })}</summary>
+            <summary>{t('Parts ordered ({n})', { n: ordered.length })}</summary>
             <ul className="small stack" style={{ marginTop: 6 }}>
               {ordered.map(({ p, l }) => <li key={p.id + l.slot}>{l.part.b} {l.part.m}<div className="tiny muted">{p.name}</div></li>)}
             </ul>
@@ -109,13 +124,21 @@ export function Me() {
       {!!Object.keys(state.customParts || {}).length && (
         <section className="section">
           <h2>{t('My parts')}</h2>
+          <div style={{ marginTop: 10 }}><BrokenBuilds builds={broken} /></div>
           <div className="list">
-            {Object.values(state.customParts).map((c) => (
-              <div className="li" key={c.id}>
-                <span className="grow"><div className="title">{c.b} {c.m}</div><div className="sub">{t(SLOTS.find((s) => s.key === c.slot)?.label || '')} · {c.w} g</div></span>
-                <button className="icon-btn" aria-label={t('Delete')} onClick={() => { if (window.confirm(t('Delete this part? Builds using it will lose it.'))) deleteCustomPart(c.id); }}><Icon name="close" /></button>
-              </div>
-            ))}
+            {Object.values(state.customParts).map((c) => {
+              const uses = buildsUsing(projects, c.id).length;
+              return (
+                <div className="li" key={c.id}>
+                  <span className="grow" style={{ minWidth: 0 }}>
+                    <div className="title">{c.b} {c.m}</div>
+                    <div className="sub">{t(SLOTS.find((s) => s.key === c.slot)?.label || '')} · {c.w} g{uses > 0 && ` · ${t(uses === 1 ? 'in one build' : 'in {n} builds', { n: uses })}`}</div>
+                  </span>
+                  <button className="icon-btn" aria-label={t('Edit {name}', { name: `${c.b} ${c.m}` })} onClick={() => setEditing(c)}><Icon name="edit" /></button>
+                  <button className="icon-btn" aria-label={t('Delete {name}', { name: `${c.b} ${c.m}` })} onClick={() => { if (window.confirm(uses ? t(uses === 1 ? 'Delete this part? The build using it will lose it.' : 'Delete this part? The {n} builds using it will lose it.', { n: uses }) : t('Delete this part?'))) deleteCustomPart(c.id); }}><Icon name="close" /></button>
+                </div>
+              );
+            })}
           </div>
         </section>
       )}
@@ -167,6 +190,7 @@ export function Me() {
         </div>
         <button className="btn danger block" style={{ marginTop: 10 }} onClick={() => { if (window.confirm(t('Erase all your builds and logs from this device?'))) { resetAll(); go('/'); } }}>{t('Erase everything')}</button>
       </section>
+      {editing && <EditPartSheet part={editing} onClose={() => setEditing(null)} onSaved={setBroken} />}
       {toast}
     </div>
   );

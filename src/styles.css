@@ -373,3 +373,12 @@ details > summary::after { transition: transform var(--dur-bouncy) var(--ease-bo
 .cmp-label { grid-column: 1 / -1; }
 .cmp-win { font-weight: 700; }
 @media print { .diagram { max-width: 340px; } .code { max-height: none; white-space: pre-wrap; } }
+
+/* Gear you own */
+.stepper { display: inline-flex; align-items: center; gap: 2px; flex: none; }
+.stepper b { min-width: 26px; text-align: center; font-size: 15px; font-weight: 600; }
+.stepper .icon-btn:disabled { opacity: .4; cursor: default; }
+.pick-row { display: flex; align-items: center; gap: 8px; }
+.pick-row .pick { flex: 1 1 0; min-width: 0; }
+.pick-row > .icon-btn { margin-bottom: 8px; }
+button.own-btn { border: 0; cursor: pointer; min-height: 30px; font-family: inherit; color: var(--ink); flex: none; }

@@ -3,18 +3,22 @@
 import { SLOTS, partName } from '../data/parts.js';
 import { buildFacts, legalChecklist } from '../data/legal.js';
 import { sparesFor, sparesTotal } from '../data/spares.js';
-import { check, cost, flight, summarize } from './engine.js';
+import { check, flight, summarize } from './engine.js';
+import { shopping } from './owned.js';
 
 /** One build as the numbers compare cares about. `build` is { sel, goal, firmware, work }. */
-function measure(build, region) {
+function measure(build, region, owned) {
   const ctx = { firmware: build.firmware, goal: build.goal, region };
   const f = flight(build.sel, { goal: build.goal });
   const n = summarize(check(build.sel, ctx));
   const legal = region && f ? legalChecklist(region.id, buildFacts(build.sel, f, { work: build.work })) : null;
+  const list = shopping(build.sel, owned);
   return {
     f,
     n,
-    usd: cost(build.sel).total,
+    usd: list.total,
+    toBuy: list.toBuy,
+    saved: list.saved,
     spares: sparesTotal(sparesFor(build.sel, build.goal)),
     legal,
   };
@@ -27,9 +31,9 @@ const row = (id, label, a, b, better = null) => {
   return { id, label, a, b, winner };
 };
 
-export function compareBuilds(a, b, region = null) {
-  const ma = measure(a, region);
-  const mb = measure(b, region);
+export function compareBuilds(a, b, region = null, owned = null) {
+  const ma = measure(a, region, owned);
+  const mb = measure(b, region, owned);
   const flown = (m, key) => (m.f ? m.f[key] : null);
   const rows = [
     row('weight', 'Weight', flown(ma, 'auw'), flown(mb, 'auw')),
@@ -38,6 +42,7 @@ export function compareBuilds(a, b, region = null) {
     row('hover', 'Hover time (min)', flown(ma, 'hover'), flown(mb, 'hover'), 'high'),
     row('peak', 'Peak current (A)', flown(ma, 'peakA'), flown(mb, 'peakA')),
     row('cost', 'Parts cost', ma.usd, mb.usd, 'low'),
+    ...(ma.saved || mb.saved ? [row('tobuy', 'Left to buy, after what you own', ma.toBuy, mb.toBuy, 'low')] : []),
     row('spares', 'Spares kit', ma.spares, mb.spares, 'low'),
     row('errors', 'Problems to fix', ma.n.errors, mb.n.errors, 'low'),
     row('warnings', 'Warnings', ma.n.warnings, mb.n.warnings, 'low'),
