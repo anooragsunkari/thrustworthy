@@ -63,7 +63,7 @@ export function About() {
         <div className="card stack">
           <div>
             <h3>Anoorag Sunkari</h3>
-            <p className="small muted">{t('Author. Created the original Multirotor.build configurator, its parts database and its flight model, which this project grew from.')}</p>
+            <p className="small muted">{t('Author')}</p>
             <div style={{ marginTop: 6 }}><Ext href="https://github.com/lazyonbed"><span className="small">github.com/lazyonbed</span></Ext></div>
           </div>
           <div>
@@ -84,7 +84,7 @@ export function About() {
       </section>
       <section className="section btn-row">
         <A to="/about/numbers" className="btn secondary">{t('How we calculate')}</A>
-        <Ext href="https://github.com/chahatdeep/thrustworthy" className="btn secondary"><Icon name="ext" />{t('Source code')}</Ext>
+        <Ext href="https://github.com/lazyonbed/Multirotor-build" className="btn secondary"><Icon name="ext" />{t('Source code')}</Ext>
       </section>
     </div>
   );
