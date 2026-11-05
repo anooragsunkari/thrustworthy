@@ -1,6 +1,6 @@
 import React, { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { A, Ext, Icon, Issue, PageHead, useToast } from '../components/ui.jsx';
-import { createProject, useStore } from '../lib/store.js';
+import { createProject, keepCustomParts, useStore } from '../lib/store.js';
 import { copyText, decodeBuild, go, grams, minutes, model3dUrl, t } from '../lib/util.js';
 import { SLOTS, partName } from '../data/parts.js';
 import { buildById } from '../data/builds.js';
@@ -51,10 +51,10 @@ function Details({ info, region, editTo, onClose }) {
   );
 }
 
-function Viewer({ name, firmware, goal, ids, back, editTo, shareProject, footer }) {
+function Viewer({ name, firmware, goal, ids, payload, back, editTo, shareProject, footer }) {
   const { profile } = useStore();
   const region = regionById(profile.region);
-  const sel = useMemo(() => resolve(ids), [ids]);
+  const sel = useMemo(() => resolve(ids, payload), [ids, payload]);
   const [selected, setSelected] = useState(null);
   const [exploded, setExploded] = useState(false);
   const [toast, setToast] = useToast();
@@ -103,6 +103,12 @@ function Viewer({ name, firmware, goal, ids, back, editTo, shareProject, footer 
                 <Icon name="chev" className="chev" />
               </button>
             ))}
+            {sel.payload && (
+              <button className={`li ${selected === 'payload' ? 'li-on' : ''}`} aria-pressed={selected === 'payload'} onClick={() => setSelected('payload')}>
+                <span className="grow"><div className="sub">{t('Payload')}</div><div className="title">{sel.payload.m}</div></span>
+                <Icon name="chev" className="chev" />
+              </button>
+            )}
           </div>
           {f && (
             <div className="stats four" style={{ marginTop: 18, marginBottom: 6 }}>
@@ -135,7 +141,7 @@ export function ProjectModel({ id }) {
   const { projects } = useStore();
   const p = projects[id];
   if (!p) return <div className="wrap"><PageHead title={t('Build not found')} back="/me" /></div>;
-  return <Viewer name={p.name} firmware={p.firmware} goal={p.goal} ids={p.sel} back={`/p/${id}`} editTo={`/configure/${id}`} shareProject={p} />;
+  return <Viewer name={p.name} firmware={p.firmware} goal={p.goal} ids={p.sel} payload={p.payload} back={`/p/${id}`} editTo={`/configure/${id}`} shareProject={p} />;
 }
 
 export function GuideModel({ id }) {
@@ -153,8 +159,9 @@ export function SharedModel({ token }) {
   const shared = decodeBuild(token);
   if (!shared) return <div className="wrap"><PageHead title={t('This link did not work')} sub={t('It may have been cut off when it was copied.')} back="/" /></div>;
   const save = () => {
+    keepCustomParts(shared.custom);
     const pid = createProject({ ...shared });
     go(`/p/${pid}`);
   };
-  return <Viewer name={shared.name} firmware={shared.firmware} goal={shared.goal} ids={shared.sel} back="/" shareProject={shared} footer={<button className="btn secondary" onClick={save}>{t('Save a copy to my builds')}</button>} />;
+  return <Viewer name={shared.name} firmware={shared.firmware} goal={shared.goal} ids={shared.sel} payload={shared.payload} back="/" shareProject={shared} footer={<button className="btn secondary" onClick={save}>{t('Save a copy to my builds')}</button>} />;
 }

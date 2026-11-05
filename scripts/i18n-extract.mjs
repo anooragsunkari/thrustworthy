@@ -8,7 +8,7 @@ const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const strings = new Set();
 const walkDir = (d) => readdirSync(d).flatMap((f) => { const p = join(d, f); return statSync(p).isDirectory() ? walkDir(p) : [p]; });
 
-const looksLikeText = (s) => /^[A-Z]/.test(s) && !/^(https?:|[A-Z_]+$|M\d)/.test(s) && !/[{}]{2}|=>|\.jsx?$/.test(s);
+const looksLikeText = (s) => /^[A-Z]/.test(s) && !/^(https?:|[A-Z_]+$|M\d|IntersectionObserver)/.test(s) && !/[{}]{2}|=>|\.jsx?$/.test(s);
 const literal = /(['"`])((?:\\.|(?!\1)[^\\\n])*)\1/g;
 const unescape = (s) => s.replace(/\\(['"`\\])/g, '$1');
 
@@ -27,6 +27,10 @@ for (const file of walkDir(join(root, 'src'))) {
   }
 }
 
+// The legal rules sit inside functions, so read them from the source text.
+const legal = readFileSync(join(root, 'src/data/legal.js'), 'utf8');
+for (const m of legal.matchAll(/\b(?:must|check)\('[^']+', '((?:\\.|[^'\\])*)', '((?:\\.|[^'\\])*)'\)/g)) { strings.add(unescape(m[1])); strings.add(unescape(m[2])); }
+
 // Words that the engine puts inside its sentences.
 for (const w of ['motors', 'ESC', 'flight controller', 'video system']) strings.add(w);
 
@@ -44,7 +48,7 @@ for (const g of parts.GOALS) { strings.add(g.label); strings.add(g.label.toLower
 for (const c of parts.COMPANIONS) strings.add(c.ros);
 for (const s of ['Beginner', 'Intermediate', 'Pro', 'All']) strings.add(s);
 
-const list = [...strings].filter((x) => !x.startsWith('/')).sort();
+const list = [...strings].filter((x) => !x.startsWith('/') && !x.startsWith('custom-') && !/^(AS150|EC5|XT\d+|LiPo|LiHV|HDZero|Walksnail)$/.test(x)).sort();
 writeFileSync(join(root, 'scripts/i18n-strings.json'), `${JSON.stringify(list, null, 1)}\n`);
 const zh = JSON.parse(readFileSync(join(root, 'src/data/zh.json'), 'utf8'));
 const miss = list.filter((s) => !zh[s]);

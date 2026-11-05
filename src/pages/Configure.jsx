@@ -1,12 +1,13 @@
 import React, { useMemo, useState } from 'react';
 import { A, Icon, Issue, PageHead, Sheet, SpringNum, useToast } from '../components/ui.jsx';
-import { useStore, createProject, updateProject } from '../lib/store.js';
+import { addCustomPart, useStore, createProject, updateProject } from '../lib/store.js';
 import { go, grams, minutes, t } from '../lib/util.js';
 import { FIRMWARES, GOALS, SLOTS, partName } from '../data/parts.js';
 import { BUILDS } from '../data/builds.js';
 import { regionById, money } from '../data/regions.js';
 import { personaById } from '../data/personas.js';
-import { autofill, check, cost, flight, isIncluded, missing, rate, resolve, summarize, toIds, allUpWeight } from '../lib/engine.js';
+import { autofill, check, cost, flight, isIncluded, missing, rate, resolve, summarize, toIds, allUpWeight, loadBuild } from '../lib/engine.js';
+import { cleanCustom, fieldsFor, PAYLOAD_PRESETS } from '../lib/custom.js';
 
 const specLine = (slot, p) => {
   switch (slot) {
@@ -82,7 +83,7 @@ export function Configure({ id }) {
   const [altitude, setAltitude] = useState(0);
   const [toast, setToast] = useToast();
 
-  const sel = useMemo(() => (p ? resolve(p.sel) : {}), [p]);
+  const sel = useMemo(() => (p ? loadBuild(p) : {}), [p, Object.keys(state.customParts || {}).length]);
   if (!p) return <div className="wrap"><PageHead title={t('Build not found')} back="/configure" /></div>;
 
   const ctx = { firmware: p.firmware, goal: p.goal, region };
@@ -149,6 +150,8 @@ export function Configure({ id }) {
         )}
       </section>
 
+      <Payload project={p} />
+
       {!!issues.length && (
         <section className="section" aria-live="polite">
           <h2>{t('Checks')}</h2>
@@ -197,27 +200,128 @@ export function Configure({ id }) {
         </div>
       </div>
 
-      {open && <Picker slot={open} sel={sel} ctx={ctx} region={region} onPick={setPart} onClose={() => setOpen(null)} />}
+      {open && <Picker slot={open} sel={sel} ctx={ctx} region={region} mine={Object.values(state.customParts || {}).filter((c) => c.slot === open)} onPick={setPart} onClose={() => setOpen(null)} />}
       {toast}
     </div>
   );
 }
 
-function Picker({ slot, sel, ctx, region, onPick, onClose }) {
+function Payload({ project }) {
+  const [name, setName] = useState('');
+  const [g, setG] = useState('');
+  const list = project.payload || [];
+  const add = (item) => updateProject(project.id, { payload: [...list, item].slice(0, 12) });
+  const grams2 = Number(g);
+  const valid = Number.isFinite(grams2) && grams2 > 0 && grams2 <= 100000;
+  const submit = (e) => {
+    e.preventDefault();
+    if (!valid) return;
+    add({ name: name.trim() || 'Payload', g: grams2 });
+    setName('');
+    setG('');
+  };
+  return (
+    <section className="section">
+      <h2>{t('Payload')}</h2>
+      <p className="small muted" style={{ marginBottom: 12 }}>{t('Anything extra it carries, such as a camera or sensor. It changes flight time, thrust and the rules that apply.')}</p>
+      {!!list.length && (
+        <div className="list" style={{ marginBottom: 12 }}>
+          {list.map((i, n) => (
+            <div className="li" key={`${i.name}${n}`}>
+              <span className="grow"><div className="title">{t(i.name)}</div><div className="sub num">{i.g} g</div></span>
+              <button className="icon-btn" aria-label={t('Remove')} onClick={() => updateProject(project.id, { payload: list.filter((_, x) => x !== n) })}><Icon name="close" /></button>
+            </div>
+          ))}
+        </div>
+      )}
+      <div className="chips" style={{ marginBottom: 12 }}>
+        {PAYLOAD_PRESETS.map((x) => <button key={x.name} className="filter" style={{ minHeight: 34, fontSize: 14 }} onClick={() => add(x)}><Icon name="plus" className="tiny-ico" />{t(x.name)} · {x.g} g</button>)}
+      </div>
+      <form className="row" style={{ flexWrap: 'nowrap', alignItems: 'flex-end' }} onSubmit={submit}>
+        <label className="field grow"><span>{t('Name')}</span><input className="input" value={name} maxLength={40} onChange={(e) => setName(e.target.value)} /></label>
+        <label className="field" style={{ width: 92, flex: 'none' }}><span>{t('Grams')}</span><input className="input" type="number" inputMode="decimal" min="1" max="100000" value={g} onChange={(e) => setG(e.target.value)} /></label>
+        <button className="btn secondary" style={{ flex: 'none', paddingInline: 18, minHeight: 46 }} disabled={!valid}>{t('Add')}</button>
+      </form>
+      <p className="tiny muted" style={{ marginTop: 8 }}>{t('Preset weights are typical. Weigh your own for a better estimate.')}</p>
+    </section>
+  );
+}
+
+function CustomForm({ slot, onDone, onCancel }) {
+  const fields = fieldsFor(slot);
+  const [values, setValues] = useState(() => Object.fromEntries(fields.map((f) => [f.key, f.kind === 'multi' ? [] : f.def ?? ''])));
+  const [errors, setErrors] = useState({});
+  const set = (k, v) => setValues({ ...values, [k]: v });
+  const save = (e) => {
+    e.preventDefault();
+    const { part, errors: errs } = cleanCustom(slot, values);
+    if (!part) {
+      setErrors(Object.fromEntries(errs.map((x) => [x.key, x.message])));
+      return;
+    }
+    onDone(addCustomPart(part));
+  };
+  return (
+    <form className="stack" onSubmit={save} noValidate>
+      <div className="note">{t('It is saved on this device and works in the checker like any other part. Use the maker\'s published numbers if you can.')}</div>
+      {fields.map((f) => (
+        <div key={f.key}>
+          {f.kind === 'multi' ? (
+            <fieldset style={{ border: 0, padding: 0, margin: 0 }}>
+              <legend className="tiny muted" style={{ marginBottom: 6, padding: 0 }}>{t(f.label)}</legend>
+              <div className="chips">
+                {f.options.map((o) => {
+                  const on = values[f.key].includes(o);
+                  return <button type="button" key={o} className={`filter ${on ? 'on' : ''}`} aria-pressed={on} onClick={() => set(f.key, on ? values[f.key].filter((x) => x !== o) : [...values[f.key], o])}>{o === 'pixhawk' ? 'Pixhawk' : o}</button>;
+                })}
+              </div>
+            </fieldset>
+          ) : (
+            <label className="field">
+              <span>{t(f.label)}{f.required ? '' : ''}</span>
+              {f.kind === 'select' ? (
+                <select className="input" value={values[f.key]} onChange={(e) => set(f.key, e.target.value)}>
+                  {f.options.map((o) => <option key={o} value={o}>{o === 'sub' ? '868/915 MHz' : o === '2.4' ? '2.4 GHz' : o === '4in1' ? '4-in-1' : o === 'single' ? t('Single') : o === 'pixhawk' ? 'Pixhawk' : o === 'arm' ? t('On the arms') : o}</option>)}
+                </select>
+              ) : f.kind === 'bool' ? (
+                <select className="input" value={String(values[f.key])} onChange={(e) => set(f.key, e.target.value === 'true')}>
+                  <option value="true">{t('Yes')}</option><option value="false">{t('No')}</option>
+                </select>
+              ) : (
+                <input className="input" type={f.kind === 'num' ? 'number' : 'text'} inputMode={f.kind === 'num' ? 'decimal' : undefined} step="any" value={values[f.key]} maxLength={60} aria-invalid={!!errors[f.key]} onChange={(e) => set(f.key, e.target.value)} />
+              )}
+            </label>
+          )}
+          {errors[f.key] && <div className="small" role="alert" style={{ color: 'var(--err)', marginTop: 4 }}>{t(errors[f.key])}</div>}
+        </div>
+      ))}
+      <div className="btn-row">
+        <button type="button" className="btn secondary" onClick={onCancel}>{t('Back')}</button>
+        <button className="btn">{t('Save and use it')}</button>
+      </div>
+    </form>
+  );
+}
+
+function Picker({ slot, sel, ctx, region, mine, onPick, onClose }) {
+  const [adding, setAdding] = useState(false);
   const s = SLOTS.find((x) => x.key === slot);
   const qty = (slot === 'motor' || slot === 'prop') ? (sel.frame?.mc || 4) : 1;
+  const rate1 = (p) => ({ p, r: rate(slot, p, sel, ctx) });
+  const yours = mine.map(rate1);
   const rated = s.list
-    .map((p) => ({ p, r: rate(slot, p, sel, ctx) }))
+    .map(rate1)
     .sort((a, b) => ({ ok: 0, warn: 1, error: 2 }[a.r.status] - { ok: 0, warn: 1, error: 2 }[b.r.status]) || a.p.p - b.p.p);
   return (
     <Sheet title={t(s.label)} sub={t(s.hint)} onClose={onClose}>
-      {(close) => (<>
+      {(close) => (adding ? <CustomForm slot={slot} onCancel={() => setAdding(false)} onDone={(part) => { onPick(slot, part); close(); }} /> : <>
+      <button className="btn secondary block" style={{ marginBottom: 12 }} onClick={() => setAdding(true)}><Icon name="plus" />{t('Add my own part')}</button>
       {!s.required && sel[slot] && <button className="btn quiet block" style={{ marginBottom: 8 }} onClick={() => { onPick(slot, null); close(); }}>{t('Remove')}</button>}
-      {rated.map(({ p, r }) => (
+      {[...yours, ...rated].map(({ p, r }) => (
         <button key={p.id} className={`pick ${sel[slot]?.id === p.id ? 'on' : ''} ${r.status === 'error' ? 'bad' : ''}`} onClick={() => { onPick(slot, p); close(); }}>
           <i className={`dot ${r.status === 'error' ? 'err' : r.status === 'warn' ? 'warn' : 'ok'}`} aria-hidden="true" />
           <span className="grow">
-            <div className="title">{partName(p)}</div>
+            <div className="title">{partName(p)}{p.custom && <span className="chip accent" style={{ marginLeft: 6 }}>{t('Yours')}</span>}</div>
             <div className="sub num">{specLine(slot, p)}</div>
             {r.reason && <div className={`why ${r.status}`}>{t(r.reason)}</div>}
           </span>

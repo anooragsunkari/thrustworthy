@@ -1,13 +1,14 @@
 import React, { useEffect, useRef } from 'react';
 import { A, BuildCard, Ext, Icon, PageHead, Progress, useToast } from '../components/ui.jsx';
-import { exportData, importData, markSeen, resetAll, setProfile, useStore } from '../lib/store.js';
+import { deleteCustomPart, exportData, importData, markSeen, resetAll, setProfile, useStore } from '../lib/store.js';
 import { downloadFile, loadLanguage, t, go } from '../lib/util.js';
 import { BUILDS } from '../data/builds.js';
+import { SLOTS } from '../data/parts.js';
 import { PERSONAS, LEVELS } from '../data/personas.js';
 import { REGIONS, regionById } from '../data/regions.js';
 import { FW_CHOICES } from '../data/firmware.js';
 import { BADGES, earned, stages } from '../lib/progress.js';
-import { cost, resolve } from '../lib/engine.js';
+import { cost, loadBuild } from '../lib/engine.js';
 import { GALLERY } from '../data/gallery.js';
 
 export function Me() {
@@ -23,7 +24,7 @@ export function Me() {
   useEffect(() => () => { if (fresh.length || !seenAt) markSeen(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const totalMin = logs.reduce((a, l) => a + (l.minutes || 0), 0);
-  const ordered = list.flatMap((p) => cost(resolve(p.sel)).lines.filter((l) => p.have?.[l.slot]).map((l) => ({ p, l })));
+  const ordered = list.flatMap((p) => cost(loadBuild(p)).lines.filter((l) => p.have?.[l.slot]).map((l) => ({ p, l })));
 
   const restore = async (e) => {
     const f = e.target.files?.[0];
@@ -102,6 +103,20 @@ export function Me() {
           ))}
         </div>
       </section>
+
+      {!!Object.keys(state.customParts || {}).length && (
+        <section className="section">
+          <h2>{t('My parts')}</h2>
+          <div className="list">
+            {Object.values(state.customParts).map((c) => (
+              <div className="li" key={c.id}>
+                <span className="grow"><div className="title">{c.b} {c.m}</div><div className="sub">{t(SLOTS.find((s) => s.key === c.slot)?.label || '')} · {c.w} g</div></span>
+                <button className="icon-btn" aria-label={t('Delete')} onClick={() => { if (window.confirm(t('Delete this part? Builds using it will lose it.'))) deleteCustomPart(c.id); }}><Icon name="close" /></button>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       <section className="section">
         <h2>{t('Settings')}</h2>

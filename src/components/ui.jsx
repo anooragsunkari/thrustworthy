@@ -167,13 +167,23 @@ export function Sheet({ title, sub, onClose, children }) {
     if (sheet.current) sheet.current.style.transform = `translateY(${m.y.x.toFixed(1)}px)`;
     if (bg.current) bg.current.style.opacity = String(Math.max(0, Math.min(1, 1 - m.y.x / m.h)));
   };
-  const close = () => {
+  const closed = useRef(false);
+  const timer = useRef(0);
+  const finish = () => {
+    if (closed.current) return;
+    closed.current = true;
+    onClose();
+  };
+  const leave = () => {
     const m = motion.current;
     if (m.closing) return;
     m.closing = true;
-    if (prefersStill()) { onClose(); return; }
+    if (prefersStill()) { finish(); return; }
     m.y.to(m.h + 20);
+    // Animation frames pause on a hidden or struggling page, and the sheet must still close.
+    timer.current = setTimeout(finish, 900);
   };
+  const close = leave;
   useEffect(() => {
     const m = motion.current;
     m.h = sheet.current.offsetHeight || 600;
@@ -184,14 +194,14 @@ export function Sheet({ title, sub, onClose, children }) {
     const stop = animate((dt) => {
       if (!m.dragging) m.y.step(dt);
       draw();
-      if (m.closing && m.y.x >= m.h) { onClose(); return false; }
+      if (m.closing && m.y.x >= m.h) { finish(); return false; }
       return true;
     });
     const prev = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
     const onKey = (e) => e.key === 'Escape' && close();
     window.addEventListener('keydown', onKey);
-    return () => { stop(); document.body.style.overflow = prev; window.removeEventListener('keydown', onKey); };
+    return () => { stop(); clearTimeout(timer.current); document.body.style.overflow = prev; window.removeEventListener('keydown', onKey); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   const drag = useRef(null);
@@ -222,7 +232,7 @@ export function Sheet({ title, sub, onClose, children }) {
     m.dragging = false;
     const held = performance.now() - d.lastT > 90;
     m.y.v = held ? 0 : d.v; // the sheet leaves at the speed of your finger
-    if (m.y.x > m.h * 0.35 || m.y.v > 900) { m.closing = true; m.y.to(m.h + 20); } else m.y.to(0);
+    if (m.y.x > m.h * 0.35 || m.y.v > 900) leave(); else m.y.to(0);
   };
   return (
     <div className="sheet-bg" onClick={close}>

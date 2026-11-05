@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
 import zhLoader from './zh-loader.js';
+import { partById, registerCustom } from '../data/parts.js';
+import { cleanPayload, cleanSharedParts } from './custom.js';
 
 // gettext-style translation: the English sentence is the key, so an untranslated string
 // simply stays in English and nothing can show up blank. Keys holding {0}, {1} also match
@@ -46,6 +48,14 @@ export const go = (path) => { window.location.hash = path; };
 // Share links carry the whole build, so they need no server.
 export function encodeBuild(project) {
   const payload = { n: project.name, g: project.goal, f: project.firmware, s: project.sel };
+  if (project.payload?.length) payload.p = project.payload;
+  // A link has to work for someone who does not have your custom parts, so it carries them.
+  const mine = {};
+  for (const id of Object.values(project.sel || {})) {
+    const part = partById(id);
+    if (part?.custom) mine[id] = part;
+  }
+  if (Object.keys(mine).length) payload.x = mine;
   const b = btoa(unescape(encodeURIComponent(JSON.stringify(payload))));
   return b.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 }
@@ -56,7 +66,9 @@ export function decodeBuild(token) {
     if (typeof j !== 'object' || !j.s) return null;
     const sel = {};
     for (const [k, v] of Object.entries(j.s)) if (typeof k === 'string' && typeof v === 'string') sel[k] = v;
-    return { name: String(j.n || 'Shared build').slice(0, 80), goal: String(j.g || 'freestyle'), firmware: String(j.f || 'Betaflight'), sel };
+    const custom = cleanSharedParts(j.x);
+    registerCustom(custom);
+    return { name: String(j.n || 'Shared build').slice(0, 80), goal: String(j.g || 'freestyle'), firmware: String(j.f || 'Betaflight'), sel, payload: cleanPayload(j.p), custom };
   } catch {
     return null;
   }

@@ -6,7 +6,7 @@ import { prefersStill } from './lib/spring.js';
 import { Home, Start } from './pages/Home.jsx';
 import { BuildDetail, Builds } from './pages/Builds.jsx';
 import { Configure, ConfigureEntry } from './pages/Configure.jsx';
-import { Assemble, FlyProject, ImportBuild, Parts, ProjectHome, Setup, ShareBuild } from './pages/Project.jsx';
+import { Assemble, FlyProject, ImportBuild, Legal, Parts, ProjectHome, Setup, ShareBuild } from './pages/Project.jsx';
 import { Fix, Flight, Software, SoftwareDetail } from './pages/Fly.jsx';
 import { Community, Me } from './pages/Me.jsx';
 import { GuideModel, ProjectModel, SharedModel } from './pages/Model.jsx';
@@ -30,6 +30,7 @@ function route(path) {
         case 'fly': return <FlyProject id={b} />;
         case 'share': return <ShareBuild id={b} />;
         case '3d': return <ProjectModel id={b} key={b} />;
+        case 'legal': return <Legal id={b} />;
         default: return <ProjectHome id={b} />;
       }
     case 'b': return <ImportBuild token={b} />;

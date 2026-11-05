@@ -81,6 +81,12 @@ export function layout(sel) {
     bottom -= size.h + 4;
   }
 
+  if (sel.payload) {
+    const size = cube(Math.max(sel.payload.w, 5), 1, [1.3, 1, 0.8]);
+    add('payload', 'box', { size, pos: [0, bottom - size.h / 2 - 3, -plateL * 0.05], tone: 'payload', explode: [0, -unit * 2.2, 0] });
+    bottom -= size.h + 5;
+  }
+
   if (sel.battery) {
     const size = cube(sel.battery.w, 2, [2.1, 1, 0.82]);
     const under = large && !sel.companion;
@@ -133,6 +139,20 @@ const ROLES = {
 export function partDetails(slot, sel, ctx = {}) {
   const part = sel[slot];
   if (!part) return null;
+  if (slot === 'payload') {
+    return {
+      slot,
+      part,
+      name: part.m,
+      label: 'Payload',
+      role: 'Extra weight the drone carries. It counts toward thrust, flight time and legal limits.',
+      rows: [...part.items.map((i) => ({ label: i.name, value: `${i.g} g` })), { label: 'Weight', value: `${part.w} g` }],
+      qty: 1,
+      usd: 0,
+      includes: [],
+      issues: check(sel, ctx).filter((i) => i.parts.includes(slot)),
+    };
+  }
   const c = cost(sel).lines.find((l) => l.slot === slot);
   const rows = [];
   const row = (label, value) => { if (value !== undefined && value !== null && value !== '') rows.push({ label, value: String(value) }); };

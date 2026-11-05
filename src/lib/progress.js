@@ -1,10 +1,10 @@
-import { resolve, check, summarize, missing, traits, cost } from './engine.js';
+import { loadBuild, check, summarize, missing, traits, cost } from './engine.js';
 import { stepsFor } from '../data/assembly.js';
 import { FW } from '../data/firmware.js';
 
 /** The journey for one build: where it stands and what comes next. */
 export function stages(p, logs = []) {
-  const sel = resolve(p.sel);
+  const sel = loadBuild(p);
   const ctx = { firmware: p.firmware, goal: p.goal };
   const n = summarize(check(sel, ctx));
   const configured = missing(sel).length === 0 && n.errors === 0;

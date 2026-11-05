@@ -1,11 +1,14 @@
 // Everything a person does lives on their own device. There is no account and no server,
 // so the site works on GitHub Pages, behind any firewall, and at a field with no signal.
 import { useSyncExternalStore } from 'react';
+import { registerCustom, unregisterCustom } from '../data/parts.js';
+import { cleanSharedParts } from './custom.js';
 
 const KEY = 'thrustworthy:v1';
 const BLANK = {
   profile: { persona: null, region: null, level: null, firmware: null, lang: null, theme: 'light' },
   projects: {},
+  customParts: {},
   logs: [],
   themeVersion: 2,
   lastVisit: null,
@@ -26,6 +29,7 @@ function read() {
 }
 
 let state = read();
+registerCustom(cleanSharedParts(state.customParts));
 const listeners = new Set();
 
 function commit(next) {
@@ -43,9 +47,9 @@ export function setProfile(patch) {
 
 const newId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
 
-export function createProject({ name, goal, firmware, sel, fromBuild = null }) {
+export function createProject({ name, goal, firmware, sel, fromBuild = null, payload = [] }) {
   const id = newId();
-  const project = { id, name: name || 'My build', goal: goal || 'freestyle', firmware: firmware || 'Betaflight', sel: sel || {}, fromBuild, created: Date.now(), updated: Date.now(), have: {}, extras: {}, steps: {}, software: {}, shared: false };
+  const project = { id, name: name || 'My build', goal: goal || 'freestyle', firmware: firmware || 'Betaflight', sel: sel || {}, payload, fromBuild, created: Date.now(), updated: Date.now(), have: {}, extras: {}, steps: {}, software: {}, shared: false };
   commit({ ...state, projects: { ...state.projects, [id]: project } });
   return id;
 }
@@ -62,6 +66,29 @@ export function toggleIn(id, field, key) {
   const map = { ...(cur[field] || {}) };
   if (map[key]) delete map[key]; else map[key] = Date.now();
   updateProject(id, { [field]: map });
+}
+
+/** Save a validated part from the form. Returns it with its new id. */
+export function addCustomPart(part) {
+  const id = `x-${part.slot}-${newId()}`.toLowerCase();
+  const saved = { ...part, id };
+  registerCustom({ [id]: saved });
+  commit({ ...state, customParts: { ...state.customParts, [id]: saved } });
+  return saved;
+}
+
+/** Keep the parts carried by a shared build, under their original ids. */
+export function keepCustomParts(map = {}) {
+  if (!Object.keys(map).length) return;
+  registerCustom(map);
+  commit({ ...state, customParts: { ...state.customParts, ...map } });
+}
+
+export function deleteCustomPart(id) {
+  const customParts = { ...state.customParts };
+  delete customParts[id];
+  unregisterCustom(id);
+  commit({ ...state, customParts });
 }
 
 export function deleteProject(id) {
@@ -89,6 +116,7 @@ export function exportData() {
 export function importData(text) {
   const s = JSON.parse(text);
   if (!s || typeof s !== 'object' || !s.profile) throw new Error('Not a Thrustworthy backup');
+  registerCustom(cleanSharedParts(s.customParts));
   commit({ ...BLANK, ...s, profile: { ...BLANK.profile, ...s.profile } });
 }
 

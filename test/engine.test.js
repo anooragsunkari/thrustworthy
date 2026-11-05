@@ -6,6 +6,10 @@ import { REGIONS, money, regionById, storeLinks, videoSearch, weightNote } from 
 import { FW, FW_CHOICES } from '../src/data/firmware.js';
 import { layout, partDetails } from '../src/lib/model.js';
 import { Spring, SOFT, SNAPPY, BOUNCY, springCurve } from '../src/lib/spring.js';
+import { cleanCustom, cleanPayload, cleanSharedParts, fieldsFor, CUSTOM_FIELDS } from '../src/lib/custom.js';
+import { buildFacts, legalChecklist } from '../src/data/legal.js';
+import { registerCustom } from '../src/data/parts.js';
+import { encodeBuild, decodeBuild } from '../src/lib/util.js';
 import { resolve, check, flight, cost, missing, autofill, summarize, toIds } from '../src/lib/engine.js';
 
 const load = (b) => resolve(b.sel);
@@ -346,4 +350,174 @@ test('spring curves become valid CSS easing, starting at 0 and ending at 1', () 
     assert.ok(c.seconds > 0.2 && c.seconds < 3, `${c.seconds}`);
   }
   assert.ok(springCurve(BOUNCY).peak > 1.05);
+});
+
+const GOOD = {
+  frame: { b: 'My', m: 'Frame', w: 100, wheel: 220, mc: '4', maxProp: 5, mount: ['16'], stack: ['30.5'], ducted: false },
+  motor: { b: 'My', m: 'Motor', w: 30, sz: '2207', kv: 1900, cMin: 4, cMax: 6, mount: '16', refT: 1500, refD: 5, refC: 6, refA: 35 },
+  esc: { b: 'My', m: 'ESC', w: 10, t: '4in1', a: 50, cMin: 3, cMax: 6, fw: 'AM32', dshot: true, mount: '30.5' },
+  fc: { b: 'My', m: 'FC', w: 8, mcu: 'STM32H743', cMin: 3, cMax: 6, u: 6, fw: ['Betaflight'], mount: '30.5' },
+  prop: { b: 'My', m: 'Prop', w: 4, d: 5, pi: 4, bl: 3 },
+  battery: { b: 'My', m: 'Pack', w: 200, c: 6, ch: 'LiPo', cap: 1300, dr: 100, cn: 'XT60' },
+  video: { b: 'My', m: 'Cam', w: 15, sys: 'Analog', cMin: 2, cMax: 6 },
+  rx: { b: 'My', m: 'RX', w: 2, proto: 'ELRS', band: '2.4' },
+  gps: { b: 'My', m: 'GPS', w: 10, chip: 'M10' },
+  companion: { b: 'My', m: 'Pi', w: 40, pw: 5, ros: 'ROS 2' },
+};
+
+test('payload adds weight, costs flight time and thrust margin, and adds no price', () => {
+  const ids = BUILDS.find((b) => b.id === 'budget-five').sel;
+  const plain = resolve(ids);
+  const heavy = resolve(ids, [{ name: 'Action camera', g: 155 }]);
+  const a = flight(plain, { goal: 'freestyle' });
+  const b = flight(heavy, { goal: 'freestyle' });
+  assert.ok(Math.abs(b.auw - a.auw - 155 * 1.04) < 1, `${a.auw} -> ${b.auw}`);
+  assert.ok(b.hover < a.hover && b.twr < a.twr);
+  assert.equal(cost(heavy).total, cost(plain).total);
+  assert.deepEqual(toIds(heavy), toIds(plain), 'payload never ends up in the part list');
+  assert.ok(check(heavy, { goal: 'freestyle' }));
+});
+
+test('too much payload is caught by the same checks', () => {
+  const s = resolve(BUILDS.find((b) => b.id === 'first-whoop').sel, [{ name: 'Action camera', g: 155 }]);
+  assert.ok(ids(s, { goal: 'whoop' }).includes('twr'));
+});
+
+test('payload is drawn in 3D and can be tapped', () => {
+  const s = resolve(BUILDS.find((b) => b.id === 'research-x500').sel, [{ name: 'Depth camera', g: 75 }]);
+  assert.ok(layout(s).parts.some((p) => p.slot === 'payload'));
+  const d = partDetails('payload', s, {});
+  assert.equal(d.name, 'Depth camera');
+  assert.ok(d.rows.some((r) => r.label === 'Weight' && r.value === '75 g'));
+});
+
+test('bad payload values are dropped', () => {
+  assert.deepEqual(cleanPayload([{ name: 'x', g: -5 }, { name: 'y', g: 'abc' }, null, { name: 'z', g: 1e9 }]), []);
+  assert.deepEqual(cleanPayload('nope'), []);
+  assert.equal(cleanPayload([{ name: 'a'.repeat(500), g: 5 }])[0].name.length, 60);
+});
+
+test('every kind of custom part validates, and works in the checker and the 3D model', () => {
+  for (const slot of Object.keys(CUSTOM_FIELDS)) {
+    const { part, errors } = cleanCustom(slot, GOOD[slot]);
+    assert.deepEqual(errors, [], slot);
+    assert.equal(part.custom, true);
+  }
+  const reg = {};
+  const sel = {};
+  for (const slot of Object.keys(GOOD)) {
+    const id = `x-test-${slot}`;
+    reg[id] = { ...cleanCustom(slot, GOOD[slot]).part, id };
+    sel[slot] = id;
+  }
+  registerCustom(reg);
+  const s = resolve(sel);
+  assert.equal(Object.keys(s).length, Object.keys(GOOD).length);
+  assert.deepEqual(missing(s), []);
+  const ctx = { firmware: 'Betaflight', goal: 'freestyle' };
+  assert.deepEqual(check(s, ctx).filter((i) => i.level === 'error').map((i) => i.detail), []);
+  assert.ok(ids(s, ctx).includes('custom-motor'), 'says the numbers are yours');
+  const f = flight(s, ctx);
+  assert.ok(f.twr > 2 && f.hover > 3, `${f.twr} ${f.hover}`);
+  assert.ok(cost(s).total >= 0);
+  for (const p of layout(s).parts) for (const n of [...(p.pos || []), ...p.explode]) assert.ok(Number.isFinite(n), p.slot);
+  for (const slot of Object.keys(GOOD)) {
+    for (const r of partDetails(slot, s, ctx).rows) assert.ok(!/undefined|NaN/.test(r.value), `${slot} ${r.label} ${r.value}`);
+  }
+});
+
+test('the checker catches a bad custom part like any other', () => {
+  const { part } = cleanCustom('motor', { ...GOOD.motor, mount: '25' });
+  registerCustom({ 'x-big-motor': { ...part, id: 'x-big-motor' } });
+  assert.ok(ids({ ...five(), motor: part }).includes('fit-motor'));
+});
+
+test('custom part forms reject nonsense with field-level errors', () => {
+  const err = (slot, raw) => cleanCustom(slot, raw).errors.map((e) => e.key);
+  assert.ok(err('motor', { ...GOOD.motor, b: '  ' }).includes('b'));
+  assert.ok(err('motor', { ...GOOD.motor, kv: 'fast' }).includes('kv'));
+  assert.ok(err('motor', { ...GOOD.motor, sz: 'big' }).includes('sz'));
+  assert.ok(err('battery', { ...GOOD.battery, c: 99 }).includes('c'));
+  assert.ok(err('esc', { ...GOOD.esc, cMin: 6, cMax: 3 }).includes('cMax'));
+  assert.ok(err('frame', { ...GOOD.frame, mount: [] }).includes('mount'));
+  assert.ok(err('fc', { ...GOOD.fc, fw: ['NotReal'] }).includes('fw'));
+  assert.equal(cleanCustom('notaslot', {}).part, null);
+  for (const slot of Object.keys(CUSTOM_FIELDS)) assert.ok(fieldsFor(slot).some((f) => f.key === 'w'), slot);
+});
+
+test('share links carry payload and custom parts, and survive tampering', () => {
+  const { part } = cleanCustom('frame', GOOD.frame);
+  const id = 'x-frame-share';
+  registerCustom({ [id]: { ...part, id } });
+  const token = encodeBuild({ name: 'Mine', goal: 'lab', firmware: 'PX4', sel: { frame: id }, payload: [{ name: 'Depth camera', g: 75 }] });
+  const back = decodeBuild(token);
+  assert.equal(back.custom[id].wheel, 220);
+  assert.deepEqual(back.payload, [{ name: 'Depth camera', g: 75 }]);
+  assert.ok(resolve(back.sel, back.payload).frame.custom);
+  // A hand-edited link cannot smuggle in bad values.
+  const dirty = cleanSharedParts({
+    '../evil': { slot: 'frame', ...GOOD.frame },
+    'x-bad': { slot: 'frame', ...GOOD.frame, wheel: 1e12 },
+    'x-nope': { slot: 'wings' },
+    'x-ok': { slot: 'gps', ...GOOD.gps, b: '<img src=x onerror=alert(1)>'.repeat(9) },
+    'x-text': 'hello',
+  });
+  assert.deepEqual(Object.keys(dirty), ['x-ok']);
+  assert.ok(dirty['x-ok'].b.length <= 60);
+  assert.equal(decodeBuild('%%%notbase64'), null);
+});
+
+const facts = (over) => ({ g: 500, fpv: true, video: true, camera: true, sub: false, work: false, ...over });
+const legalIds = (r, over) => legalChecklist(r, facts(over)).map((i) => i.id);
+
+test('every country has a legal checklist with complete items', () => {
+  for (const r of REGIONS) {
+    for (const over of [{}, { g: 50, fpv: false, video: false, camera: false }, { g: 5000, sub: true, work: true }]) {
+      const items = legalChecklist(r.id, facts(over));
+      assert.ok(items.length >= 1, `${r.id} has at least one rule`);
+      assert.equal(new Set(items.map((i) => i.id)).size, items.length, `${r.id} ids unique`);
+      for (const i of items) assert.ok(i.title && i.detail && ['must', 'check'].includes(i.kind), `${r.id} ${i.id}`);
+    }
+  }
+  assert.deepEqual(legalChecklist('atlantis', facts()), []);
+});
+
+test('legal weight thresholds follow each country', () => {
+  assert.ok(!legalIds('us', { g: 249 }).includes('register'));
+  assert.ok(legalIds('us', { g: 250 }).includes('register'));
+  assert.ok(legalIds('us', { g: 250 }).includes('rid'));
+  assert.ok(!legalIds('uk', { g: 99 }).includes('flyer'));
+  assert.ok(legalIds('uk', { g: 100 }).includes('flyer'));
+  assert.ok(legalIds('uk', { g: 150, camera: true }).includes('operator'));
+  assert.ok(!legalIds('uk', { g: 150, camera: false }).includes('operator'));
+  assert.ok(legalIds('uk', { g: 250, camera: false }).includes('operator'));
+  assert.ok(legalIds('ca', { g: 250 }).includes('basic'));
+  assert.ok(!legalIds('ca', { g: 249 }).includes('basic'));
+  assert.ok(legalIds('jp', { g: 100, fpv: false, video: false }).includes('register'));
+  assert.ok(!legalIds('jp', { g: 99, fpv: false, video: false }).includes('register'));
+  assert.ok(legalIds('br', { g: 251 }).includes('sisant'));
+  assert.ok(!legalIds('br', { g: 250 }).includes('sisant'));
+  const eu = (g) => legalChecklist('eu', facts({ g })).find((i) => i.id === 'cat').title;
+  assert.match(eu(249), /A1/);
+  assert.match(eu(250), /A3/);
+});
+
+test('legal items follow the build and how it is used', () => {
+  assert.ok(legalIds('uk', { fpv: true }).includes('observer'));
+  assert.ok(!legalIds('uk', { fpv: false }).includes('observer'));
+  assert.ok(legalIds('us', { work: true }).includes('107'));
+  assert.ok(!legalIds('us', { work: false }).includes('107'));
+  assert.ok(legalIds('eu', { sub: true }).includes('band'));
+  assert.ok(legalIds('cn', {}).includes('beijing'));
+});
+
+test('payload can push a build over a legal limit', () => {
+  const b = BUILDS.find((x) => x.id === 'sub250');
+  const light = resolve(b.sel);
+  const loaded = resolve(b.sel, [{ name: 'Action camera', g: 155 }]);
+  const us = (s) => legalChecklist('us', buildFacts(s, flight(s, { goal: b.goal }))).map((i) => i.id);
+  assert.ok(!us(light).includes('register'));
+  assert.ok(us(loaded).includes('register'));
+  const cam = resolve({ frame: 'f-m65', motor: 'm-ex0802' }, [{ name: 'Depth camera', g: 50 }]);
+  assert.ok(buildFacts(cam, null).camera, 'a camera payload counts as a camera');
 });

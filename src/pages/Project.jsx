@@ -1,13 +1,14 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { A, Ext, Icon, PageHead, Progress, useToast } from '../components/ui.jsx';
-import { useStore, createProject, deleteProject, deletePhoto, loadPhoto, savePhoto, shrinkImage, toggleIn, updateProject } from '../lib/store.js';
-import { copyText, decodeBuild, downloadFile, go, shareUrl, t } from '../lib/util.js';
+import { useStore, createProject, deleteProject, keepCustomParts, deletePhoto, loadPhoto, savePhoto, setProfile, shrinkImage, toggleIn, updateProject } from '../lib/store.js';
+import { copyText, decodeBuild, downloadFile, go, grams, shareUrl, t } from '../lib/util.js';
 import { SLOTS, partName } from '../data/parts.js';
 import { GEAR } from '../data/personas.js';
 import { PHASES, stepsFor } from '../data/assembly.js';
 import { FW, ESC_NOTE, RADIO_NOTE } from '../data/firmware.js';
-import { regionById, money, storeLinks } from '../data/regions.js';
-import { check, cost, resolve, summarize, traits, flight } from '../lib/engine.js';
+import { REGIONS, RULES_CHECKED, regionById, money, storeLinks } from '../data/regions.js';
+import { buildFacts, legalChecklist } from '../data/legal.js';
+import { check, cost, loadBuild, resolve, summarize, traits, flight } from '../lib/engine.js';
 import { stages } from '../lib/progress.js';
 import { Flight } from './Fly.jsx';
 
@@ -29,7 +30,7 @@ export function ProjectHome({ id }) {
         <div style={{ marginTop: 8 }}><Progress value={s.pct} ok={s.pct === 100} /></div>
       </div>
       {s.next && <A to={s.next.to} className="btn block" style={{ marginTop: 14 }}>{t('Next: {step}', { step: t(s.next.title) })}</A>}
-      {resolve(p.sel).frame && (
+      {loadBuild(p).frame && (
         <A to={`/p/${id}/3d`} className="card tap row between" style={{ marginTop: 14, flexWrap: 'nowrap' }}>
           <span className="grow">
             <h3>{t(s.pct === 100 ? 'Your finished drone in 3D' : 'See your drone in 3D')}</h3>
@@ -47,6 +48,10 @@ export function ProjectHome({ id }) {
           </A>
         ))}
       </div>
+      <A to={`/p/${id}/legal`} className="card tap row between" style={{ marginTop: 14, flexWrap: 'nowrap' }}>
+        <span className="grow"><h3>{t('Am I legal?')}</h3><span className="small muted">{t('A checklist for this exact build, in your country.')}</span></span>
+        <Icon name="chev" className="chev" />
+      </A>
       <button className="btn danger block" style={{ marginTop: 24 }} onClick={remove}>{t('Delete build')}</button>
     </div>
   );
@@ -58,7 +63,7 @@ export function Parts({ id }) {
   const region = regionById(state.profile.region);
   const [toast, setToast] = useToast();
   if (!p) return notFound();
-  const sel = resolve(p.sel);
+  const sel = loadBuild(p);
   const c = cost(sel);
   const tr = traits(sel, p.firmware);
   const gear = GEAR.filter((g) => !g.when || g.when(tr));
@@ -68,6 +73,7 @@ export function Parts({ id }) {
   const asText = () => [
     p.name, `${t('Firmware')}: ${p.firmware}`, '',
     ...c.lines.map((l) => `${t(SLOTS.find((s) => s.key === l.slot).label)}: ${l.qty > 1 ? `${l.qty} x ` : ''}${partName(l.part)} (${money(l.total, region)})`),
+    ...(sel.payload ? ['', `${t('Payload')}: ${sel.payload.items.map((i) => `${i.name} (${i.g} g)`).join(', ')}`] : []),
     '', `${t('Total')}: ${money(c.total, region)}`, shareUrl(p),
   ].join('\n');
   const csv = () => {
@@ -181,7 +187,7 @@ export function Assemble({ id }) {
   const state = useStore();
   const p = state.projects[id];
   if (!p) return notFound();
-  const sel = resolve(p.sel);
+  const sel = loadBuild(p);
   const steps = stepsFor(traits(sel, p.firmware));
   const done = steps.filter((s) => p.steps?.[s.id]).length;
   const pct = steps.length ? (done / steps.length) * 100 : 0;
@@ -303,13 +309,69 @@ export function SoftwareSteps({ fw, doneMap, onToggle }) {
 
 export const FlyProject = ({ id }) => <Flight projectId={id} />;
 
+export function Legal({ id }) {
+  const state = useStore();
+  const p = state.projects[id];
+  const region = regionById(state.profile.region);
+  if (!p) return notFound();
+  const sel = loadBuild(p);
+  const f = flight(sel, { goal: p.goal });
+  const work = p.use === 'work';
+  const items = region && f ? legalChecklist(region.id, buildFacts(sel, f, { work })) : [];
+  const done = items.filter((i) => p.legal?.[i.id]).length;
+  return (
+    <div className="wrap narrow">
+      <PageHead title={t('Am I legal?')} sub={p.name} back={`/p/${id}`} />
+      {!region && (
+        <div className="stack" style={{ marginTop: 14 }}>
+          <div className="note">{t('Tell us your country')} {t('to see local prices, shops and rules.')}</div>
+          <div className="list">
+            {REGIONS.map((r) => <button key={r.id} className="li" onClick={() => setProfile({ region: r.id })}><span className="grow title">{t(r.name)}</span><Icon name="chev" className="chev" /></button>)}
+          </div>
+        </div>
+      )}
+      {region && !f && <div className="note" style={{ marginTop: 14 }}>{t('Pick your motors and battery first, because the rules depend on weight.')} <A to={`/configure/${id}`} className="link">{t('Pick your parts')}</A></div>}
+      {region && f && (
+        <>
+          <div className="card" style={{ marginTop: 14 }}>
+            <div className="row between"><span className="small muted">{t(region.name)}</span><b className="num">{grams(f.auw)}</b></div>
+            <div className="segment" data-i={work ? 1 : 0} role="group" aria-label={t('Why you fly')}>
+              <button className={work ? '' : 'on'} aria-pressed={!work} onClick={() => updateProject(id, { use: 'fun' })}>{t('For fun')}</button>
+              <button className={work ? 'on' : ''} aria-pressed={work} onClick={() => updateProject(id, { use: 'work' })}>{t('For work')}</button>
+            </div>
+            <div className="row between small" style={{ marginTop: 14 }}><span className="muted">{t('{a} of {b} checked', { a: done, b: items.length })}</span></div>
+            <div style={{ marginTop: 8 }}><Progress value={items.length ? (done / items.length) * 100 : 0} ok={done === items.length} /></div>
+          </div>
+          <div className="list" style={{ marginTop: 14 }}>
+            {items.map((i) => {
+              const isDone = !!p.legal?.[i.id];
+              return (
+                <label key={i.id} className={`check ${isDone ? 'done' : ''}`}>
+                  <input type="checkbox" checked={isDone} onChange={() => toggleIn(id, 'legal', i.id)} />
+                  <span className="grow">
+                    <span className="title" style={{ fontWeight: 500 }}>{t(i.title)}</span>
+                    {i.kind === 'check' && <span className="chip warn" style={{ marginLeft: 6 }}>{t('Unconfirmed')}</span>}
+                    <div className="small muted" style={{ marginTop: 2 }}>{t(i.detail)}</div>
+                  </span>
+                </label>
+              );
+            })}
+          </div>
+          <A to={`/rules/${region.id}`} className="btn secondary block" style={{ marginTop: 14 }}>{t('Full rules')}</A>
+          <p className="tiny muted" style={{ marginTop: 10 }}>{t('Checked {date}. This is a helpful summary and not legal advice. Laws change, so confirm with the official source before you fly or buy.', { date: RULES_CHECKED })} {t('Local rules, airspace limits and permits can also apply.')}</p>
+        </>
+      )}
+    </div>
+  );
+}
+
 export function ShareBuild({ id }) {
   const state = useStore();
   const p = state.projects[id];
   const [toast, setToast] = useToast();
   if (!p) return notFound();
   const url = shareUrl(p);
-  const sel = resolve(p.sel);
+  const sel = loadBuild(p);
   const f = flight(sel, { goal: p.goal });
   const body = encodeURIComponent(`Build link: ${url}\n\nFirmware: ${p.firmware}\n${f ? `Weight: ${Math.round(f.auw)} g\n` : ''}\nWhat I learned:\n\nPhotos (drag them in):\n`);
   const issue = `https://github.com/chahatdeep/thrustworthy/issues/new?title=${encodeURIComponent(`Build: ${p.name}`)}&labels=gallery&body=${body}`;
@@ -348,7 +410,7 @@ export function ImportBuild({ token }) {
   const { profile } = useStore();
   const region = regionById(profile.region);
   if (!shared) return <div className="wrap"><PageHead title={t('This link did not work')} sub={t('It may have been cut off when it was copied.')} back="/" /></div>;
-  const sel = resolve(shared.sel);
+  const sel = resolve(shared.sel, shared.payload);
   const c = cost(sel);
   return (
     <div className="wrap narrow">
@@ -362,7 +424,7 @@ export function ImportBuild({ token }) {
         ))}
       </div>
       <A to={`/v/${token}`} className="btn secondary block" style={{ marginTop: 14 }}><Icon name="cpu" />{t('View in 3D')}</A>
-      <button className="btn block" style={{ marginTop: 10 }} onClick={() => { const id = createProject({ ...shared, sel: shared.sel, name: shared.name }); go(`/p/${id}`); }}>{t('Save a copy to my builds')}</button>
+      <button className="btn block" style={{ marginTop: 10 }} onClick={() => { keepCustomParts(shared.custom); const id = createProject({ ...shared }); go(`/p/${id}`); }}>{t('Save a copy to my builds')}</button>
     </div>
   );
 }

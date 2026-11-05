@@ -194,5 +194,9 @@ export const GOALS = [
 
 const INDEX = {};
 for (const s of SLOTS) for (const item of s.list) INDEX[item.id] = { ...item, slot: s.key };
-export const partById = (id) => INDEX[id] || null;
-export const partName = (p) => (p ? `${p.b} ${p.m}`.replace(/^None /, '') : '');
+// Parts people entered themselves, kept apart from the database.
+const CUSTOM = {};
+export const registerCustom = (map = {}) => { Object.assign(CUSTOM, map); };
+export const unregisterCustom = (id) => { delete CUSTOM[id]; };
+export const partById = (id) => INDEX[id] || CUSTOM[id] || null;
+export const partName = (p) => (p ? `${p.b} ${p.m}`.replace(/^None /, '').trim() : '');

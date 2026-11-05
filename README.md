@@ -30,11 +30,11 @@ A free, phone-first guide for anyone building a multirotor. It starts by asking 
 
 1. **Find** your starting point in four quick questions, or just browse.
 2. **Learn** from reference builds, each with cost, weight, flight time, and what it can and cannot do.
-3. **Configure** with a checker covering voltage, fit, current, tip speed, firmware, serial ports and local law.
+3. **Configure** with a checker covering voltage, fit, current, tip speed, firmware, serial ports and local law. Add payload such as a camera, and enter your own parts when one is not listed.
 4. **Get parts** with local prices and shops, the extras first-timers forget, and export as text, PDF, CSV or a link.
 5. **Build** with a checklist generated for your exact parts, with tips, common mistakes and progress photos.
 6. **Set up** firmware with step-by-step guides linked to the official docs.
-7. **Fly** with a pre-flight checklist that works offline, a flight log, and a troubleshooter that goes one fix at a time.
+7. **Fly** with an "Am I legal?" list for your exact build and country, a pre-flight checklist that works offline, a flight log, and a troubleshooter that goes one fix at a time.
 8. **Share** with a link holding your whole build, plus a community gallery through GitHub.
 9. **Come back** to a dashboard with your builds, progress and badges.
 
@@ -67,6 +67,8 @@ src/components/Drone3D.jsx  The 3D scene and its interaction
 src/data/parts.js         Parts database
 src/data/builds.js        Reference builds, each one tested against the engine
 src/data/regions.js       Laws, radio limits, shops and currency by country
+src/data/legal.js         The "Am I legal?" checklist for one build
+src/lib/custom.js         Validation for parts people enter themselves
 src/data/firmware.js      Setup guides and official links
 src/data/assembly.js      Build steps, selected by the features of your build
 src/data/troubleshoot.js  Fixes, ordered by how likely they are

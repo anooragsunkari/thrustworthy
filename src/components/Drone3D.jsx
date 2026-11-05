@@ -108,7 +108,7 @@ function buildScene(canvas, sel, dark) {
         break;
       }
       case 'box':
-        addMesh(g, box(p.size.l, p.size.h, p.size.w), p.tone === 'case' ? C.caseTone : C.pcb, p.pos);
+        addMesh(g, box(p.size.l, p.size.h, p.size.w), p.tone === 'case' ? C.caseTone : p.tone === 'payload' ? C.strap : C.pcb, p.pos, p.tone === 'payload' ? { roughness: 0.75 } : undefined);
         break;
       case 'perArm':
         for (const m of p.mounts) {

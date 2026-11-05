@@ -95,6 +95,7 @@ export function Flight({ projectId }) {
     <div className="wrap narrow">
       <PageHead title={t('Fly')} sub={p ? p.name : t('Your checklist and your fixes, even with no signal at the field.')} back={p ? `/p/${p.id}` : undefined} />
       {region && <A to={`/rules/${region.id}`} className="note info" style={{ display: 'block', marginTop: 14, textDecoration: 'none' }}><b>{t('Rules for {place}', { place: t(region.name) })}</b>{t(region.summary)}</A>}
+      {p && <A to={`/p/${p.id}/legal`} className="btn secondary block" style={{ marginTop: 12 }}>{t('Am I legal?')}</A>}
       <section className="section" style={{ marginTop: 22 }}>
         <div className="row between" style={{ marginBottom: 10 }}>
           <h2>{t('Pre-flight check')}</h2>

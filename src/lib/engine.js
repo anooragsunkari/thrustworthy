@@ -3,6 +3,7 @@
 // Peukert correction and an ISA atmosphere.
 
 import { SLOTS, GOALS, partById, partName } from '../data/parts.js';
+import { cleanPayload } from './custom.js';
 
 const CHEM = {
   LiPo: { nom: 3.7, full: 4.2, usable: 0.8, k: 1.05 },
@@ -15,14 +16,21 @@ export const packVolts = (b) => b.c * CHEM[b.ch].nom;
 export const packFull = (b) => b.c * CHEM[b.ch].full;
 
 /** Turn { slot: partId } into { slot: part }. Unknown ids are dropped, so old share links survive. */
-export function resolve(ids = {}) {
+export function resolve(ids = {}, payload = null) {
   const sel = {};
   for (const s of SLOTS) {
     const p = ids[s.key] && partById(ids[s.key]);
     if (p) sel[s.key] = p;
   }
+  const items = cleanPayload(payload);
+  if (items.length) {
+    sel.payload = { b: '', m: items.map((i) => i.name).join(', '), w: items.reduce((a, i) => a + i.g, 0), items };
+  }
   return sel;
 }
+
+/** The parts and payload of a saved build. */
+export const loadBuild = (project) => resolve(project.sel, project.payload);
 
 const included = (sel, slot) => !!sel.fc?.includes?.includes(slot);
 const motorCount = (sel) => sel.frame?.mc || 4;
@@ -52,6 +60,7 @@ export function allUpWeight(sel) {
     rx: included(sel, 'rx') ? 0 : sel.rx?.w || 0,
     gps: sel.gps?.w || 0,
     companion: sel.companion?.w || 0,
+    payload: sel.payload?.w || 0,
   };
   const subtotal = Object.values(parts).reduce((a, b) => a + b, 0);
   parts.wiring = Math.max(1, subtotal * 0.04);
@@ -212,6 +221,8 @@ export function check(sel, ctx = {}) {
   if ((firmware === 'ArduPilot' || firmware === 'PX4') && !gps && !companion) add('warn', 'ap-gps', `${firmware} needs a position source for autonomous modes`, 'Without GPS or a vision system you only have manual and stabilized modes.', 'Add a GPS, or a companion computer running vision.', ['gps']);
   if (firmware === 'ArduPilot' && fc && fc.flash < 2 && fc.fw.includes('ArduPilot')) add('info', 'ap-flash', 'This board runs a reduced ArduPilot', `With ${fc.flash} MB of flash some features are left out, and future releases may drop it. A 2 MB H7 board gives you everything.`, null, ['fc']);
   if (esc?.legacy && !noEsc) add('info', 'blheli32', 'BLHeli_32 has been discontinued', 'These ESCs still work, but the firmware gets no more updates. New builds are better served by AM32 or Bluejay.', null, ['esc']);
+  for (const [slot, p] of Object.entries(sel)) if (p.custom) add('info', `custom-${slot}`, `${partName(p)} uses specs you entered`, 'The checks for this part are only as accurate as those numbers.', null, [slot]);
+  if (sel.payload && motor && battery && sel.payload.w / allUpWeight(sel).total > 0.25) add('info', 'payload-share', 'Your payload is a big share of the weight', 'Mount it close to the center of the drone, so the motors stay balanced.', null, ['payload']);
   for (const [slot, p] of Object.entries(sel)) if (p.stock === 'low') add('info', `stock-${slot}`, `${partName(p)} may be hard to find`, 'The maker or main retailers listed it as discontinued or out of stock when we checked. Search your local shops, or pick a similar part.', null, [slot]);
   if (rx?.legacy && !noRx) add('info', 'legacy-rx', 'Older radio link', 'SBUS still works but new builds generally use ELRS or Crossfire.', null, ['rx']);
   if (fc?.needsPM) add('info', 'pm', 'You also need a power module', 'Pixhawk-class boards are powered through a separate power module and power distribution board. Budget about $30 and check that it is rated for your battery.', null, ['fc']);
@@ -321,7 +332,7 @@ export function missing(sel) {
 }
 
 export const isIncluded = included;
-export const toIds = (sel) => Object.fromEntries(Object.entries(sel).map(([k, v]) => [k, v.id]));
+export const toIds = (sel) => Object.fromEntries(Object.entries(sel).filter(([, v]) => v.id).map(([k, v]) => [k, v.id]));
 
 /** Features of the build, which select the matching assembly steps. */
 export function traits(sel, firmware) {
