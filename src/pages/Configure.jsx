@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react';
-import { A, Icon, Issue, PageHead, Sheet, SpringNum, useToast } from '../components/ui.jsx';
+import { A, Icon, Issue, PageHead, Sheet, SpringNum, Tile, useToast } from '../components/ui.jsx';
+import { GOAL_ICON, SLOT_ICON } from '../lib/icons.js';
 import { PartForm } from '../components/PartForm.jsx';
 import { useStore, createProject, updateProject } from '../lib/store.js';
 import { go, grams, minutes, t } from '../lib/util.js';
@@ -53,6 +54,7 @@ export function ConfigureEntry() {
         </section>
       )}
       <A to="/gear" className="card tap row between" style={{ marginTop: 18, flexWrap: 'nowrap' }}>
+        <Tile name="toolbox" />
         <span className="grow"><h3>{t('Start from what you have')}</h3><span className="small muted">{t('Tell us what is on your bench, and build around it.')}</span></span>
         <Icon name="chev" className="chev" />
       </A>
@@ -62,6 +64,7 @@ export function ConfigureEntry() {
         <div className="list">
           {GOALS.map((g) => (
             <button key={g.id} className="li" onClick={() => fresh(g.id, firmwareForGoal(g.id))}>
+              <Tile name={GOAL_ICON[g.id]} />
               <span className="grow title">{t(g.label)}</span><Icon name="chev" className="chev" />
             </button>
           ))}
@@ -72,6 +75,7 @@ export function ConfigureEntry() {
         <div className="list">
           {BUILDS.map((b) => (
             <A key={b.id} to={`/builds/${b.id}`} className="li">
+              <Tile name={GOAL_ICON[b.goal] || 'frame'} />
               <span className="grow"><div className="title">{t(b.title)}</div><div className="sub">{t(b.type)} · {b.firmware}</div></span><Icon name="chev" className="chev" />
             </A>
           ))}
@@ -140,12 +144,13 @@ export function Configure({ id }) {
             const line = c.lines.find((l) => l.slot === s.key);
             return (
               <button key={s.key} className="li" onClick={() => setOpen(s.key)} disabled={inc} style={inc ? { opacity: .7, cursor: 'default' } : undefined}>
-                <i className={`dot ${inc ? 'ok' : level}`} aria-hidden="true" />
+                <Tile name={SLOT_ICON[s.key]} />
                 <span className="grow">
                   <div className="sub">{t(s.label)}{!s.required && ` · ${t('optional')}`}</div>
                   <div className="title">{inc ? t('Included in the flight controller') : part ? partName(part) : <span className="muted" style={{ fontWeight: 500 }}>{t('Choose')}</span>}</div>
                   {line?.own > 0 && <div className="chips" style={{ marginTop: 4 }}><span className="chip ok">{line.buy ? t('You own {have} of {need}', { have: line.own, need: line.qty }) : t('You own this')}</span></div>}
                 </span>
+                <i className={`dot ${inc ? 'ok' : level}`} aria-hidden="true" />
                 {!inc && <Icon name="chev" className="chev" />}
               </button>
             );

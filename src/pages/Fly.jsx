@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { A, Ext, Icon, PageHead, Progress, FirmwareLogo } from '../components/ui.jsx';
+import { A, Ext, Icon, PageHead, Progress, FirmwareLogo, Tile } from '../components/ui.jsx';
+import { SYMPTOM_ICON } from '../lib/icons.js';
 import { addLog, deleteLog, useStore } from '../lib/store.js';
 import { dateStr, t } from '../lib/util.js';
 import { SYMPTOMS } from '../data/troubleshoot.js';
@@ -117,6 +118,7 @@ export function Flight({ projectId }) {
         <div className="list">
           {SYMPTOMS.filter((s) => !s.only || s.only.includes(p?.firmware || fw)).map((s) => (
             <A key={s.id} to={`/fly/fix/${s.id}${p ? `/${p.firmware}` : `/${fw}`}`} className="li">
+              <Tile name={SYMPTOM_ICON[s.id]} />
               <span className="grow"><div className="title">{t(s.title)}</div><div className="sub">{t(s.hint)}</div></span>
               <Icon name="chev" className="chev" />
             </A>

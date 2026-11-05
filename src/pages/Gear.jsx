@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Icon, PageHead, Sheet } from '../components/ui.jsx';
+import { Icon, PageHead, Sheet, Tile } from '../components/ui.jsx';
+import { GOAL_ICON, SLOT_ICON } from '../lib/icons.js';
 import { BrokenBuilds, EditPartSheet, PartForm } from '../components/PartForm.jsx';
 import { createProject, setGearOwned, setOwnedQty, useStore } from '../lib/store.js';
 import { go, t } from '../lib/util.js';
@@ -70,6 +71,7 @@ function AroundSheet({ owned, profile, region, onClose }) {
       <div className="list">
         {GOALS.map((g) => (
           <button key={g.id} className="li" onClick={() => start(g.id)}>
+            <Tile name={GOAL_ICON[g.id]} />
             <span className="grow title">{t(g.label)}</span><Icon name="chev" className="chev" />
           </button>
         ))}
@@ -103,6 +105,7 @@ export function Gear() {
           <div className="list" style={{ marginBottom: 12 }}>
             {items.map(({ part, qty }) => (
               <div className="li" key={part.id}>
+                <Tile name={SLOT_ICON[part.slot]} />
                 <span className="grow" style={{ minWidth: 0 }}>
                   <div className="sub">{t(label(part.slot))}</div>
                   <div className="title">{partName(part)}</div>

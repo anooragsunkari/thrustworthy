@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { A, Ext, Icon, PageHead, Progress, useToast } from '../components/ui.jsx';
+import { A, Ext, Icon, PageHead, Progress, Tile, useToast } from '../components/ui.jsx';
+import { STAGE_ICON } from '../lib/icons.js';
 import { useStore, createProject, deleteProject, duplicateProject, keepCustomParts, deletePhoto, loadPhoto, savePhoto, setGearOwned, setOwnedQty, setProfile, shrinkImage, toggleIn, updateProject } from '../lib/store.js';
 import { copyText, decodeBuild, downloadFile, go, grams, shareUrl, t } from '../lib/util.js';
 import { SLOTS, partName } from '../data/parts.js';
@@ -33,17 +34,18 @@ export function ProjectHome({ id }) {
       {s.next && <A to={s.next.to} className="btn block" style={{ marginTop: 14 }}>{t('Next: {step}', { step: t(s.next.title) })}</A>}
       {loadBuild(p).frame && (
         <A to={`/p/${id}/3d`} className="card tap row between" style={{ marginTop: 14, flexWrap: 'nowrap' }}>
+          <Tile name="box" />
           <span className="grow">
             <h3>{t(s.pct === 100 ? 'Your finished drone in 3D' : 'See your drone in 3D')}</h3>
             <span className="small muted">{t('Turn it around, pull it apart, and tap any part for details.')}</span>
           </span>
-          <Icon name="cpu" className="chev" />
+          <Icon name="chev" className="chev" />
         </A>
       )}
       <div className="list" style={{ marginTop: 14 }}>
         {s.list.map((st) => (
           <A key={st.key} to={st.to} className="li">
-            <i className={`dot ${st.done ? 'ok' : ''}`} aria-hidden="true" />
+            <Tile name={STAGE_ICON[st.key]} done={st.done} />
             <span className="grow"><div className="title">{t(st.title)}</div><div className="sub">{t(st.detail)}</div></span>
             <Icon name="chev" className="chev" />
           </A>
@@ -52,13 +54,14 @@ export function ProjectHome({ id }) {
       <h2 style={{ margin: '24px 0 10px' }}>{t('Tools for this build')}</h2>
       <div className="list">
         {[
-          [`/p/${id}/wiring`, 'Wiring diagram', 'Power, motor order and every connection, for your exact parts.'],
-          [`/p/${id}/settings`, 'Starter settings', 'A file for your firmware, with ports and battery limits filled in.'],
-          [`/p/${id}/spares`, 'Spares and repairs', 'What usually breaks, how many spares to keep, and how to fix it.'],
-          [`/p/${id}/legal`, 'Am I legal?', 'A checklist for this exact build, in your country.'],
-          [`/compare/p.${p.copyOf && state.projects[p.copyOf] ? `${p.copyOf}/p.${id}` : id}`, 'Compare builds', 'See it side by side with another build.'],
-        ].map(([to, title, sub]) => (
+          [`/p/${id}/wiring`, 'Wiring diagram', 'Power, motor order and every connection, for your exact parts.', 'plug'],
+          [`/p/${id}/settings`, 'Starter settings', 'A file for your firmware, with ports and battery limits filled in.', 'cog'],
+          [`/p/${id}/spares`, 'Spares and repairs', 'What usually breaks, how many spares to keep, and how to fix it.', 'build'],
+          [`/p/${id}/legal`, 'Am I legal?', 'A checklist for this exact build, in your country.', 'shield'],
+          [`/compare/p.${p.copyOf && state.projects[p.copyOf] ? `${p.copyOf}/p.${id}` : id}`, 'Compare builds', 'See it side by side with another build.', 'columns'],
+        ].map(([to, title, sub, icon]) => (
           <A key={to} to={to} className="li">
+            <Tile name={icon} />
             <span className="grow"><div className="title">{t(title)}</div><div className="sub">{t(sub)}</div></span>
             <Icon name="chev" className="chev" />
           </A>
@@ -242,6 +245,7 @@ export function Assemble({ id }) {
       </div>
 
       <A to={`/p/${id}/wiring`} className="card tap row between" style={{ marginTop: 14, flexWrap: 'nowrap' }}>
+        <Tile name="plug" />
         <span className="grow"><h3>{t('Wiring diagram')}</h3><span className="small muted">{t('Power, motor order and every connection, for your exact parts.')}</span></span>
         <Icon name="chev" className="chev" />
       </A>
@@ -299,6 +303,7 @@ export function Setup({ id }) {
       <p className="tiny muted" style={{ marginTop: 8 }}>{t(fw.toolNote)}</p>
       <div className="note warn" style={{ marginTop: 14 }}><b>{t('Keep the props off')}</b>{t('Props stay off until every step here is finished.')}</div>
       <A to={`/p/${id}/settings`} className="card tap row between" style={{ marginTop: 14, flexWrap: 'nowrap' }}>
+        <Tile name="cog" />
         <span className="grow"><h3>{t('Starter settings')}</h3><span className="small muted">{t('A file for your firmware, with ports and battery limits filled in.')}</span></span>
         <Icon name="chev" className="chev" />
       </A>
@@ -430,8 +435,9 @@ export function ShareBuild({ id }) {
         <button className="link small" onClick={() => updateProject(id, { shared: true })}>{t('Mark as shared')}</button>
       </div>
       <A to={`/p/${id}/3d`} className="card tap row between" style={{ marginTop: 12, flexWrap: 'nowrap' }}>
+        <Tile name="box" />
         <span className="grow"><h3>{t('Share it in 3D')}</h3><span className="small muted">{t('Anyone can open the model in a browser and tap each part.')}</span></span>
-        <Icon name="cpu" className="chev" />
+        <Icon name="chev" className="chev" />
       </A>
       {toast}
     </div>

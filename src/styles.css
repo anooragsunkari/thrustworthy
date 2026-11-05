@@ -201,8 +201,14 @@ a.chip { min-height: 30px; }
 @keyframes spin { to { transform: rotate(360deg); } }
 @media (min-width: 900px) { .hero { padding-top: 84px; } }
 .card.persona { display: flex; gap: 14px; align-items: flex-start; }
-.persona .ico { flex: none; width: 42px; height: 42px; border-radius: 50%; background: var(--accent-soft); color: var(--accent); display: grid; place-items: center; }
-.persona .ico svg { width: 22px; height: 22px; }
+/* Icon tile: one size on cards, a smaller one in lists, the same line weight everywhere. */
+.ico { flex: none; width: 42px; height: 42px; border-radius: 12px; background: var(--bg); color: var(--ink); display: grid; place-items: center; box-shadow: inset 0 0 0 .5px var(--line); }
+.ico svg { width: 22px; height: 22px; }
+.ico b { font-size: 16px; font-weight: 600; }
+.ico.ok { background: var(--ok-soft); color: var(--ok); box-shadow: none; }
+.li > .ico { width: 34px; height: 34px; border-radius: 10px; }
+.li > .ico svg { width: 18px; height: 18px; }
+.badge.off .ico { opacity: .55; }
 .journey { counter-reset: j; display: grid; gap: 0; }
 .journey li { counter-increment: j; position: relative; padding: 0 0 22px 44px; }
 .journey li::before { content: counter(j); position: absolute; left: 0; top: 0; width: 30px; height: 30px; border-radius: 50%; background: var(--sunken); display: grid; place-items: center; font-size: 14px; font-weight: 600; }
@@ -385,6 +391,7 @@ button.own-btn { border: 0; cursor: pointer; min-height: 30px; font-family: inhe
 
 /* Firmware logos. The plate stays dark in both themes, so each logo keeps its own colors. */
 .fw-logo { display: inline-grid; place-items: center; flex: none; width: 84px; height: 44px; border-radius: 10px; background: #111114; vertical-align: middle; }
+.fw-logo svg { width: 22px; height: 22px; color: #fff; }
 .fw-logo img { display: block; width: 68px; height: 34px; object-fit: contain; }
 
 /* A card can also be a row, with its arrow at the end. */

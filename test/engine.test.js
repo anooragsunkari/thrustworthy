@@ -8,8 +8,11 @@ import { layout, partDetails } from '../src/lib/model.js';
 import { Spring, SOFT, SNAPPY, BOUNCY, springCurve } from '../src/lib/spring.js';
 import { cleanCustom, cleanPayload, cleanSharedParts, fieldsFor, formValues, CUSTOM_FIELDS, CUSTOM_ID } from '../src/lib/custom.js';
 import { brokenBuilds, buildAround, buildsUsing, cleanOwned, EVERY_BUILD_GEAR, gearOwned, MAX_OWNED, ownedList, shopping } from '../src/lib/owned.js';
-import { stages } from '../src/lib/progress.js';
-import { GEAR } from '../src/data/personas.js';
+import { BADGES, stages } from '../src/lib/progress.js';
+import { BADGE_ICON, GOAL_ICON, PATHS, SLOT_ICON, STAGE_ICON, SYMPTOM_ICON } from '../src/lib/icons.js';
+import { SYMPTOMS } from '../src/data/troubleshoot.js';
+import { GOALS } from '../src/data/parts.js';
+import { GEAR, PERSONAS } from '../src/data/personas.js';
 import { buildFacts, legalChecklist } from '../src/data/legal.js';
 import { registerCustom } from '../src/data/parts.js';
 import { encodeBuild, decodeBuild } from '../src/lib/util.js';
@@ -955,4 +958,15 @@ test('opening an old link never overwrites a part you have since edited', () => 
   const same = decodeBuild(encodeBuild({ name: 'x', goal: 'lab', firmware: 'PX4', sel: { gps: id } }));
   assert.equal(same.sel.gps, id);
   assert.deepEqual(Object.keys(same.custom), [id]);
+});
+
+test('everything with an icon points at one that exists', () => {
+  const need = (map, keys, what) => { for (const k of keys) assert.ok(PATHS[map[k]], `${what} ${k}`); };
+  need(GOAL_ICON, GOALS.map((g) => g.id), 'goal');
+  need(SLOT_ICON, [...SLOTS.map((s) => s.key), 'payload'], 'slot');
+  need(BADGE_ICON, BADGES.map((b) => b.id), 'badge');
+  need(SYMPTOM_ICON, SYMPTOMS.map((x) => x.id), 'symptom');
+  need(STAGE_ICON, stages({ id: 'a', goal: 'freestyle', firmware: 'Betaflight', sel: {} }).list.map((x) => x.key), 'stage');
+  for (const b of BUILDS) assert.ok(PATHS[GOAL_ICON[b.goal]], `build ${b.id}`);
+  for (const p of PERSONAS) assert.ok(PATHS[p.icon], `persona ${p.id}`);
 });

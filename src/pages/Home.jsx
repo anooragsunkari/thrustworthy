@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { A, BuildCard, HeroDrone, Icon, Progress, FirmwareLogo } from '../components/ui.jsx';
+import { A, BuildCard, HeroDrone, Icon, LevelBars, Progress, FirmwareLogo, Tile } from '../components/ui.jsx';
 import { useStore, setProfile, createProject } from '../lib/store.js';
 import { go, t } from '../lib/util.js';
 import { PERSONAS, LEVELS, personaById } from '../data/personas.js';
@@ -64,7 +64,7 @@ export function Home() {
           <div className="grid two">
             {PERSONAS.map((p) => (
               <button key={p.id} className="card tap persona" onClick={() => { setProfile({ persona: p.id, level: p.level }); go('/start/where'); }}>
-                <span className="ico"><Icon name={p.icon} /></span>
+                <Tile name={p.icon} />
                 <span><h3>{t(p.title)}</h3><span className="small muted">{t(p.blurb)}</span></span>
               </button>
             ))}
@@ -76,8 +76,11 @@ export function Home() {
         <section className="section">
           <h2>{t('Where to start')}</h2>
           <ol className="grid three">
-            {persona.first.map((f) => (
-              <li key={f.title} className="card"><h3>{t(f.title)}</h3><p className="small muted" style={{ marginTop: 4 }}>{t(f.text)}</p></li>
+            {persona.first.map((f, i) => (
+              <li key={f.title} className="card persona">
+                <Tile><b className="num">{i + 1}</b></Tile>
+                <span><h3>{t(f.title)}</h3><p className="small muted" style={{ marginTop: 4 }}>{t(f.text)}</p></span>
+              </li>
             ))}
           </ol>
         </section>
@@ -96,8 +99,9 @@ export function Home() {
           <h2>{t('Choose your level')}</h2>
           <div className="grid three">
             {LEVELS.map((l) => (
-              <A key={l.id} to={`/builds/level/${l.id}`} className="card tap">
-                <h3>{t(l.title)}</h3><p className="small muted" style={{ marginTop: 4 }}>{t(l.text)}</p>
+              <A key={l.id} to={`/builds/level/${l.id}`} className="card tap persona">
+                <Tile><LevelBars level={l.id} /></Tile>
+                <span><h3>{t(l.title)}</h3><p className="small muted" style={{ marginTop: 4 }}>{t(l.text)}</p></span>
               </A>
             ))}
           </div>
@@ -168,8 +172,9 @@ export function Start({ step }) {
           <p className="muted" style={{ margin: '8px 0 18px' }}>{t('This changes how much we explain. You can change it at any time.')}</p>
           <div className="stack">
             {LEVELS.map((l) => (
-              <button key={l.id} className={`card tap ${profile.level === l.id ? 'sel' : ''}`} onClick={() => { setProfile({ level: l.id }); nextOf('level'); }}>
-                <h3>{t(l.title)}</h3><p className="small muted">{t(l.text)}</p>
+              <button key={l.id} className={`card tap persona ${profile.level === l.id ? 'sel' : ''}`} onClick={() => { setProfile({ level: l.id }); nextOf('level'); }}>
+                <Tile><LevelBars level={l.id} /></Tile>
+                <span><h3>{t(l.title)}</h3><p className="small muted">{t(l.text)}</p></span>
               </button>
             ))}
           </div>
@@ -180,6 +185,7 @@ export function Start({ step }) {
           <p className="muted" style={{ margin: '8px 0 18px' }}>{t('Firmware is the software on the flight controller. If you do not know yet, that is normal.')}</p>
           <div className="list">
             <button className="li" onClick={() => { setProfile({ firmware: null }); nextOf('firmware'); }}>
+              <FirmwareLogo icon="spark" />
               <span className="grow"><div className="title">{t('Pick for me')}</div><div className="sub">{t('Recommended if you are unsure')}</div></span><Icon name="chev" className="chev" />
             </button>
             {FW_CHOICES.map((id) => (
@@ -196,7 +202,7 @@ export function Start({ step }) {
           <div className="stack">
             {PERSONAS.map((p) => (
               <button key={p.id} className={`card tap persona ${profile.persona === p.id ? 'sel' : ''}`} onClick={() => { setProfile({ persona: p.id, level: p.level }); nextOf('who'); }}>
-                <span className="ico"><Icon name={p.icon} /></span>
+                <Tile name={p.icon} />
                 <span><h3>{t(p.title)}</h3><span className="small muted">{t(p.blurb)}</span></span>
               </button>
             ))}

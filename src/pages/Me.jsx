@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { A, BuildCard, Ext, Icon, PageHead, Progress, useToast } from '../components/ui.jsx';
+import { A, BuildCard, Ext, Icon, PageHead, Progress, Tile, useToast } from '../components/ui.jsx';
+import { BADGE_ICON, GOAL_ICON } from '../lib/icons.js';
 import { BrokenBuilds, EditPartSheet } from '../components/PartForm.jsx';
 import { deleteCustomPart, exportData, importData, markSeen, resetAll, setProfile, useStore } from '../lib/store.js';
 import { downloadFile, t, go } from '../lib/util.js';
@@ -67,8 +68,8 @@ export function Me() {
             const s = stages(p, logs, state.owned);
             return (
               <A to={`/p/${p.id}`} key={p.id} className="card tap">
-                <div className="row between"><h3>{p.name}</h3><span className="small num muted">{s.pct}%</span></div>
-                <div className="small muted" style={{ margin: '2px 0 8px' }}>{s.next ? t('Next: {step}', { step: t(s.next.title) }) : t('Complete')} · {p.firmware}</div>
+                <div className="row" style={{ flexWrap: 'nowrap' }}><Tile name={GOAL_ICON[p.goal] || 'frame'} /><h3 className="grow">{p.name}</h3><span className="small num muted">{s.pct}%</span></div>
+                <div className="small muted" style={{ margin: '8px 0' }}>{s.next ? t('Next: {step}', { step: t(s.next.title) }) : t('Complete')} · {p.firmware}</div>
                 <Progress value={s.pct} ok={s.pct === 100} />
               </A>
             );
@@ -78,6 +79,7 @@ export function Me() {
 
       <section className="section">
         <A to="/gear" className="card tap row between" style={{ flexWrap: 'nowrap' }}>
+          <Tile name="toolbox" />
           <span className="grow">
             <h3>{t('Gear I own')}</h3>
             <span className="small muted">{ownedCount ? t(ownedCount === 1 ? 'One item. It comes off your shopping lists.' : '{n} items. They come off your shopping lists.', { n: ownedCount }) : t('Leftover parts, your radio, your charger. They come off your shopping lists.')}</span>
@@ -113,7 +115,10 @@ export function Me() {
         <div className="grid two" style={{ gridTemplateColumns: '1fr 1fr' }}>
           {BADGES.map((b) => (
             <div key={b.id} className={`card badge ${got.has(b.id) ? '' : 'off'}`}>
-              {got.has(b.id) ? <span className="chip ok"><Icon name="check" className="" />{t('Earned')}</span> : <span className="chip">{t('Not yet')}</span>}
+              <div className="row between" style={{ flexWrap: 'nowrap' }}>
+                <Tile name={BADGE_ICON[b.id]} />
+                {got.has(b.id) ? <span className="chip ok"><Icon name="check" className="" />{t('Earned')}</span> : <span className="chip">{t('Not yet')}</span>}
+              </div>
               <h3 style={{ fontSize: 15 }}>{t(b.title)}</h3>
               <span className="tiny muted">{t(b.text)}</span>
             </div>

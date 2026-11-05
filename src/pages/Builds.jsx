@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { A, BuildCard, Ext, Icon, Issue, PageHead } from '../components/ui.jsx';
+import { A, BuildCard, Ext, Icon, Issue, PageHead, Tile } from '../components/ui.jsx';
+import { SLOT_ICON } from '../lib/icons.js';
 import { useStore, createProject } from '../lib/store.js';
 import { go, grams, minutes, t } from '../lib/util.js';
 import { BUILDS, BUILD_TYPES, buildById } from '../data/builds.js';
@@ -92,6 +93,7 @@ export function BuildDetail({ id }) {
             const line = c.lines.find((l) => l.slot === s.key);
             return (
               <div className="li" key={s.key}>
+                <Tile name={SLOT_ICON[s.key]} />
                 <span className="grow"><div className="sub">{t(s.label)}</div><div className="title">{inc ? t('Included in the flight controller') : partName(sel[s.key])}</div></span>
                 {line && (line.buy === 0 ? <span className="chip ok">{t('You own this')}</span> : <span className="right small num">{line.buy > 1 && <span className="muted">{line.buy} × </span>}{money(line.buyTotal, region)}</span>)}
               </div>
