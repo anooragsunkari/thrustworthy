@@ -1,25 +1,30 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Multirotor.build — Build. Validate. Fly.</title>
-    <meta name="description" content="Interactive multi-rotor configurator with real-time compatibility checking, physics-based flight time estimation, and 3D visualization." />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet"/>
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'none'; object-src 'none'; base-uri 'self'; form-action 'none';" />
-    <meta http-equiv="X-Content-Type-Options" content="nosniff" />
-    <meta http-equiv="X-Frame-Options" content="SAMEORIGIN" />
-    <style>
-      *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-      body { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
-      ::-webkit-scrollbar { width: 6px; }
-      ::-webkit-scrollbar-track { background: transparent; }
-      ::-webkit-scrollbar-thumb { background: rgba(128,128,128,0.3); border-radius: 3px; }
-      ::-webkit-scrollbar-thumb:hover { background: rgba(128,128,128,0.5); }
-    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Thrustworthy: build a drone you can trust</title>
+    <meta name="description" content="From first idea to first flight. Compatibility-checked drone builds for beginners, FPV pilots, filmmakers and researchers, on Betaflight, INAV, ArduPilot or PX4, with the rules and shops for your country." />
+    <meta name="author" content="Anoorag Sunkari" />
+    <meta name="theme-color" content="#ffffff" />
+    <script>
+      try {
+        var s = JSON.parse(localStorage.getItem('thrustworthy:v1') || '{}');
+        var th = s.themeVersion === 2 && s.profile && s.profile.theme;
+        document.documentElement.dataset.theme = th === 'dark' || th === 'auto' ? th : 'light';
+      } catch (e) {
+        document.documentElement.dataset.theme = 'light';
+      }
+    </script>
+    <meta property="og:title" content="Thrustworthy" />
+    <meta property="og:description" content="Build a drone you can trust, from first idea to first flight." />
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="icon" href="./icon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="./icon-192.png" />
   </head>
   <body>
     <div id="root"></div>
+    <noscript>Thrustworthy needs JavaScript to run its build checker.</noscript>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

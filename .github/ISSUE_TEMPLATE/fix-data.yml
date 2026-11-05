@@ -1,0 +1,23 @@
+name: Fix a part, rule or link
+description: A wrong spec, an outdated law, or a dead link.
+title: "Fix: "
+labels: [data]
+body:
+  - type: input
+    id: where
+    attributes:
+      label: What is wrong?
+      description: For example "Tattu R-Line 1300 weight" or "EU video power limit".
+    validations:
+      required: true
+  - type: input
+    id: source
+    attributes:
+      label: Source
+      description: The maker's page or the official regulator page.
+    validations:
+      required: true
+  - type: textarea
+    id: detail
+    attributes:
+      label: Details
